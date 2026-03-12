@@ -1,0 +1,32 @@
+# 根目录 .gitignore（前后端通用）
+# 子目录 frontend、backend 各有自己的 .gitignore，Git 会合并生效
+
+# 依赖
+node_modules/
+
+# 环境与敏感信息（勿提交）
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 构建与缓存
+dist/
+.expo/
+web-build/
+*.tsbuildinfo
