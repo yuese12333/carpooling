@@ -1,6 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 
+// 加载 backend/.env（用于 AK/SK 等敏感配置）
+require('dotenv').config();
+
+const smsRouter = require('./router/sms-router');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -18,6 +23,8 @@ app.post('/health', (req, res) => {
 app.post('/api', (req, res) => {
   res.json({ message: 'Carpooling API' });
 });
+
+app.use('/api/sms', smsRouter);
 
 app.listen(Number(PORT), HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
