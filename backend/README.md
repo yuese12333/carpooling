@@ -4,7 +4,14 @@
 
 ### 接口约定
 
-**所有后端接口均只接受 POST 请求**，请求体使用 JSON（`Content-Type: application/json`）。前端调用时请统一使用 `POST` 方法。
+后端接口遵循 `CONTRIBUTING.md` 约定：
+
+- **查询类接口**使用 **GET**
+- **新增/修改/删除类接口**使用 **POST**
+
+当接口为 POST 时，请求体使用 JSON，并确保 `Content-Type: application/json`。
+
+说明：当前 `src/index.js` 作为占位实现，具体接口方法可能会随后续迭代逐步对齐该约定。
 
 ## 环境要求
 
@@ -153,13 +160,21 @@ require('dotenv').config();
 ```
 backend/
 ├── src/
-│   └── index.js    # 入口、CORS、路由
+│   ├── router/        # 路由层（仅限定路径与请求方法，不写业务逻辑）
+│   ├── controller/    # 控制层（接收参数、校验、调用 service 并返回标准响应）
+│   ├── service/       # 业务逻辑层（核心业务规则、异常处理）
+│   ├── dao/            # 数据访问层（数据库增删改查）
+│   ├── middleware/    # 中间件（鉴权、日志、错误捕获）
+│   ├── utils/         # 工具层（参数校验、响应封装、脱敏等）
+│   └── index.js       # 入口（当前阶段临时集中在此文件；后续建议拆分）
 ├── scripts/
-│   └── build.js    # 打包脚本，npm run build 生成 dist/
+│   └── build.js       # 打包脚本，npm run build 生成 dist/
 ├── dist/           # npm run build 生成，用于上传服务器（已加入 .gitignore）
 ├── package.json
 └── README.md
 ```
+
+说明：当前阶段仅为快速跑通流程，`src/index.js` 里集中了路由与接口占位实现；当接口数量增加时，建议按上面分层逐步拆分到对应目录（与 `CONTRIBUTING.md` 一致）。
 
 ## 开发说明
 
