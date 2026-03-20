@@ -11,7 +11,23 @@
 
 当接口为 POST 时，请求体使用 JSON，并确保 `Content-Type: application/json`。
 
-说明：当前 `src/index.js` 作为占位实现，具体接口方法可能会随后续迭代逐步对齐该约定。
+说明：当前已落地短信验证码接口，路由与业务已按分层规范拆分，不再集中在 `src/index.js`。
+
+## 已实现接口（当前版本）
+
+### 1) 发送短信验证码
+
+- **方法**：`POST`
+- **路径**：`/api/sms/send-verify-code`
+- **说明**：调用阿里云短信验证码能力发送验证码
+
+### 2) 校验短信验证码
+
+- **方法**：`POST`
+- **路径**：`/api/sms/check-verify-code`
+- **说明**：校验用户输入验证码是否有效
+
+前端联调详细说明见 [docx/短信验证接口联调文档.md](../docx/短信验证接口联调文档.md)。
 
 ## 环境要求
 
@@ -112,6 +128,8 @@ npm install --production
 |------|------|------|
 | `PORT` | 服务监听端口 | `3000` |
 | `HOST` | 监听地址（服务器上建议 `0.0.0.0`） | `0.0.0.0` |
+| `ALIBABA_CLOUD_ACCESS_KEY_ID` | 阿里云访问密钥 ID（短信服务必需） | - |
+| `ALIBABA_CLOUD_ACCESS_KEY_SECRET` | 阿里云访问密钥 Secret（短信服务必需） | - |
 | `NODE_ENV` | `production` 时可用于收紧 CORS、日志等 | - |
 
 在服务器上可通过系统环境变量或 `.env`（配合 `dotenv`）配置。
@@ -141,17 +159,29 @@ npm install --production
 
 ---
 
-## 环境变量汇总（可选）
+## 环境变量汇总（推荐）
 
-如需用 `.env` 文件，可在 backend 目录安装 `dotenv` 并在入口最顶部加载：
+项目已集成 `dotenv`，默认在入口加载 `backend/.env`。  
+可基于 `backend/.env.example` 创建本地配置：
 
 ```bash
-npm install dotenv
+cp .env.example .env
 ```
 
-```js
-require('dotenv').config();
+```powershell
+Copy-Item .env.example .env
 ```
+
+最少需要配置：
+
+```env
+ALIBABA_CLOUD_ACCESS_KEY_ID=你的AccessKeyId
+ALIBABA_CLOUD_ACCESS_KEY_SECRET=你的AccessKeySecret
+PORT=3000
+HOST=0.0.0.0
+```
+
+> `backend/.env` 里的具体敏感配置请找陈柯获取；该文件已被 `.gitignore` 忽略，禁止提交到远程仓库。
 
 ---
 
@@ -160,21 +190,26 @@ require('dotenv').config();
 ```
 backend/
 ├── src/
-│   ├── router/        # 路由层（仅限定路径与请求方法，不写业务逻辑）
-│   ├── controller/    # 控制层（接收参数、校验、调用 service 并返回标准响应）
-│   ├── service/       # 业务逻辑层（核心业务规则、异常处理）
-│   ├── dao/            # 数据访问层（数据库增删改查）
-│   ├── middleware/    # 中间件（鉴权、日志、错误捕获）
-│   ├── utils/         # 工具层（参数校验、响应封装、脱敏等）
-│   └── index.js       # 入口（当前阶段临时集中在此文件；后续建议拆分）
+│   ├── router/
+│   │   └── sms-router.js            # 短信验证码路由
+│   ├── controller/
+│   │   └── sms-controller.js        # 短信验证码控制层
+│   ├── service/
+│   │   └── aliyun-sms-service.js    # 阿里云短信业务调用
+│   ├── dao/                         # 数据访问层（预留）
+│   ├── middleware/                  # 中间件层（预留）
+│   ├── utils/
+│   │   └── response.js              # 标准响应封装与 requestId 生成
+│   ├── constants/                   # 常量层（预留）
+│   ├── config/                      # 配置层（预留）
+│   └── index.js                     # 入口（挂载中间件与路由）
 ├── scripts/
 │   └── build.js       # 打包脚本，npm run build 生成 dist/
 ├── dist/           # npm run build 生成，用于上传服务器（已加入 .gitignore）
+├── .env.example    # 环境变量示例
 ├── package.json
 └── README.md
 ```
-
-说明：当前阶段仅为快速跑通流程，`src/index.js` 里集中了路由与接口占位实现；当接口数量增加时，建议按上面分层逐步拆分到对应目录（与 `CONTRIBUTING.md` 一致）。
 
 ## 开发说明
 
