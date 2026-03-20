@@ -24,7 +24,7 @@ export default function HomeScreen() {
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
+          Edit <ThemedText type="defaultSemiBold">pages/(tabs)/index.tsx</ThemedText> to see changes.
           Press{' '}
           <ThemedText type="defaultSemiBold">
             {Platform.select({
@@ -69,9 +69,9 @@ export default function HomeScreen() {
         <ThemedText>
           {`When you're ready, run `}
           <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
+          <ThemedText type="defaultSemiBold">pages</ThemedText> directory. This will move the current{' '}
+          <ThemedText type="defaultSemiBold">pages</ThemedText> to{' '}
+          <ThemedText type="defaultSemiBold">pages-example</ThemedText>.
         </ThemedText>
       </ThemedView>
     </ParallaxScrollView>

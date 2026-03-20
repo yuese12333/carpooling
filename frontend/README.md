@@ -78,7 +78,7 @@ echo "registry=https://registry.npmmirror.com" > .npmrc
 2. 开发时：`.env` 里使用内网地址（或删掉该行用默认本地）；运行 `npx expo start` 连内网后端。
 3. 测公网时：修改 `.env` 中 `EXPO_PUBLIC_API_URL` 为测试公网地址，保存后重启 `npx expo start`（或重新构建）。
 
-请求接口时使用 `constants/api.ts` 中的 `API_BASE_URL` 作为根地址（由 `app.config.js` 根据 `EXPO_PUBLIC_API_URL` 注入）。
+请求接口时使用 `config/api.ts` 中的 `API_BASE_URL` 作为根地址（由 `app.config.js` 根据 `EXPO_PUBLIC_API_URL` 注入）。
 
 ---
 
@@ -107,20 +107,23 @@ npx expo start
 
 ```
 carpooling/
-├── app/                    # 页面与路由（Expo Router 文件路由）
+├── pages/                  # 页面与路由（Expo Router 文件路由）
 │   ├── _layout.tsx         # 根布局
 │   ├── modal.tsx           # 模态页
 │   └── (tabs)/             # 底部 Tab 分组
 │       ├── _layout.tsx
-│       ├── index.tsx       # 首页
-│       └── explore.tsx     # 探索页
+│       ├── index.tsx       # 首页（Tab）
+│       └── explore.tsx     # 探索页（Tab）
 ├── components/             # 可复用组件
 │   ├── ui/                 # 基础 UI 组件
 │   └── ...
-├── constants/              # 常量（主题、API 根地址等）
+├── config/                 # 配置与常量（主题、API 根地址等）
 │   ├── api.ts              # API_BASE_URL（开发内网 / 测试公网）
 │   └── theme.ts
 ├── hooks/                  # 自定义 Hooks
+├── utils/                  # 工具类（建议统一放入）
+├── router/                 # 路由配置（如需统一封装）
+├── store/                  # 全局状态管理（如需引入）
 ├── assets/                 # 静态资源（图标、图片等）
 ├── scripts/                # 脚本（如 reset-project）
 ├── app.json                # Expo 配置

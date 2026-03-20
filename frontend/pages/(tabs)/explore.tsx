@@ -7,7 +7,7 @@ import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { Fonts } from '@/config/theme';
 
 export default function TabTwoScreen() {
   return (
@@ -34,11 +34,11 @@ export default function TabTwoScreen() {
       <Collapsible title="File-based routing">
         <ThemedText>
           This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+          <ThemedText type="defaultSemiBold">pages/(tabs)/index.tsx</ThemedText> and{' '}
+          <ThemedText type="defaultSemiBold">pages/(tabs)/explore.tsx</ThemedText>
         </ThemedText>
         <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
+          The layout file in <ThemedText type="defaultSemiBold">pages/(tabs)/_layout.tsx</ThemedText>{' '}
           sets up the tab navigator.
         </ThemedText>
         <ExternalLink href="https://docs.expo.dev/router/introduction">
