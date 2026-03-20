@@ -2,7 +2,8 @@
 
 /**
  * This script is used to reset the project to a blank state.
- * It deletes or moves the /pages, /components, /hooks, /scripts, and /config directories to /pages-example based on user input and creates a new /pages directory with an index.tsx and _layout.tsx file.
+ * It deletes or moves the /src/pages, /src/components (and related supporting layers) directories to /pages-example based on user input
+ * and recreates a new /src directory with an index.tsx and _layout.tsx file.
  * You can remove the `reset-project` script from package.json and safely delete this file after running it.
  */
 
@@ -11,9 +12,18 @@ const path = require("path");
 const readline = require("readline");
 
 const root = process.cwd();
-const oldDirs = ["pages", "components", "hooks", "config", "scripts", "utils", "router", "store"];
+const oldDirs = [
+  "src/pages",
+  "src/components",
+  "src/hooks",
+  "src/config",
+  "src/utils",
+  "src/router",
+  "src/store",
+  "scripts",
+];
 const exampleDir = "pages-example";
-const newAppDir = "pages";
+const newAppDir = "src";
 const exampleDirPath = path.join(root, exampleDir);
 
 const indexContent = `import { Text, View } from "react-native";
@@ -27,7 +37,7 @@ export default function Index() {
         alignItems: "center",
       }}
     >
-      <Text>Edit pages/index.tsx to edit this screen.</Text>
+      <Text>Edit src/index.tsx to edit this screen.</Text>
     </View>
   );
 }
@@ -70,24 +80,24 @@ const moveDirectories = async (userInput) => {
       }
     }
 
-    // Create new /pages directory
+    // Create new /src directory
     const newAppDirPath = path.join(root, newAppDir);
     await fs.promises.mkdir(newAppDirPath, { recursive: true });
-    console.log("\n📁 New /pages directory created.");
+    console.log("\n📁 New /src directory created.");
 
     // Create index.tsx
     const indexPath = path.join(newAppDirPath, "index.tsx");
     await fs.promises.writeFile(indexPath, indexContent);
-    console.log("📄 pages/index.tsx created.");
+    console.log("📄 src/index.tsx created.");
 
     // Create _layout.tsx
     const layoutPath = path.join(newAppDirPath, "_layout.tsx");
     await fs.promises.writeFile(layoutPath, layoutContent);
-    console.log("📄 pages/_layout.tsx created.");
+    console.log("📄 src/_layout.tsx created.");
 
     console.log("\n✅ Project reset complete. Next steps:");
     console.log(
-      `1. Run \`npx expo start\` to start a development server.\n2. Edit pages/index.tsx to edit the main screen.${
+      `1. Run \`npx expo start\` to start a development server.\n2. Edit src/pages/index.tsx to edit the main screen.${
         userInput === "y"
           ? `\n3. Delete the /${exampleDir} directory when you're done referencing it.`
           : ""

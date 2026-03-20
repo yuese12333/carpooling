@@ -107,23 +107,24 @@ npx expo start
 
 ```
 carpooling/
-├── pages/                  # 页面与路由（Expo Router 文件路由）
-│   ├── _layout.tsx         # 根布局
-│   ├── modal.tsx           # 模态页
-│   └── (tabs)/             # 底部 Tab 分组
-│       ├── _layout.tsx
-│       ├── index.tsx       # 首页（Tab）
-│       └── explore.tsx     # 探索页（Tab）
-├── components/             # 可复用组件
-│   ├── ui/                 # 基础 UI 组件
-│   └── ...
-├── config/                 # 配置与常量（主题、API 根地址等）
-│   ├── api.ts              # API_BASE_URL（开发内网 / 测试公网）
-│   └── theme.ts
-├── hooks/                  # 自定义 Hooks
-├── utils/                  # 工具类（建议统一放入）
-├── router/                 # 路由配置（如需统一封装）
-├── store/                  # 全局状态管理（如需引入）
+├── src/                     # 核心源码根目录（按 CONTRIBUTING.md 分层）
+│   ├── pages/              # 业务页面组件（Expo Router 文件路由）
+│   │   ├── _layout.tsx     # 根布局
+│   │   ├── modal.tsx       # 模态页
+│   │   └── (tabs)/         # 底部 Tab 分组
+│   │       ├── _layout.tsx
+│   │       ├── index.tsx   # 首页（Tab）
+│   │       └── explore.tsx # 探索页（Tab）
+│   ├── components/         # 可复用组件
+│   │   ├── ui/             # 基础 UI 组件
+│   │   └── ...
+│   ├── hooks/              # 自定义 Hooks
+│   ├── utils/              # 全局工具类
+│   ├── router/             # 路由配置（如需统一封装）
+│   ├── store/              # 全局状态管理
+│   └── config/            # 环境配置与常量（主题、API 根地址等）
+│       ├── api.ts          # API_BASE_URL（开发内网 / 测试公网）
+│       └── theme.ts
 ├── assets/                 # 静态资源（图标、图片等）
 ├── scripts/                # 脚本（如 reset-project）
 ├── app.json                # Expo 配置

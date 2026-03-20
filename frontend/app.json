@@ -29,7 +29,7 @@
       [
         "expo-router",
         {
-          "root": "./pages"
+          "root": "src"
         }
       ],
       [
