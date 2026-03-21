@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -96,20 +97,25 @@ export default function LoginPage() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
-        <View style={styles.header}>
-          <View style={styles.circleTopRight} />
-          <View style={styles.circleBottomLeft} />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
+            <View style={styles.circleTopRight} />
+            <View style={styles.circleBottomLeft} />
 
-          <View style={styles.headerInner}>
-            <View style={styles.headerIcon}>
-              <Text style={styles.headerEmoji}>🚗</Text>
+            <View style={styles.headerInner}>
+              <View style={styles.headerIcon}>
+                <Text style={styles.headerEmoji}>🚗</Text>
+              </View>
+              <Text style={styles.headerTitle}>欢迎回来</Text>
+              <Text style={styles.headerSubtitle}>登录您的拼车账号</Text>
             </View>
-            <Text style={styles.headerTitle}>欢迎回来</Text>
-            <Text style={styles.headerSubtitle}>登录您的拼车账号</Text>
           </View>
-        </View>
 
-        <View style={styles.body}>
+          <View style={styles.body}>
           <View style={styles.fieldBlock}>
             <Text style={styles.label}>手机号</Text>
             <View
@@ -266,7 +272,8 @@ export default function LoginPage() {
             </View>
           ) : null}
           {/* --------------------------------------------------------------------------- END DEBUG */}
-        </View>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -307,6 +314,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     paddingHorizontal: 24,

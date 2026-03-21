@@ -4,8 +4,17 @@
  */
 
 import { Stack, useRouter } from 'expo-router';
-import React from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  NativeModules,
+  PermissionsAndroid,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AmapMapTestView } from '../../components/amap-map-test-view';
@@ -13,6 +22,52 @@ import { AmapMapTestView } from '../../components/amap-map-test-view';
 export default function MapTestPage() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  const AmapLocation = (NativeModules as any)?.AmapLocation;
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [locLoading, setLocLoading] = useState(false);
+  const [locError, setLocError] = useState('');
+  const [recenterToken, setRecenterToken] = useState(0);
+
+  const handleLocate = useCallback(async () => {
+    if (Platform.OS !== 'android') return;
+    if (!AmapLocation?.getCurrentLocation) {
+      setLocError('未找到原生定位模块 AmapLocation，请确认已编译安装（expo run:android）');
+      return;
+    }
+
+    setLocError('');
+    setLocLoading(true);
+    try {
+      const fine = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: '定位权限申请',
+          message: '需要定位权限以获取你的位置并在地图上展示。',
+          buttonPositive: '允许',
+          buttonNegative: '拒绝',
+        },
+      );
+
+      if (fine !== PermissionsAndroid.RESULTS.GRANTED) {
+        setLocError('未授予定位权限，无法获取位置');
+        return;
+      }
+
+      const res = await AmapLocation.getCurrentLocation();
+      setLatitude(typeof res?.latitude === 'number' ? res.latitude : null);
+      setLongitude(typeof res?.longitude === 'number' ? res.longitude : null);
+      setAccuracy(typeof res?.accuracy === 'number' ? res.accuracy : null);
+      // 强制触发一次原生镜头居中，即便经纬度与上次相同
+      setRecenterToken((v) => v + 1);
+    } catch (e: any) {
+      setLocError(e?.message ? String(e.message) : '获取定位失败，请稍后重试');
+    } finally {
+      setLocLoading(false);
+    }
+  }, [AmapLocation]);
 
   const handleBack = () => {
     if (router.canGoBack()) {
@@ -45,8 +100,40 @@ export default function MapTestPage() {
           )}
         </View>
 
+        <View style={styles.locPanel}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleLocate}
+            disabled={locLoading}
+            style={[styles.locBtn, locLoading ? styles.locBtnDisabled : undefined]}
+          >
+            {locLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.locBtnText}>获取定位</Text>
+            )}
+          </TouchableOpacity>
+
+          {locError ? (
+            <Text style={styles.locError}>{locError}</Text>
+          ) : latitude != null && longitude != null ? (
+            <Text style={styles.locOk}>
+              位置：{latitude.toFixed(6)}, {longitude.toFixed(6)}
+              {accuracy != null ? `（精度 ${accuracy.toFixed(0)}m）` : ''}
+            </Text>
+          ) : (
+            <Text style={styles.locHint}>点击「获取定位」以把镜头移动到当前位置</Text>
+          )}
+        </View>
+
         <View style={styles.mapShell}>
-          <AmapMapTestView style={styles.mapInner} />
+          <AmapMapTestView
+            style={styles.mapInner}
+            latitude={latitude ?? undefined}
+            longitude={longitude ?? undefined}
+            zoom={17}
+            recenterToken={recenterToken}
+          />
         </View>
 
         <TouchableOpacity
@@ -98,6 +185,45 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: '#e5e7eb',
+  },
+  locPanel: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 10,
+  },
+  locBtn: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#2563eb',
+  },
+  locBtnDisabled: {
+    opacity: 0.7,
+  },
+  locBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  locError: {
+    marginTop: 8,
+    color: '#dc2626',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  locOk: {
+    marginTop: 8,
+    color: '#16a34a',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  locHint: {
+    marginTop: 8,
+    color: '#6b7280',
+    fontSize: 13,
+    lineHeight: 18,
   },
   backBtn: {
     marginHorizontal: 16,

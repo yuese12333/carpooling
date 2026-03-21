@@ -21,6 +21,15 @@ const NATIVE_VIEW_NAME = 'AmapMapTest';
 type NativeProps = {
   /** 与 RN 内置 View 一致，支持数组以合并样式 */
   style?: StyleProp<ViewStyle>;
+
+  /** 纬度（由定位模块提供） */
+  latitude?: number;
+  /** 经度（由定位模块提供） */
+  longitude?: number;
+  /** 缩放级别（移动镜头用） */
+  zoom?: number;
+  /** 每次变化都触发一次重新居中（即便经纬度未变） */
+  recenterToken?: number;
 };
 
 function getNativeMapView(): React.ComponentType<NativeProps> | null {
@@ -37,13 +46,23 @@ const NativeAmapMapTest = getNativeMapView();
 
 export type AmapMapTestViewProps = {
   style?: StyleProp<ViewStyle>;
+  latitude?: number;
+  longitude?: number;
+  zoom?: number;
+  recenterToken?: number;
 };
 
 /**
  * 测试用地图区域：在 development build / `expo run:android` 下应显示高德底图。
  * Expo Go 不包含自定义原生模块，将显示提示文案。
  */
-export function AmapMapTestView({ style }: AmapMapTestViewProps) {
+export function AmapMapTestView({
+  style,
+  latitude,
+  longitude,
+  zoom = 17,
+  recenterToken,
+}: AmapMapTestViewProps) {
   if (Platform.OS !== 'android') {
     return (
       <View style={[styles.fallback, style]}>
@@ -65,7 +84,15 @@ export function AmapMapTestView({ style }: AmapMapTestViewProps) {
     );
   }
 
-  return <NativeAmapMapTest style={[styles.map, style]} />;
+  return (
+    <NativeAmapMapTest
+      style={[styles.map, style]}
+      latitude={latitude}
+      longitude={longitude}
+      zoom={zoom}
+      recenterToken={recenterToken}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
