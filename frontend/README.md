@@ -103,10 +103,12 @@ npx expo start
 
 ### 高德地图 Android 自检（自定义原生模块）
 
-- 路由 **`/map-test`**：验证高德 2D JAR、清单 Key 与原生视图是否生效（源码见 `src/map-test.tsx`、`src/pages/map-test-page.tsx`）。
+- 路由 **`/map-test`**：验证高德 2D JAR、清单 Key、**定位**（`AmapLocation`）、**POI 搜索**（`AmapSearch`）与原生地图视图是否生效（源码见 `src/map-test.tsx`、`src/pages/map-test-page.tsx`）。
 - **必须使用** `npx expo run:android` 安装到模拟器/真机；**Expo Go 不包含本项目的原生地图视图**，打开该页会提示未找到原生模块。
-- 在 **`frontend/.env`** 配置 **`EXPO_PUBLIC_AMAP_API_KEY`**（构建时由 Gradle 读入，详见 `docx/高德地图Android_2D_SDK接入说明.md`）。
+- 在 **`frontend/.env`** 配置 **`EXPO_PUBLIC_AMAP_API_KEY`**（构建时由 Gradle 读入；完整接入见 **`docs/高德地图Android_SDK接入与开发说明.md`**）。
+- 搜索 SDK（`AMap_Search_*.jar`）与 **Volley**（`Volley.jar`）与 2D 地图官方 Demo 一致，放在 `android/app/libs/`，由 `fileTree` 引入。
 - Android **登录页底部**提供「高德地图 SDK 测试页」入口。
+- **业务开发与三 SDK 接入**：见仓库 **`docs/高德地图Android_SDK接入与开发说明.md`**。
 
 ---
 
