@@ -1,6 +1,7 @@
 /**
  * 登录页（LoginPage）
  * 说明：目前仅保留登录界面的输入与本地校验反馈，不实现后端请求与路由跳转。
+ * 调试：Android + __DEV__ 时底部显示「地图 SDK 测试」区块，用于验证高德原生接入（/map-test）。
  */
 
 import Feather from '@expo/vector-icons/Feather';
@@ -16,6 +17,7 @@ import {
   View,
 } from 'react-native';
 
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
@@ -24,6 +26,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
  * - 不包含登录跳转/接口请求逻辑
  */
 export default function LoginPage() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -238,6 +241,31 @@ export default function LoginPage() {
               <Text style={styles.registerLink}>立即注册</Text>
             </TouchableOpacity>
           </View>
+
+          {/*
+           * ---------------------------------------------------------------------------
+           * DEBUG：高德地图原生 SDK 自检（仅 Android + __DEV__）
+           * - 路由：/map-test
+           * - 正式包不展示；与业务登录无关
+           * ---------------------------------------------------------------------------
+           */}
+          {Platform.OS === 'android' && __DEV__ ? (
+            <View style={styles.mapTestDebugBlock}>
+              <Text style={styles.mapTestDebugLabel}>调试入口</Text>
+              <Text style={styles.mapTestDebugDesc}>
+                仅开发模式显示。用于验证高德 2D 地图原生 SDK（需已执行 `expo run:android` 且配置
+                .env 中的 Key），与正式登录流程无关。
+              </Text>
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() => router.push('/map-test')}
+                style={styles.mapTestEntry}
+              >
+                <Text style={styles.mapTestEntryText}>打开地图 SDK 测试页</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+          {/* --------------------------------------------------------------------------- END DEBUG */}
         </View>
       </KeyboardAvoidingView>
     </View>
@@ -530,5 +558,41 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
+
+  /* ---------------------------------------------------------------------------
+   * DEBUG：高德地图 SDK 测试区块样式（与上方 JSX 调试入口对应）
+   * --------------------------------------------------------------------------- */
+  mapTestDebugBlock: {
+    marginTop: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#fefce8',
+    borderWidth: 1,
+    borderColor: '#fde047',
+  },
+  mapTestDebugLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#a16207',
+    marginBottom: 6,
+  },
+  mapTestDebugDesc: {
+    fontSize: 11,
+    color: '#854d0e',
+    lineHeight: 16,
+    marginBottom: 10,
+  },
+  mapTestEntry: {
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  mapTestEntryText: {
+    fontSize: 13,
+    color: '#2563eb',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  /* END DEBUG styles */
 });
 
