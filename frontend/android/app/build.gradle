@@ -81,6 +81,43 @@ def enableMinifyInReleaseBuilds = (findProperty('android.enableMinifyInReleaseBu
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+// 高德地图 2D SDK：Key 与 frontend/.env 中 EXPO_PUBLIC_AMAP_API_KEY 一致（Gradle 构建时读取，勿将 .env 提交仓库）
+def readExpoPublicAmapKeyFromFrontendEnv = {
+    def envFile = rootProject.file("../.env")
+    if (!envFile.exists()) {
+        return ""
+    }
+    def key = ""
+    envFile.eachLine { String line ->
+        def trimmed = line.trim()
+        if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+            return
+        }
+        def prefix = "EXPO_PUBLIC_AMAP_API_KEY="
+        if (trimmed.startsWith(prefix)) {
+            def v = trimmed.substring(prefix.length()).trim()
+            if (v.length() >= 2 && v.startsWith('"') && v.endsWith('"')) {
+                v = v.substring(1, v.length() - 1)
+            } else if (v.length() >= 2 && v.startsWith("'") && v.endsWith("'")) {
+                v = v.substring(1, v.length() - 1)
+            }
+            key = v
+        }
+    }
+    return key
+}()
+
+def amapLocalProps = new Properties()
+def amapLocalFile = rootProject.file("local.properties")
+if (amapLocalFile.exists()) {
+    amapLocalFile.withReader("UTF-8") { amapLocalProps.load(it) }
+}
+// 优先级：CI/脚本覆盖 → .env → local.properties → Gradle 属性
+def amapApiKey = System.getenv("AMAP_API_KEY")
+        ?: readExpoPublicAmapKeyFromFrontendEnv
+        ?: amapLocalProps.getProperty("amap.api.key", "")
+        ?: (findProperty("AMAP_API_KEY") ?: "")
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -94,6 +131,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
+
+        manifestPlaceholders = [AMAP_API_KEY: amapApiKey]
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
@@ -179,4 +218,7 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // 高德地图 Android 2D SDK（本地 libs，见 docx/高德地图Android_2D_SDK接入说明.md）
+    implementation fileTree(dir: "libs", include: ["*.jar"])
 }
