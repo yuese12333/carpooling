@@ -78,7 +78,7 @@ echo "registry=https://registry.npmmirror.com" > .npmrc
 2. 开发时：`.env` 里使用内网地址（或删掉该行用默认本地）；运行 `npx expo start` 连内网后端。
 3. 测公网时：修改 `.env` 中 `EXPO_PUBLIC_API_URL` 为测试公网地址，保存后重启 `npx expo start`（或重新构建）。
 
-请求接口时使用 `config/api.ts` 中的 `API_BASE_URL` 作为根地址（由 `app.config.js` 根据 `EXPO_PUBLIC_API_URL` 注入）。
+请求接口时使用 **`config/api.ts`**（路径：`frontend/config/api.ts`，与 `src/` 同级）中的 `API_BASE_URL` 作为根地址（由 `app.config.js` 根据 `EXPO_PUBLIC_API_URL` 注入）。**不要**把非页面模块放在 `src/` 下，否则 Expo Router 会当作路由并告警。
 
 ---
 
@@ -101,30 +101,29 @@ npx expo start
 - 按 `a` 在 Android 模拟器运行、按 `i` 在 iOS 模拟器运行（需本机已安装对应模拟器）
 - 运行 Web：`npm run web`
 
+### 高德地图 Android 自检（自定义原生模块）
+
+- 路由 **`/map-test`**：验证高德 2D JAR、清单 Key、**定位**（`AmapLocation`）、**POI 搜索**（`AmapSearch`）与原生地图视图是否生效（源码见 `src/map-test.tsx`、`src/pages/map-test-page.tsx`）。
+- **必须使用** `npx expo run:android` 安装到模拟器/真机；**Expo Go 不包含本项目的原生地图视图**，打开该页会提示未找到原生模块。
+- 在 **`frontend/.env`** 配置 **`EXPO_PUBLIC_AMAP_API_KEY`**（构建时由 Gradle 读入；完整接入见 **`docs/高德地图Android_SDK接入与开发说明.md`**）。
+- 搜索 SDK（`AMap_Search_*.jar`）与 **Volley**（`Volley.jar`）与 2D 地图官方 Demo 一致，放在 `android/app/libs/`，由 `fileTree` 引入。
+- Android **登录页底部**提供「高德地图 SDK 测试页」入口。
+- **业务开发与三 SDK 接入**：见仓库 **`docs/高德地图Android_SDK接入与开发说明.md`**。
+
 ---
 
 ## 项目结构
 
 ```
 carpooling/
-├── src/                     # 核心源码根目录（按 CONTRIBUTING.md 分层）
-│   ├── pages/              # 业务页面组件（Expo Router 文件路由）
-│   │   ├── _layout.tsx     # 根布局
-│   │   ├── modal.tsx       # 模态页
-│   │   └── (tabs)/         # 底部 Tab 分组
-│   │       ├── _layout.tsx
-│   │       ├── index.tsx   # 首页（Tab）
-│   │       └── explore.tsx # 探索页（Tab）
-│   ├── components/         # 可复用组件
-│   │   ├── ui/             # 基础 UI 组件
-│   │   └── ...
-│   ├── hooks/              # 自定义 Hooks
-│   ├── utils/              # 全局工具类
-│   ├── router/             # 路由配置（如需统一封装）
-│   ├── store/              # 全局状态管理
-│   └── config/            # 环境配置与常量（主题、API 根地址等）
-│       ├── api.ts          # API_BASE_URL（开发内网 / 测试公网）
-│       └── theme.ts
+├── components/             # 可复用组件（与 src 同级，勿放 src 内，见 CONTRIBUTING.md）
+├── config/                 # 环境配置与常量（与 src 同级）
+│   └── api.ts              # API_BASE_URL（开发内网 / 测试公网）
+├── src/                    # Expo Router 路由根目录（仅页面与路由相关）
+│   ├── pages/              # 业务页面组件
+│   ├── _layout.tsx
+│   ├── index.tsx
+│   └── ...
 ├── assets/                 # 静态资源（图标、图片等）
 ├── scripts/                # 脚本（如 reset-project）
 ├── app.json                # Expo 配置

@@ -39,6 +39,5 @@ yarn-error.*
 
 app-example
 
-# generated native folders
+# iOS 原生工程（可选：本地 prebuild 生成，按需提交）
 /ios
-/android

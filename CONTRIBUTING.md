@@ -131,9 +131,7 @@
 
 - frontend/src/：核心源码根目录
 
-- ├── components/：全局公共组件（按钮、输入框、弹窗、加载态，全项目复用）
-
-- ├── pages/：业务页面组件（按模块拆分子目录，如user、order、home）
+- ├── pages/：业务页面组件（按模块拆分子目录，如user、order、home；若出现「缺少 default export」警告，可改为 `_pages/` 或把页面文件放在 `src` 根并配合 Expo Router 约定）
 
 - ├── hooks/：自定义钩子（公共逻辑抽离，如请求钩子、表单校验钩子）
 
@@ -143,9 +141,9 @@
 
 - ├── store/：全局状态管理（公共状态存放，如用户信息、全局配置）
 
-- └── config/：环境配置（开发/测试/生产环境接口地址、全局常量）
+- ├── components/（与 **src/** 同级，位于 **frontend/components/**）：全局公共组件（按钮、输入框、弹窗、加载态，全项目复用）。**勿放在 `src/` 下**，否则 Expo Router 的 `require.context` 会将其当作路由文件并告警。
 
-**示例**：用户相关业务统一放在pages/user/目录下，包含登录页LoginPage、个人中心页UserCenterPage，公共按钮组件存放在components/Button/，全局请求工具封装在utils/request.js。
+- └── config/（与 **src/** 同级，位于 **frontend/config/**）：环境配置（开发/测试/生产环境接口地址、全局常量）。**勿放在 `src/` 下**，避免被 Expo Router 扫描为路由。
 
 ## 2.2 组件开发规范
 
