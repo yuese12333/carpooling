@@ -14,7 +14,7 @@
 6. [隐私合规 Application](#6-隐私合规-application)  
 7. [ProGuard](#7-proguard)  
 8. [高德控制台与 SHA1](#8-高德控制台与-sha1)  
-9. [RN 业务开发地图定位poi](#9-rn-业务开发地图--定位--poi)  
+9. [RN 业务开发（地图 / 定位 / POI）](#9-rn-业务开发地图--定位--poi)
 10. [文件索引与排错](#10-文件索引与排错)
 
 ---
@@ -174,13 +174,39 @@ cd frontend/android
 ### 9.4 搜索 `NativeModules.AmapSearch`
 
 - `poiKeywordSearch(keyword, city, pageNum, pageSize)`  
-- 推荐：**将定位返回的 `city` 传入** 以同城搜索；无城市则传 `''` 全国搜。
+- **`city` 为空字符串**：全国范围检索（`setCityLimit(false)`）。  
+- **`city` 非空**：同城检索（通常传地级市名，如 `北京市`）。
+
+### 9.4.1 地图测试页：城市选择 + 地点输入
+
+`/map-test` 提供 **城市选择（先省 / 直辖市，再市）** 与 **地点关键字输入**，便于与业务表单一致联调：
+
+| 控件 | 默认 / 行为 |
+|--------|-------------|
+| **城市** | **`CityPicker` 组件**（`frontend/utils/city-picker.tsx`，与 `src` 同级，避免被 Expo Router 当作路由）：第一步选省级行政区，第二步选地级市；首项 **「全国」** 表示不限制城市。传给原生时 **`全国` 或空** 等价于 `city=''`（全国 POI）。**获取定位**成功后，若有逆地理 `city` 则写入选中城市；若该城市在数据表中可匹配省份，则插入对应省列表首位；若无法匹配省份，则出现 **「使用定位城市：xxx」** 快捷项。 |
+| **地点** | POI 关键字输入（如「天安门」「加油站」）。 |
+
+省 / 市数据、`cityToNativeParam` 与 `CityPicker` 均在 `frontend/utils/city-picker.tsx`（勿放入 `src/`，否则 Expo Router 会将其当作页面路由），可按业务扩展数据或拆分模块。
 
 ### 9.5 示例流程
 
-定位 → 地图居中（`recenterToken++`）→ 保存 `city` → 用户输入关键字 → POI 搜索 → 选点更新地图与表单。
+定位 → 地图居中（`recenterToken++`）→ 城市选择（省 → 市）同步逆地理城市（或保持全国）→ 输入地点关键字 → POI 搜索 → 选点更新地图与表单。
 
 **联调页面**：`/map-test`（`src/pages/map-test-page.tsx`）。
+
+### 9.6 地图测试页：POI 结果点击定位
+
+`/map-test` 在 **POI 搜索成功**后，先对 **本页拉取到的全部结果**（`pageSize` 最大 50，与 `AmapSearchModule` 一致）按所选方式排序，再 **截取前 5 条** 列表展示，**每条可点击**，用于在地图上查看该 POI 位置（与仅文字展示不同，便于联调「搜索 → 地图」闭环）。
+
+| 行为 | 说明 |
+|------|------|
+| **排序** | **默认（接口顺序）**：与 SDK 对本页全部结果的返回顺序一致，再取前 5 条。**距我距离**：对本页全部结果按与「获取定位」成功时保存的 `userLocateLat` / `userLocateLng`（Haversine 球面距离，米）升序后，再取前 5 条；无经纬度的条目排在后面。未成功获取定位时「距我距离」不可用。 |
+| **有经纬度** | 点击后设置 `latitude` / `longitude`，并对 **`recenterToken` 递增**，触发原生 `AmapMapTestView` 再次移动镜头（与「获取定位」后居中逻辑一致；若经纬度与上次相同，也必须依赖 `recenterToken` 变化才能强制居中）。 |
+| **无经纬度** | 仍可点击；弹出系统提示（`Alert`），说明该条未返回坐标，无法移动地图。列表上对无坐标项会标注「无坐标」类文案。 |
+
+**业务页复用**：将搜索返回数组（如前 5 条）映射为 `TouchableOpacity`（或 `Pressable`），在 `onPress` 中若 `latitude`/`longitude` 为有效数字则更新地图状态并递增 `recenterToken`；否则提示用户。
+
+实现参考：`frontend/src/pages/map-test-page.tsx` 中的 `poiAllResults`（单次搜索完整列表）、`poiSortMode`、`POI_DISPLAY_LIMIT`、`focusPoiOnMap`；距离计算见 `frontend/utils/geo.ts`（`haversineMeters`）。
 
 ---
 
