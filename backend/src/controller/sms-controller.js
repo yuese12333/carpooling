@@ -66,6 +66,7 @@ async function sendVerifyCodeController(req, res) {
       smsUpExtendCode,
     });
 
+    // 发送失败时不返回 verifyCode，避免验证码被误暴露给前端
     if (!data?.success) {
       return res.status(500).json(
         buildFailureResponse(
@@ -73,7 +74,6 @@ async function sendVerifyCodeController(req, res) {
           data?.aliyunMessage || '短信发送失败',
           {
             success: data?.success,
-            verifyCode: data?.verifyCode,
             aliyunCode: data?.aliyunCode,
             aliyunMessage: data?.aliyunMessage,
             accessDeniedDetail: data?.accessDeniedDetail,
@@ -84,11 +84,22 @@ async function sendVerifyCodeController(req, res) {
       );
     }
 
-    return res.json(buildSuccessResponse(data, requestId));
+    // 生产环境默认不把验证码回传给前端（联调可设 ALLOW_RETURN_VERIFY_CODE=true）
+    const dataForClient = { ...data };
+    if (
+      process.env.NODE_ENV === 'production' &&
+      process.env.ALLOW_RETURN_VERIFY_CODE !== 'true'
+    ) {
+      delete dataForClient.verifyCode;
+    }
+
+    return res.json(buildSuccessResponse(dataForClient, requestId));
   } catch (err) {
-    return res.status(500).json(
-      buildFailureResponse(500, err?.message || '短信发送失败', null, requestId),
-    );
+    const message =
+      process.env.NODE_ENV === 'production'
+        ? '短信发送失败'
+        : err?.message || '短信发送失败';
+    return res.status(500).json(buildFailureResponse(500, message, null, requestId));
   }
 }
 
@@ -137,9 +148,11 @@ async function checkVerifyCodeController(req, res) {
 
     return res.json(buildSuccessResponse(data, requestId));
   } catch (err) {
-    return res.status(500).json(
-      buildFailureResponse(500, err?.message || '短信校验失败', null, requestId),
-    );
+    const message =
+      process.env.NODE_ENV === 'production'
+        ? '短信校验失败'
+        : err?.message || '短信校验失败';
+    return res.status(500).json(buildFailureResponse(500, message, null, requestId));
   }
 }
 
