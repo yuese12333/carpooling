@@ -13,6 +13,8 @@ import com.facebook.react.common.ReleaseLevel
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactNativeHost
 
+import com.amap.api.location.AMapLocationClient
+
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
 
@@ -25,6 +27,8 @@ class MainApplication : Application(), ReactApplication {
             PackageList(this).packages.apply {
               // 高德 2D 地图测试视图（见 frontend/components/amap-map-test-view.tsx）
               add(AmapMapPackage())
+              // 高德定位能力（供 /map-test 页面获取经纬度）
+              add(AmapLocationPackage())
             }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
@@ -40,6 +44,18 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
+    /*
+     * 高德定位 SDK 隐私合规初始化（必须在首次使用 AMapLocationClient 之前调用）
+     *
+     * 位置：这里放在 `super.onCreate()` 之后、其它初始化（如 loadReactNative）之前。
+     *
+     * 开发说明：当前为了快速联调，临时写死 `true`。
+     * 正式上线建议：在用户同意隐私政策后再把参数设为 true（或先设为 false，
+     * 待用户同意后再在相应业务流程里更新）。
+     */
+    AMapLocationClient.updatePrivacyShow(this, true, true)
+    AMapLocationClient.updatePrivacyAgree(this, true)
+
     DefaultNewArchitectureEntryPoint.releaseLevel = try {
       ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
     } catch (e: IllegalArgumentException) {
