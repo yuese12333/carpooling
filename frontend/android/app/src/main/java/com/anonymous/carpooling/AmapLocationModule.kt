@@ -29,7 +29,8 @@ class AmapLocationModule(private val reactContext: ReactApplicationContext) :
       val option = AMapLocationClientOption()
       option.setOnceLocation(true)
       option.setOnceLocationLatest(true)
-      option.setNeedAddress(false)
+      // 需要地址/城市信息，供 POI 搜索限定「当前定位城市」
+      option.setNeedAddress(true)
       // 只做一次定位即可，避免持续耗电
       client.setLocationOption(option)
 
@@ -43,6 +44,10 @@ class AmapLocationModule(private val reactContext: ReactApplicationContext) :
                 map.putDouble("longitude", amapLocation.longitude)
                 map.putDouble("accuracy", amapLocation.accuracy.toDouble())
                 map.putInt("errorCode", amapLocation.errorCode)
+                map.putString("city", amapLocation.city ?: "")
+                map.putString("district", amapLocation.district ?: "")
+                map.putString("province", amapLocation.province ?: "")
+                map.putString("address", amapLocation.address ?: "")
                 promise.resolve(map)
               } else {
                 promise.reject(

@@ -219,6 +219,6 @@ dependencies {
         implementation jscFlavor
     }
 
-    // 高德地图 Android 2D SDK（本地 libs，见 docx/高德地图Android_2D_SDK接入说明.md）
+    // 高德：2D 地图 + 定位 + 搜索（JAR 放 libs/；搜索依赖 Volley，与官方 2D Demo 一致）
     implementation fileTree(dir: "libs", include: ["*.jar"])
 }
