@@ -14,7 +14,7 @@ export const ROUTES = {
     // 认证模块
     AUTH: {
         LOGIN: '/auth/login/login',
-        REGISTER: '/auth/register',
+        REGISTER: '/auth/register/register',
         FORGET_PASSWORD: '/auth/forget-password',
     },
 
