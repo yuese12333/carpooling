@@ -1,7 +1,7 @@
 /**
  * @file auth.ts
  * @description 认证模块接口请求实现。
- * 包含登录鉴权、页面动态配置加载及相关的类型定义。
+ * 包含登录鉴权、页面动态配置加载、注册流程接口及相关的类型定义。
  * 遵循规范：2.4 接口请求与数据处理规范、严格结构化日志输出规范。
  */
 
@@ -75,6 +75,14 @@ const MOCK_LOGIN_SUCCESS: LoginData = {
     expireIn: 604800
 };
 
+// --- 私有工具函数 ---
+
+/**
+ * 获取当前上下文中的 RequestId
+ * 用于 API 层日志记录，确保链路一致性
+ */
+const getContextRequestId = (): string => useEnvStore.getState().currentRequestId;
+
 // --- 接口函数实现 ---
 
 /**
@@ -85,7 +93,6 @@ const MOCK_LOGIN_SUCCESS: LoginData = {
  */
 export const fetchLoginConfig = async (
     isMockMode: boolean,
-    requestId: string
 ): Promise<PageConfig> => {
     if (isMockMode) {
         return new Promise((resolve) => {
@@ -109,7 +116,7 @@ export const fetchLoginConfig = async (
             operate: 'fetchLoginConfig',
             error: error instanceof Error ? error.message : String(error),
             errorType: 'API_RESPONSE_ERROR',
-            requestId
+            requestId: getContextRequestId()
         });
 
         return {
@@ -131,7 +138,6 @@ export const fetchLoginConfig = async (
 export const loginByPassword = async (
     payload: LoginRequest,
     isMockMode: boolean,
-    requestId?: string
 ): Promise<LoginData> => {
     if (isMockMode) {
         return new Promise((resolve) => {
@@ -155,7 +161,7 @@ export const loginByPassword = async (
             params: { phone: payload.phone },
             error: error instanceof Error ? error.message : String(error),
             errorType: 'LOGIN_ACTION_ERROR',
-            requestId: requestId || useEnvStore.getState().currentRequestId
+            requestId: getContextRequestId()
         });
         throw error;
     }

@@ -25,7 +25,7 @@ import { useRouter } from 'expo-router';
 import styles, { COLORS } from './login.style';
 
 // 工具类
-import logger, { generateRequestId } from '../../../utils/logger';
+import logger from '../../../utils/logger';
 
 // 状态管理与 Hook
 import { useLoginForm } from '../../../hooks/use-login-form';
@@ -99,7 +99,7 @@ export default function LoginPage(): JSX.Element {
   const loadPageConfig = useCallback(async (): Promise<void> => {
     setIsConfigLoading(true);
     try {
-      const data = await fetchLoginConfig(isMockMode, requestId);
+      const data = await fetchLoginConfig(isMockMode);
       setPageConfig(data);
 
       logger.info({
