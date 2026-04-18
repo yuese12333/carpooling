@@ -53,6 +53,37 @@ export interface SocialItemProps {
     onPress?: () => void;
 }
 
+/** 注册请求载荷 */
+export interface RegisterRequest {
+    nickname: string;
+    phoneNumber: string;
+    password?: string;
+    verifyCode: string;
+    agreeProtocol: boolean;
+    tempToken?: string;
+}
+
+/** 注册成功返回的数据 */
+export interface RegisterData {
+    userId: string;
+    accessToken: string;
+    userInfo: {
+        nickname: string;
+        avatarUrl: string;
+    };
+}
+
+/** 昵称可用性响应 */
+export interface NicknameCheckData {
+    isAvailable: boolean;
+}
+
+/** 验证码校验响应 */
+export interface VerifyCodeData {
+    isValid: boolean;
+    tempToken: string;
+}
+
 // --- 内部常量与 Mock 数据 ---
 
 const MOCK_DELAY = {
@@ -161,6 +192,139 @@ export const loginByPassword = async (
             params: { phone: payload.phone },
             error: error instanceof Error ? error.message : String(error),
             errorType: 'LOGIN_ACTION_ERROR',
+            requestId: getContextRequestId()
+        });
+        throw error;
+    }
+};
+
+// --- 注册相关接口实现 ---
+
+/**
+ * 检测用户昵称是否可用
+ * @param {string} nickname - 待检测的昵称
+ * @param {boolean} isMock - 是否启用 Mock 模式
+ * @returns {Promise<NicknameCheckData>} 可用性检测结果
+ */
+export const checkNickname = async (
+    nickname: string,
+    isMock: boolean
+): Promise<NicknameCheckData> => {
+    if (isMock) {
+        return { isAvailable: nickname !== "已占用" };
+    }
+    try {
+        const res = await axios.get<ApiResponse<NicknameCheckData>>('/api/auth/register/check-nickname', {
+            params: { nickname }
+        });
+        return res.data.data;
+    } catch (error) {
+        logger.error({
+            module: 'auth-api',
+            operate: 'checkNickname',
+            params: { nickname },
+            error: error instanceof Error ? error.message : String(error),
+            errorType: 'VALIDATION_ERROR',
+            requestId: getContextRequestId()
+        });
+        throw error;
+    }
+};
+
+/**
+ * 发送短信验证码
+ * @param {string} phoneNumber - 手机号
+ * @param {boolean} isMock - 是否启用 Mock 模式
+ * @returns {Promise<boolean>} 是否发送成功
+ */
+export const sendSmsCode = async (
+    phoneNumber: string,
+    isMock: boolean
+): Promise<boolean> => {
+    if (isMock) {
+        return true;
+    }
+    try {
+        const res = await axios.post<ApiResponse<{ success: boolean }>>('/api/sms/send-verify-code', { phoneNumber });
+        return res.data.code === 200;
+    } catch (error) {
+        logger.error({
+            module: 'auth-api',
+            operate: 'sendSmsCode',
+            params: { phoneNumber },
+            error: error instanceof Error ? error.message : String(error),
+            errorType: 'SMS_SERVICE_ERROR',
+            requestId: getContextRequestId()
+        });
+        return false;
+    }
+};
+
+/**
+ * 校验短信验证码合法性
+ * @param {string} phoneNumber - 手机号
+ * @param {string} verifyCode - 验证码
+ * @param {boolean} isMock - 是否启用 Mock 模式
+ * @returns {Promise<VerifyCodeData>} 校验结果及临时令牌
+ */
+export const verifySmsCode = async (
+    phoneNumber: string,
+    verifyCode: string,
+    isMock: boolean
+): Promise<VerifyCodeData> => {
+    if (isMock) {
+        return { isValid: true, tempToken: "mock_temp_token_123" };
+    }
+    try {
+        const res = await axios.post<ApiResponse<VerifyCodeData>>('/api/auth/register/verify-code', {
+            phoneNumber,
+            verifyCode
+        });
+        return res.data.data;
+    } catch (error) {
+        logger.error({
+            module: 'auth-api',
+            operate: 'verifySmsCode',
+            params: { phoneNumber },
+            error: error instanceof Error ? error.message : String(error),
+            errorType: 'VERIFY_CODE_ERROR',
+            requestId: getContextRequestId()
+        });
+        throw error;
+    }
+};
+
+/**
+ * 提交用户注册信息
+ * @param {RegisterRequest} params - 注册请求完整参数
+ * @param {boolean} isMock - 是否启用 Mock 模式
+ * @returns {Promise<RegisterData>} 注册成功后的用户数据
+ */
+export const registerUser = async (
+    params: RegisterRequest,
+    isMock: boolean
+): Promise<RegisterData> => {
+    if (isMock) {
+        return {
+            userId: "u_mock_1001",
+            accessToken: "mock_jwt_token",
+            userInfo: { nickname: params.nickname, avatarUrl: "" }
+        };
+    }
+    try {
+        const res = await axios.post<ApiResponse<RegisterData>>('/api/auth/register', params);
+        return res.data.data;
+    } catch (error) {
+        logger.error({
+            module: 'auth-api',
+            operate: 'registerUser',
+            params: {
+                nickname: params.nickname,
+                phoneNumber: params.phoneNumber,
+                agreeProtocol: params.agreeProtocol
+            }, // 剔除敏感字段 password 和 verifyCode
+            error: error instanceof Error ? error.message : String(error),
+            errorType: 'REGISTER_SUBMIT_ERROR',
             requestId: getContextRequestId()
         });
         throw error;
