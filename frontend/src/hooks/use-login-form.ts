@@ -58,7 +58,7 @@ export const useLoginForm = (isMockMode: boolean, requestId: string) => {
             const payload = { phone, password, shouldRemember };
 
             // 执行 API 请求
-            const userData = await loginByPassword(payload, isMockMode, requestId);
+            const userData = await loginByPassword(payload, isMockMode);
 
             // 严格遵循规范：INFO 级别结构化日志记录
             logger.info({
