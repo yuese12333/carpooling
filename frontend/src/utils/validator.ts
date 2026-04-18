@@ -4,11 +4,21 @@
  * 遵循规范：1.3.2 函数注释规范。
  */
 
+import logger from '@/utils/logger';
+import { useEnvStore } from '@/store/env-store';
 
 // --- 常量定义 ---
 
 export const MIN_PASSWORD_LENGTH = 8;
 export const MAX_PASSWORD_LENGTH = 20;
+export const VERIFY_CODE_LENGTH = 6;
+
+// --- 内部辅助函数 ---
+
+/**
+ * 获取当前链路追踪 ID
+ */
+const getContextRequestId = (): string => useEnvStore.getState().currentRequestId || 'internal-auto-gen';
 
 /**
  * 校验手机号格式是否合法
@@ -53,3 +63,79 @@ export const validatePassword = (password: string): string => {
   return '';
 };
 
+/**
+ * 校验昵称合法性
+ * @param {string} nickname - 用户输入的昵称
+ * @returns {string} 错误信息，通过则返回空字符串
+ */
+export const validateNickname = (nickname: string): string => {
+  const trimmedNickname = nickname.trim();
+  if (!trimmedNickname) {
+    return "请输入昵称";
+  }
+  if (trimmedNickname.length < 2) {
+    return "昵称至少需要 2 个字符";
+  }
+  return "";
+};
+
+/**
+ * 校验验证码格式
+ * @param {string} code - 6位数字验证码
+ * @returns {string} 错误信息，通过则返回空字符串
+ */
+export const validateVerifyCode = (code: string): string => {
+  const digitReg = /^\d+$/;
+  if (!code || code.length !== VERIFY_CODE_LENGTH || !digitReg.test(code)) {
+    return `请输入 ${VERIFY_CODE_LENGTH} 位数字验证码`;
+  }
+  return "";
+};
+
+/**
+ * 校验两次密码输入是否一致
+ * @param {string} p1 - 密码
+ * @param {string} p2 - 确认密码
+ * @returns {string} 错误信息，一致则返回空字符串
+ */
+export const validateConfirmPassword = (p1: string, p2: string): string => {
+  if (p1 !== p2) {
+    return "两次输入的密码不一致";
+  }
+  return "";
+};
+
+/**
+ * 计算密码强度分值 (0-100)
+ * @param {string} password - 待评估的密码字符串（不记录日志）
+ * @returns {number} 强度分值
+ * @description 基于长度、大写字母、数字及特殊字符四个维度评估。
+ */
+export const calculatePasswordStrength = (password: string): number => {
+  let score = 0;
+
+  // 维度 1: 基础长度
+  if (password.length >= MIN_PASSWORD_LENGTH) score += 25;
+
+  // 维度 2: 包含大写字母
+  if (/[A-Z]/.test(password)) score += 25;
+
+  // 维度 3: 包含数字
+  if (/[0-9]/.test(password)) score += 25;
+
+  // 维度 4: 包含特殊字符
+  if (/[^A-Za-z0-9]/.test(password)) score += 25;
+
+  // 关键节点审计（仅记录结果，严禁记录 params.password）
+  if (score > 0) {
+    logger.info({
+      module: 'utils-validator',
+      operate: 'calculatePasswordStrength',
+      params: { passwordLength: password.length },
+      result: `Score: ${score}`,
+      requestId: getContextRequestId()
+    });
+  }
+
+  return score;
+};
