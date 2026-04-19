@@ -7,29 +7,102 @@ const {
   createUser,
   findUserByPhone,
 } = require('../dao/users-dao');
+const { logger } = require('../utils/logger');
 
-async function initUsersSchema() {
-  await ensureUsersTable();
-  return { initialized: true };
+async function initUsersSchema(requestId) {
+  try {
+    logger.info({
+      module: 'users-service',
+      operate: 'init-users-schema',
+      requestId,
+      result: 'Starting schema initialization',
+    });
+
+    await ensureUsersTable(requestId);
+
+    logger.info({
+      module: 'users-service',
+      operate: 'init-users-schema',
+      requestId,
+      result: 'Schema initialization completed',
+    });
+
+    return { initialized: true };
+  } catch (error) {
+    logger.error({
+      module: 'users-service',
+      operate: 'init-users-schema',
+      requestId,
+      error: error.message,
+      errorType: 'ServiceSchemaInitError',
+    });
+    throw error;
+  }
 }
 
-async function registerUser({ phone, nickname }) {
-  const existed = await findUserByPhone(phone);
-  if (existed) {
+async function registerUser({ phone, nickname }, requestId) {
+  try {
+    logger.info({
+      module: 'users-service',
+      operate: 'register-user',
+      requestId,
+      params: { phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'), nickname },
+      result: 'Starting user registration',
+    });
+
+    const existed = await findUserByPhone(phone, requestId);
+    if (existed) {
+      logger.info({
+        module: 'users-service',
+        operate: 'register-user',
+        requestId,
+        result: 'User already exists',
+      });
+      return {
+        created: false,
+        user: existed,
+        reason: 'PHONE_ALREADY_EXISTS',
+      };
+    }
+
+    let insertId;
+    try {
+      insertId = await createUser({ phone, nickname }, requestId);
+    } catch (error) {
+      if (error && error.code === 'ER_DUP_ENTRY') {
+        const duplicatedUser = await findUserByPhone(phone, requestId);
+        return {
+          created: false,
+          user: duplicatedUser,
+          reason: 'PHONE_ALREADY_EXISTS',
+        };
+      }
+      throw error;
+    }
+
+    const createdUser = await findUserByPhone(phone, requestId);
+
+    logger.info({
+      module: 'users-service',
+      operate: 'register-user',
+      requestId,
+      result: `User registered successfully with id: ${insertId}`,
+    });
+
     return {
-      created: false,
-      user: existed,
-      reason: 'PHONE_ALREADY_EXISTS',
+      created: Boolean(insertId),
+      user: createdUser,
     };
+  } catch (error) {
+    logger.error({
+      module: 'users-service',
+      operate: 'register-user',
+      requestId,
+      error: error.message,
+      errorType: 'ServiceUserRegisterError',
+    });
+    throw error;
   }
-
-  const insertId = await createUser({ phone, nickname });
-  const createdUser = await findUserByPhone(phone);
-
-  return {
-    created: Boolean(insertId),
-    user: createdUser,
-  };
 }
 
 module.exports = {
