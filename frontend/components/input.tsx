@@ -15,6 +15,9 @@ import {
     type ViewStyle,
     type TextStyle
 } from "react-native";
+// 引入规范要求的日志工具与 Store
+import logger from '@/utils/logger';
+import { useEnvStore } from '@/store/env-store';
 
 /**
  * @interface InputProps
@@ -45,7 +48,7 @@ const UI_THEME = {
 };
 
 /**
- * 内部实现组件（避免直接在导出处使用匿名 forwardRef）
+ * 内部实现组件
  */
 const InputComponent = forwardRef<TextInput, InputProps>((props, ref) => {
     const {
@@ -62,12 +65,23 @@ const InputComponent = forwardRef<TextInput, InputProps>((props, ref) => {
     } = props;
 
     /**
-     * 组件日志记录规范
-     * 格式：[UI_LOG] [module:组件名] [operate:行为]
+     * 符合规范的日志记录逻辑
+     * 严格遵循字段名：module, operate, params, result, error, errorType, requestId
      */
     const logUIEvent = useCallback((operate: string) => {
-        console.log(`[UI_LOG] [module:${moduleName}] [operate:${operate}]`);
-    }, [moduleName]);
+        // 从 Store 中获取全局唯一 RequestId，禁止本地生成
+        const requestId = useEnvStore.getState().currentRequestId;
+
+        logger.info({
+            module: moduleName,
+            operate: operate,
+            params: { multiline, hasError: !!errorText },
+            result: undefined, // 避免使用 null
+            error: undefined,
+            errorType: undefined,
+            requestId: requestId
+        });
+    }, [moduleName, multiline, errorText]);
 
     const handleFocus = useCallback((e: any) => {
         logUIEvent("INPUT_FOCUS");
@@ -90,7 +104,7 @@ const InputComponent = forwardRef<TextInput, InputProps>((props, ref) => {
     ] as StyleProp<ViewStyle>, [multiline, errorText, containerStyle]);
 
     /**
-     * 强制断言样式数组类型，避免类型兼容报错
+     * 样式数组类型断言
      */
     const inputMergedStyle = useMemo(() => [
         styles.inputBase,
@@ -194,10 +208,6 @@ const styles = StyleSheet.create({
     }
 });
 
-// 设置组件名称以便于调试
 InputComponent.displayName = "Input";
 
-/**
- * 最终具名导出，确保导出的是一个已赋值的函数对象
- */
 export const Input = InputComponent;
