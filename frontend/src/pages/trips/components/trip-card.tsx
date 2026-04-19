@@ -1,7 +1,6 @@
 /**
  * @file trip-card.tsx
  * @description 行程卡片组件，负责展示行程简要信息、角色状态、路线以及交互操作。
- * @version 1.1.0
  */
 
 import React from "react";

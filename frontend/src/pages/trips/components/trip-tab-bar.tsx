@@ -1,7 +1,6 @@
 /**
  * @file trip-tab-bar.tsx
  * @description 我的行程页面状态切换标签栏组件，集成了全链路日志追踪与规范化样式引用。
- * @version 1.1.0
  */
 
 import React from "react";

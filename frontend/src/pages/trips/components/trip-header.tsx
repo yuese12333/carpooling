@@ -1,7 +1,6 @@
 /**
  * @file trip-header.tsx
  * @description 行程列表页面的头部组件。包含返回导航、标题展示以及身份角色筛选切换器。
- * @version 1.1.0
  */
 
 import React from "react";

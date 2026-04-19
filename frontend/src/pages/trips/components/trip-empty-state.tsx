@@ -1,7 +1,6 @@
 /**
  * @file trip-empty-state.tsx
  * @description 行程列表为空时的占位组件，采用标准化的原子化按钮与品牌视觉。
- * @version 1.1.0
  */
 
 import React from "react";

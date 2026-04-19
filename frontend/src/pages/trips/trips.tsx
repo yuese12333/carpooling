@@ -1,3 +1,8 @@
+/**
+ * @file trips.tsx
+ * @description “我的行程”页面实现。
+ */
+
 import React from "react";
 import { ScrollView, View, ActivityIndicator, SafeAreaView } from "react-native";
 import { useRouter } from 'expo-router';
