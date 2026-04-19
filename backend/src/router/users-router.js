@@ -1,0 +1,16 @@
+/**
+ * 文件功能：用户路由层
+ * 关联业务：用户建表初始化、最小注册接口
+ */
+const express = require('express');
+const {
+  initUsersSchemaController,
+  createUserController,
+} = require('../controller/users-controller');
+
+const router = express.Router();
+
+router.post('/init-schema', initUsersSchemaController);
+router.post('/create', createUserController);
+
+module.exports = router;
