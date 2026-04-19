@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosResponse } from 'axios';
-import { mockRides, currentUser as mockUser } from "../data/mockData";
+import { mockRides, currentUser as mockUser } from "../store/mock-data";
 import { useEnvStore } from '../store/env-store';
 import logger from '@/utils/logger';
 

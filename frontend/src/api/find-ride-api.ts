@@ -3,7 +3,7 @@
  * @description 拼车行程相关接口对接，集成链路追踪与标准化日志审计
  */
 import axios, { AxiosError } from 'axios';
-import { mockRides } from '../data/mockData';
+import { mockRides } from '../store/mock-data';
 import logger from '@/utils/logger';
 import { useEnvStore } from '@/store/env-store';
 
