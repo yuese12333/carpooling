@@ -15,7 +15,7 @@ export const ROUTES = {
     AUTH: {
         LOGIN: '/auth/login/login',
         REGISTER: '/auth/register/register',
-        FORGET_PASSWORD: '/auth/forget-password',
+        FORGET_PASSWORD: '/auth/forget-password/forget-password',
     },
 
     // 个人中心模块
