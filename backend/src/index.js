@@ -55,7 +55,6 @@ app.post('/api', (req, res) => {
 app.use('/api/sms', smsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
-app.use('/api/auth', authRouter);
 
 app.listen(Number(PORT), HOST, async () => {
   const requestId = `startup-${Date.now()}`;

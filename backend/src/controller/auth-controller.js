@@ -4,6 +4,11 @@
  * 说明：负责参数校验、调用 service、返回标准响应
  */
 const { loginByPassword } = require('../service/auth-service');
+const {
+  createRequestId,
+  buildSuccessResponse,
+  buildFailureResponse,
+} = require('../utils/response');
 
 const CHINA_MAINLAND_PHONE_REGEX = /^1\d{10}$/;
 
@@ -13,31 +18,21 @@ const CHINA_MAINLAND_PHONE_REGEX = /^1\d{10}$/;
  * 出参：标准化 JSON 响应
  */
 async function loginByPasswordController(req, res) {
+  const requestId = createRequestId();
+
   try {
     const { phone, password, rememberMe } = req.body || {};
 
     if (!phone || typeof phone !== 'string' || !CHINA_MAINLAND_PHONE_REGEX.test(phone)) {
-      return res.status(400).json({
-        code: 400,
-        message: '手机号格式不正确',
-        data: null,
-      });
+      return res.status(400).json(buildFailureResponse(400, '手机号格式不正确', null, requestId));
     }
 
     if (!password || typeof password !== 'string' || !password.trim()) {
-      return res.status(400).json({
-        code: 400,
-        message: '密码不能为空',
-        data: null,
-      });
+      return res.status(400).json(buildFailureResponse(400, '密码不能为空', null, requestId));
     }
 
     if (rememberMe !== undefined && typeof rememberMe !== 'boolean') {
-      return res.status(400).json({
-        code: 400,
-        message: 'rememberMe 必须为布尔值',
-        data: null,
-      });
+      return res.status(400).json(buildFailureResponse(400, 'rememberMe 必须为布尔值', null, requestId));
     }
 
     const data = await loginByPassword({
@@ -50,11 +45,7 @@ async function loginByPasswordController(req, res) {
       },
     });
 
-    return res.json({
-      code: 200,
-      message: 'success',
-      data,
-    });
+    return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
     const status = error?.statusCode || 500;
     const message =
@@ -64,11 +55,7 @@ async function loginByPasswordController(req, res) {
           ? '登录失败'
           : error?.message || '登录失败';
 
-    return res.status(status).json({
-      code: status,
-      message,
-      data: null,
-    });
+    return res.status(status).json(buildFailureResponse(status, message, null, requestId));
   }
 }
 

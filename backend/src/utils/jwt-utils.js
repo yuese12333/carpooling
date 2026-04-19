@@ -5,9 +5,12 @@
  */
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'carpooling-default-jwt-secret';
-const JWT_REFRESH_SECRET =
-  process.env.JWT_REFRESH_SECRET || 'carpooling-default-jwt-refresh-secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
+
+if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
+  throw new Error('Missing required JWT environment variables: JWT_SECRET, JWT_REFRESH_SECRET');
+}
 
 /**
  * 函数功能：生成访问令牌

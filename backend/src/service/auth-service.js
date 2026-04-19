@@ -43,7 +43,8 @@ async function loginByPassword({ phone, password, rememberMe, deviceInfo }) {
   );
 
   await userDao.updateLastLoginInfo(user.userId, {
-    lastLoginAt: new Date().toISOString(),
+    // DATETIME 字段直接使用 Date 对象，避免 ISO 字符串写入报错
+    lastLoginAt: new Date(),
     deviceInfo,
   });
 
