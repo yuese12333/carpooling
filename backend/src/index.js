@@ -5,6 +5,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const smsRouter = require('./router/sms-router');
+const authRouter = require('./router/auth-router');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +25,7 @@ app.post('/api', (req, res) => {
 });
 
 app.use('/api/sms', smsRouter);
+app.use('/api/auth', authRouter);
 
 app.listen(Number(PORT), HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
