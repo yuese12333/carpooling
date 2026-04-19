@@ -1,5 +1,5 @@
 /**
- * @file rn-avatar.tsx
+ * @file avatar.tsx
  * @description 高性能头像组件，支持加载状态感知、占位回退机制及统一链路日志记录
  */
 
