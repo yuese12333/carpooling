@@ -8,6 +8,7 @@ const smsRouter = require('./router/sms-router');
 const usersRouter = require('./router/users-router');
 const pool = require('./config/db');
 const { logger } = require('./utils/logger');
+const { createRequestId } = require('./utils/response');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,17 +19,30 @@ app.use(express.json());
 
 // 健康检查（包含数据库连通性）
 app.get('/health', async (req, res) => {
+  const requestId = createRequestId();
+
   try {
     await pool.query('SELECT 1');
+    logger.info({
+      module: 'system-health',
+      operate: 'health-check',
+      requestId,
+      result: 'Health check passed',
+    });
     res.json({ status: 'ok', db_connected: true, timestamp: new Date().toISOString() });
   } catch (error) {
     logger.error({
       module: 'system-health',
       operate: 'health-check',
+      requestId,
       error: error.message,
       errorType: 'DatabaseConnectionError',
     });
-    res.status(500).json({ status: 'error', db_connected: false, error: error.message });
+    res.status(500).json({
+      status: 'error',
+      db_connected: false,
+      error: '数据库暂不可用',
+    });
   }
 });
 
@@ -41,9 +55,12 @@ app.use('/api/sms', smsRouter);
 app.use('/api/users', usersRouter);
 
 app.listen(Number(PORT), HOST, async () => {
+  const requestId = `startup-${Date.now()}`;
+
   logger.info({
     module: 'server-bootstrap',
     operate: 'server-start',
+    requestId,
     params: { host: HOST, port: Number(PORT) },
     result: 'Server started',
   });
@@ -54,12 +71,14 @@ app.listen(Number(PORT), HOST, async () => {
     logger.info({
       module: 'server-bootstrap',
       operate: 'database-connectivity-check',
+      requestId,
       result: 'MySQL connection established',
     });
   } catch (error) {
     logger.error({
       module: 'server-bootstrap',
       operate: 'database-connectivity-check',
+      requestId,
       error: error.message,
       errorType: 'DatabaseConnectionError',
     });
