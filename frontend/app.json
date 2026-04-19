@@ -12,6 +12,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.anonymous.carpooling",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -29,7 +30,7 @@
       [
         "expo-router",
         {
-          "root": "src"
+          "root": "src/pages"
         }
       ],
       [
