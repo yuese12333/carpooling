@@ -27,6 +27,18 @@
 - **路径**：`/api/sms/check-verify-code`
 - **说明**：校验用户输入验证码是否有效
 
+### 3) 初始化用户表（数据库）
+
+- **方法**：`POST`
+- **路径**：`/api/users/init-schema`
+- **说明**：初始化数据库最小用户表结构（`users`）
+
+### 4) 创建用户（数据库）
+
+- **方法**：`POST`
+- **路径**：`/api/users/create`
+- **说明**：创建最小用户记录，用于数据库联调
+
 前端联调详细说明见 [docx/短信验证接口联调文档.md](../docx/短信验证接口联调文档.md)。
 
 ## 环境要求
@@ -130,6 +142,12 @@ npm install --production
 | `HOST` | 监听地址（服务器上建议 `0.0.0.0`） | `0.0.0.0` |
 | `ALIBABA_CLOUD_ACCESS_KEY_ID` | 阿里云访问密钥 ID（短信服务必需） | - |
 | `ALIBABA_CLOUD_ACCESS_KEY_SECRET` | 阿里云访问密钥 Secret（短信服务必需） | - |
+| `DB_HOST` | MySQL 主机地址 | - |
+| `DB_PORT` | MySQL 端口 | `3306` |
+| `DB_USER` | MySQL 用户名 | - |
+| `DB_PASSWORD` | MySQL 密码 | - |
+| `DB_NAME` | MySQL 数据库名 | - |
+| `DB_CONNECTION_LIMIT` | 数据库连接池上限 | `10` |
 | `NODE_ENV` | `production` 时可用于收紧 CORS、日志等 | - |
 
 在服务器上可通过系统环境变量或 `.env`（配合 `dotenv`）配置。
@@ -179,6 +197,12 @@ ALIBABA_CLOUD_ACCESS_KEY_ID=你的AccessKeyId
 ALIBABA_CLOUD_ACCESS_KEY_SECRET=你的AccessKeySecret
 PORT=3000
 HOST=0.0.0.0
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=carpooling
+DB_CONNECTION_LIMIT=10
 ```
 
 > `backend/.env` 里的具体敏感配置请找陈柯获取；该文件已被 `.gitignore` 忽略，禁止提交到远程仓库。
@@ -197,7 +221,14 @@ backend/
 │   ├── service/
 │   │   └── aliyun-sms-service.js    # 阿里云短信业务调用
 │   ├── dao/                         # 数据访问层（预留）
+│   │   └── users-dao.js             # 用户表数据访问
 │   ├── middleware/                  # 中间件层（预留）
+│   ├── controller/
+│   │   └── users-controller.js      # 用户控制层
+│   ├── service/
+│   │   └── users-service.js         # 用户业务层
+│   ├── router/
+│   │   └── users-router.js          # 用户路由
 │   ├── utils/
 │   │   └── response.js              # 标准响应封装与 requestId 生成
 │   ├── constants/                   # 常量层（预留）
