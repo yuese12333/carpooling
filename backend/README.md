@@ -53,8 +53,8 @@ cp .env.example .env
 |---|------|------|------|
 | 1 | POST | `/api/sms/send-verify-code` | 发送短信验证码 |
 | 2 | POST | `/api/sms/check-verify-code` | 校验短信验证码 |
-| 3 | POST | `/api/users/init-schema` | 初始化 `users` 表（`CREATE TABLE IF NOT EXISTS`） |
-| 4 | POST | `/api/users/create` | 创建用户（联调/最小用户数据） |
+| 3 | POST | `/api/users/init-schema` | 初始化 `auth_users` 表（`CREATE TABLE IF NOT EXISTS`） |
+| 4 | POST | `/api/users/create` | 创建登录用户（写入 `auth_users`） |
 | 5 | POST | `/api/auth/login/password` | 用户密码登录（返回 access/refresh token） |
 
 ### 用户接口补充
@@ -78,11 +78,12 @@ cp .env.example .env
 ```json
 {
   "phone": "13812341234",
-  "nickname": "张三"
+  "nickname": "张三",
+  "password": "your_password"
 }
 ```
 
-校验：`phone` 为字符串、11 位数字且以 `1` 开头；`nickname` 为字符串、长度 1～50。  
+校验：`phone`（或 `phoneNumber`）为字符串、11 位数字且以 `1` 开头；`nickname`（或 `userName`）为字符串长度 1～50；`password` 长度 6～128。  
 HTTP **201** 创建成功，响应 `code` 仍为 200 包装体；手机号已存在时 **409**，`data.reason` 为 `PHONE_ALREADY_EXISTS`。
 
 ### 认证接口补充
@@ -102,7 +103,7 @@ HTTP **201** 创建成功，响应 `code` 仍为 200 包装体；手机号已存
 说明：`rememberMe=true` 时 token 有效期更长；成功返回 `token`、`refreshToken`、`userId`、`userName`、`avatarUrl`、`expireIn`。  
 失败场景：手机号或密码错误返回 **401**。
 
-> 注意：当前版本不再自动播种默认登录账号。首次联调前请先在数据库 `auth_users` 表中插入测试账号（`password_hash` 支持 sha256 或 bcrypt），例如：
+> 注意：当前版本注册接口与登录接口共用 `auth_users` 表。调用 `/api/users/create` 创建的账号可直接用于 `/api/auth/login/password` 登录。
 >
 > ```sql
 > INSERT INTO auth_users (user_id, phone, password_hash, user_name, avatar_url)
@@ -128,18 +129,9 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 
 服务启动后调用 **`POST /api/users/init-schema`**（或用 Postman/Apifox）。生产环境建议由迁移脚本或受控运维执行，勿长期依赖公网任意访问该接口。
 
-### `users` 表字段
+### `auth_users` 表字段（注册/登录统一）
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | BIGINT UNSIGNED | 主键，自增 |
-| phone | VARCHAR(20) | 手机号，唯一 |
-| nickname | VARCHAR(50) | 昵称 |
-| created_at / updated_at | TIMESTAMP | 创建 / 更新时间 |
-
-### `auth_users` 表字段（登录鉴权）
-
-> 说明：登录接口 `POST /api/auth/login/password` 使用 `auth_users` 表，不依赖 `users` 表中的昵称数据。
+> 说明：注册接口 `POST /api/users/create` 与登录接口 `POST /api/auth/login/password` 均使用 `auth_users` 表。
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
