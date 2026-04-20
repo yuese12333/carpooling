@@ -10,7 +10,6 @@ import { User, Phone, ShieldCheck } from "lucide-react-native";
 import { Input } from "@/components/input";
 import { Button } from "@/components/button";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 import styles, { COLORS } from "../register.style";
 import { RegistrationFormData } from '@/hooks/use-register-form';
 
@@ -21,6 +20,7 @@ import { RegistrationFormData } from '@/hooks/use-register-form';
  * @property {any} actions - 外部传入的行为处理函数集合
  */
 interface StepInfoFormProps {
+    requestId: string;
     state: {
         formData: {
             nickname: string;
@@ -38,9 +38,8 @@ interface StepInfoFormProps {
     };
 }
 
-export const StepInfoForm: React.FC<StepInfoFormProps> = ({ state, actions }) => {
-    // 从全局 Store 获取唯一的 RequestId，确保链路一致性
-    const currentRequestId = useEnvStore.getState().currentRequestId;
+export const StepInfoForm: React.FC<StepInfoFormProps> = ({ requestId, state, actions }) => {
+    const currentRequestId = requestId;
 
     /**
      * 处理验证码发送点击
@@ -161,3 +160,5 @@ export const StepInfoForm: React.FC<StepInfoFormProps> = ({ state, actions }) =>
         </View>
     );
 };
+
+export default StepInfoForm;

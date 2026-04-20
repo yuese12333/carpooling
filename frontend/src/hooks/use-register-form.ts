@@ -22,7 +22,6 @@ import {
     MIN_PASSWORD_LENGTH
 } from '../utils/validator';
 import logger from '../utils/logger';
-import { useEnvStore } from '../store/env-store';
 import { ROUTES } from '../router/paths';
 
 /** 注册表单数据接口 */
@@ -43,12 +42,9 @@ const COUNTDOWN_INITIAL = 60;
  * @param {(...args: any[]) => Promise<void>} registerLocal - 本地存储注册信息的外部回调
  * @returns 包含状态（state）与动作（actions）的响应式对象
  */
-export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: any[]) => Promise<void>) => {
+export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: any[]) => Promise<void>, requestId: string) => {
     const router = useRouter();
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-    // 从 Store 自动化获取链路 ID
-    const getRequestId = () => useEnvStore.getState().currentRequestId;
 
     // --- 状态管理 ---
     const [currentStep, setCurrentStep] = useState<1 | 2>(1);
@@ -88,8 +84,6 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
         }
 
         setIsLoading(true);
-        const requestId = getRequestId();
-
         try {
             const success = await sendSmsCode(formData.phoneNumber, isMockMode);
 
@@ -142,7 +136,6 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
         }
 
         setIsLoading(true);
-        const requestId = getRequestId();
 
         try {
             // 校验昵称可用性
@@ -198,7 +191,6 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
         }
 
         setIsLoading(true);
-        const requestId = getRequestId();
 
         try {
             const registerParams: RegisterRequest = {

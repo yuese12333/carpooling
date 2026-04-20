@@ -101,3 +101,5 @@ export const StepVerifyOtp: React.FC<StepVerifyOtpProps> = ({
         </View>
     );
 };
+
+export default StepVerifyOtp;

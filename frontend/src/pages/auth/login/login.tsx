@@ -5,7 +5,7 @@
  * 遵循全链路日志追踪规范，作为 RequestId 的生命周期起点。
  */
 
-import React, { useMemo, useState, useCallback, useEffect, JSX } from 'react';
+import React, { useMemo, useState, useCallback, useEffect, useRef, JSX } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -74,12 +74,17 @@ export default function LoginPage(): JSX.Element {
   const [pageConfig, setPageConfig] = useState<PageConfig | null>(null);
   const [isConfigLoading, setIsConfigLoading] = useState<boolean>(true);
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
+  const lastInitLogKeyRef = useRef<string>('');
+  const lastConfigLoadKeyRef = useRef<string>('');
 
   /**
    * 初始化页面链路追踪
    * 在组件挂载时将生成的 requestId 注入全局状态仓库，供拦截器与 Hook 使用
    */
   useEffect(() => {
+    const initLogKey = `${requestId}|${String(isMockMode)}`;
+    if (lastInitLogKeyRef.current === initLogKey) return;
+    lastInitLogKeyRef.current = initLogKey;
 
     // 记录页面初始化日志
     logger.info({
@@ -97,6 +102,10 @@ export default function LoginPage(): JSX.Element {
    * @returns {Promise<void>}
    */
   const loadPageConfig = useCallback(async (): Promise<void> => {
+    const loadKey = `${requestId}|${String(isMockMode)}`;
+    if (lastConfigLoadKeyRef.current === loadKey) return;
+    lastConfigLoadKeyRef.current = loadKey;
+
     setIsConfigLoading(true);
     try {
       const data = await fetchLoginConfig(isMockMode);

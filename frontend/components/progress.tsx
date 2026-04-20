@@ -3,7 +3,7 @@
  * @description 高性能进度条组件。支持响应式动画、暗黑模式感知，并具备完善的 UI 生命周期日志记录。
  */
 
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -81,22 +81,6 @@ export const Progress: React.FC<ProgressProps> = ({
     }
     return Math.min(Math.max(value, 0), 100);
   }, [value, moduleName]);
-
-  /**
-   * 生命周期日志
-   */
-  useEffect(() => {
-    const requestId = useEnvStore.getState().currentRequestId;
-    logger.info({
-      module: moduleName,
-      operate: "mount",
-      params: { value: safeValue },
-      result: undefined,
-      error: undefined,
-      errorType: undefined,
-      requestId: requestId,
-    });
-  }, []);
 
   // 1. 驱动动画：使用纯数值并引用静态配置
   const animatedWidth = useDerivedValue(() => {

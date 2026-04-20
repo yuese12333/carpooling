@@ -7,7 +7,6 @@ import * as React from "react";
 import { View, Text, StyleSheet, type ViewProps, type TextProps } from "react-native";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../src/utils";
-import logger from "../src/utils/logger";
 
 const alertVariants = cva(
   "relative w-full rounded-xl border p-4 flex-row items-start",
@@ -36,15 +35,6 @@ export interface AlertProps extends ViewProps, VariantProps<typeof alertVariants
  * 告警提示根组件
  */
 export function Alert({ className, variant, icon, children, ...props }: AlertProps) {
-  // 记录组件挂载日志
-  React.useEffect(() => {
-    logger.info({
-      module: 'Alert',
-      operate: 'mount',
-      params: { variant: variant || 'default' }
-    });
-  }, [variant]);
-
   return (
     <View
       className={cn(alertVariants({ variant }), className)}

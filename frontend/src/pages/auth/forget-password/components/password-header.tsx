@@ -62,3 +62,5 @@ export const PasswordHeader: React.FC<PasswordHeaderProps> = ({ step, onBack, ti
         )}
     </View>
 );
+
+export default PasswordHeader;

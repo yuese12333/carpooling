@@ -8,7 +8,6 @@
 import * as React from "react";
 import { View, StyleSheet, type ViewProps } from "react-native";
 import { cn } from "../src/utils";
-import logger from "../src/utils/logger";
 
 /**
  * Separator 组件属性接口
@@ -41,17 +40,7 @@ export const Separator = React.forwardRef<View, SeparatorProps>(
     },
     ref
   ) => {
-
-    // 1. 生命周期审计日志：记录组件挂载
-    React.useEffect(() => {
-      logger.info({
-        module: "Separator",
-        operate: "mount",
-        params: { orientation, decorative }
-      });
-    }, [orientation, decorative]);
-
-    // 2. 性能感知：根据方向缓存样式对象
+    // 性能感知：根据方向缓存样式对象
     const orientationStyle = React.useMemo(() => {
       return orientation === "horizontal" ? styles.horizontal : styles.vertical;
     }, [orientation]);

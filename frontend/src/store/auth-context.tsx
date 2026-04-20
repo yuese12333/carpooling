@@ -38,13 +38,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const MOCK_USER: User = {
-    id: "u1",
-    name: "李小明",
-    phone: "13888888888",
-    avatar:
-        "https://images.unsplash.com/photo-1605504836193-e77d3d9ede8a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGluZXNlJTIwbWFuJTIwcG9ydHJhaXQlMjBhdmF0YXJ8ZW58MXx8fHwxNzczOTcyNDA3fDA&ixlib=rb-4.1.0&q=80&w=400",
-};
+const MOCK_USER: User | null = __DEV__
+    ? {
+          id: "u1",
+          name: "李小明",
+          phone: "13888888888",
+          avatar:
+              "https://images.unsplash.com/photo-1605504836193-e77d3d9ede8a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGluZXNlJTIwbWFuJTIwcG9ydHJhaXQlMjBhdmF0YXJ8ZW58MXx8fHwxNzczOTcyNDA3fDA&ixlib=rb-4.1.0&q=80&w=400",
+      }
+    : null;
 
 const STORAGE_KEY = "carpooling_auth";
 
@@ -57,14 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isReady, setIsReady] = useState(false);
 
-    // 从 Store 获取全局唯一 RequestId
-    const currentRequestId = useEnvStore.getState().currentRequestId;
-
     useEffect(() => {
-        /**
-         * 初始化时从本地存储恢复用户状态
-         */
         const loadStorageData = async () => {
+            const currentRequestId = useEnvStore.getState().currentRequestId;
             try {
                 const stored = await AsyncStorage.getItem(STORAGE_KEY);
                 if (stored) {
@@ -87,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
 
         loadStorageData();
-    }, [currentRequestId]);
+    }, []);
 
     /**
      * 执行用户登录逻辑
@@ -97,7 +94,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const login = async (phone: string, password: string) => {
         const requestId = useEnvStore.getState().currentRequestId;
         try {
-            // 模拟 API 调用延迟
+            // 模拟 API 调用延迟（仅 Dev 环境）
+            if (!__DEV__ || !MOCK_USER) {
+                throw new Error("login API not implemented");
+            }
             await new Promise((res) => setTimeout(res, 1000));
 
             const loggedUser = { ...MOCK_USER, phone };
@@ -137,6 +137,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const register = async (name: string, phone: string, password: string) => {
         const requestId = useEnvStore.getState().currentRequestId;
         try {
+            if (!__DEV__ || !MOCK_USER) {
+                throw new Error("register API not implemented");
+            }
             await new Promise((res) => setTimeout(res, 1000));
 
             const newUser = { ...MOCK_USER, name, phone };

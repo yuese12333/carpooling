@@ -9,7 +9,6 @@ import * as React from "react";
 import { Text, StyleSheet, type TextProps } from "react-native";
 import { cssInterop } from "nativewind";
 import { cn } from "../src/utils";
-import logger from "../src/utils/logger";
 
 // 映射 NativeWind 属性
 cssInterop(Text, { className: "style" });
@@ -30,17 +29,7 @@ export interface LabelProps extends TextProps {
  */
 export const Label = React.forwardRef<Text, LabelProps>(
   ({ className, disabled = false, style, ...props }, ref) => {
-
-    // 1. 生命周期审计日志
-    React.useEffect(() => {
-      logger.info({
-        module: "Label",
-        operate: "mount",
-        params: { disabled }
-      });
-    }, [disabled]);
-
-    // 2. 性能感知：缓存样式计算
+    // 性能感知：缓存样式计算
     const labelStyle = React.useMemo(() => {
       return [
         styles.base,
