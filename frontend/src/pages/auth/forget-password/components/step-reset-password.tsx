@@ -6,10 +6,11 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Lock, Eye, EyeOff } from "lucide-react-native";
-import styles, { COLORS } from '../forget-password.style';
+import forgetPasswordStyles, { COLORS } from '../forget-password.style';
 import { Button } from "@/../components/button";
 import { Label } from "@/../components/label";
 import { Progress } from "@/../components/progress";
+import { MIN_PASSWORD_LENGTH } from '@/utils/validator';
 
 /** 强度信息接口定义 */
 interface StrengthInfo {
@@ -70,17 +71,17 @@ export const StepResetPassword: React.FC<StepResetPasswordProps> = ({
     onSubmit,
     strengthInfo
 }) => (
-    <View style={styles.fullWidth}>
+    <View style={forgetPasswordStyles.fullWidth}>
         {/* 新密码输入区块 */}
-        <View style={styles.inputGroup}>
-            <Label style={styles.label}>新密码</Label>
-            <View style={[styles.inputWrapper, errors.password && styles.inputError]}>
-                <Lock size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+        <View style={forgetPasswordStyles.inputGroup}>
+            <Label style={forgetPasswordStyles.label}>新密码</Label>
+            <View style={[forgetPasswordStyles.inputWrapper, errors.password && forgetPasswordStyles.inputError]}>
+                <Lock size={18} color={COLORS.textPlaceholder} style={forgetPasswordStyles.inputIcon} />
                 <TextInput
                     secureTextEntry={!showPwd}
-                    placeholder="设置新密码（至少6位）"
+                    placeholder={`设置新密码（至少${MIN_PASSWORD_LENGTH}位）`}
                     placeholderTextColor={COLORS.textPlaceholder}
-                    style={styles.input}
+                    style={forgetPasswordStyles.input}
                     value={password}
                     onChangeText={onPasswordChange}
                     autoCapitalize="none"
@@ -100,29 +101,29 @@ export const StepResetPassword: React.FC<StepResetPasswordProps> = ({
 
             {/* 密码强度动态指示器 */}
             {password.length > 0 && (
-                <View style={styles.strengthContainer}>
+                <View style={forgetPasswordStyles.strengthContainer}>
                     <Progress
                         value={pwdStrength}
-                        style={[styles.progressBase, { backgroundColor: strengthInfo.color }]}
+                        style={[forgetPasswordStyles.progressBase, { backgroundColor: strengthInfo.color }]}
                     />
-                    <Text style={[styles.strengthText, { color: strengthInfo.textColor }]}>
+                    <Text style={[forgetPasswordStyles.strengthText, { color: strengthInfo.textColor }]}>
                         安全性：{strengthInfo.text}
                     </Text>
                 </View>
             )}
-            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            {errors.password && <Text style={forgetPasswordStyles.errorText}>{errors.password}</Text>}
         </View>
 
         {/* 确认密码输入区块 */}
-        <View style={styles.inputGroup}>
-            <Label style={styles.label}>确认新密码</Label>
-            <View style={[styles.inputWrapper, errors.confirmPwd && styles.inputError]}>
-                <Lock size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
+        <View style={forgetPasswordStyles.inputGroup}>
+            <Label style={forgetPasswordStyles.label}>确认新密码</Label>
+            <View style={[forgetPasswordStyles.inputWrapper, errors.confirmPwd && forgetPasswordStyles.inputError]}>
+                <Lock size={18} color={COLORS.textPlaceholder} style={forgetPasswordStyles.inputIcon} />
                 <TextInput
                     secureTextEntry={!showConfirm}
                     placeholder="再次输入以确认"
                     placeholderTextColor={COLORS.textPlaceholder}
-                    style={styles.input}
+                    style={forgetPasswordStyles.input}
                     value={confirmPwd}
                     onChangeText={onConfirmPwdChange}
                     autoCapitalize="none"
@@ -139,16 +140,18 @@ export const StepResetPassword: React.FC<StepResetPasswordProps> = ({
                     )}
                 </TouchableOpacity>
             </View>
-            {errors.confirmPwd && <Text style={styles.errorText}>{errors.confirmPwd}</Text>}
+            {errors.confirmPwd && <Text style={forgetPasswordStyles.errorText}>{errors.confirmPwd}</Text>}
         </View>
 
         {/* 提交动作按钮 */}
         <Button
             onPress={onSubmit}
             loading={loading}
-            style={styles.submitBtn}
+            style={forgetPasswordStyles.submitBtn}
         >
             保存设置
         </Button>
     </View>
 );
+
+export default StepResetPassword;

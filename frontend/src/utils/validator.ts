@@ -4,21 +4,11 @@
  * 遵循规范：1.3.2 函数注释规范。
  */
 
-import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
-
 // --- 常量定义 ---
 
 export const MIN_PASSWORD_LENGTH = 8;
 export const MAX_PASSWORD_LENGTH = 20;
 export const VERIFY_CODE_LENGTH = 6;
-
-// --- 内部辅助函数 ---
-
-/**
- * 获取当前链路追踪 ID
- */
-const getContextRequestId = (): string => useEnvStore.getState().currentRequestId || 'internal-auto-gen';
 
 /**
  * 校验手机号格式是否合法
@@ -125,17 +115,6 @@ export const calculatePasswordStrength = (password: string): number => {
 
   // 维度 4: 包含特殊字符
   if (/[^A-Za-z0-9]/.test(password)) score += 25;
-
-  // 关键节点审计（仅记录结果，严禁记录 params.password）
-  if (score > 0) {
-    logger.info({
-      module: 'utils-validator',
-      operate: 'calculatePasswordStrength',
-      params: { passwordLength: password.length },
-      result: `Score: ${score}`,
-      requestId: getContextRequestId()
-    });
-  }
 
   return score;
 };

@@ -11,7 +11,6 @@ import { Input } from "@/components/input";
 import { Button } from "@/components/button";
 import { Progress } from "@/components/progress";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 import styles, { COLORS } from "../register.style";
 import { RegistrationFormData } from '@/hooks/use-register-form';
 
@@ -20,6 +19,7 @@ import { RegistrationFormData } from '@/hooks/use-register-form';
  * @description 密码表单组件属性定义
  */
 interface StepPasswordFormProps {
+    requestId: string;
     state: {
         formData: {
             password: string;
@@ -41,9 +41,8 @@ interface StepPasswordFormProps {
     };
 }
 
-export const StepPasswordForm: React.FC<StepPasswordFormProps> = ({ state, actions }) => {
-    // 强制获取全局链路 ID，严禁在此 generate
-    const currentRequestId = useEnvStore.getState().currentRequestId;
+export const StepPasswordForm: React.FC<StepPasswordFormProps> = ({ requestId, state, actions }) => {
+    const currentRequestId = requestId;
 
     /**
      * 切换协议勾选状态
@@ -169,3 +168,5 @@ export const StepPasswordForm: React.FC<StepPasswordFormProps> = ({ state, actio
         </View>
     );
 };
+
+export default StepPasswordForm;

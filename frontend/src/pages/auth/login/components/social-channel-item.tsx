@@ -52,3 +52,5 @@ export function SocialChannelItem({
         </View>
     );
 }
+
+export default SocialChannelItem;

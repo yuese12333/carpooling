@@ -7,7 +7,6 @@ import * as React from "react";
 import { Pressable, Text, ActivityIndicator, type GestureResponderEvent } from "react-native";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../src/utils";
-import logger from "../src/utils/logger";
 
 const buttonVariants = cva(
   "flex-row items-center justify-center rounded-md active:opacity-70 disabled:opacity-50",
@@ -66,18 +65,12 @@ export const Button = React.forwardRef<React.ElementRef<typeof Pressable>, Butto
     const handlePress = React.useCallback((event: GestureResponderEvent) => {
       if (loading || disabled) return;
 
-      logger.info({
-        module: 'Button',
-        operate: 'press',
-        params: { variant: variant || 'default', size: size || 'default' }
-      });
-
       if (onPress) {
         onPress(event);
       } else if (onClick) {
         onClick();
       }
-    }, [onPress, onClick, loading, disabled, variant, size]);
+    }, [onPress, onClick, loading, disabled]);
 
     // 缓存样式计算结果
     const containerStyle = React.useMemo(() =>

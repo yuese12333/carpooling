@@ -1,6 +1,6 @@
 /**
  * @file step-success.tsx
- * @description 找回密码流程第四步：重置成功反馈组件。包含成功动效装饰及自动跳转逻辑。
+ * @description 找回密码流程第四步：重置成功反馈组件。展示成功状态及装饰点布局。
  */
 
 import React, { useEffect } from 'react';
@@ -37,7 +37,7 @@ export const StepSuccess: React.FC = () => {
             <Text style={styles.successTitle}>设置成功</Text>
             <Text style={styles.successSubtitle}>您的账号安全信息已更新，即将跳转。</Text>
 
-            {/* 动画装饰点布局 */}
+            {/* 装饰点布局 */}
             <View style={styles.dotContainer}>
                 <View style={styles.dot} />
                 <View style={[styles.dot, styles.dotOpacity6]} />
@@ -46,3 +46,5 @@ export const StepSuccess: React.FC = () => {
         </View>
     );
 };
+
+export default StepSuccess;

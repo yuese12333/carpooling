@@ -4,10 +4,10 @@
  */
 
 import React, { useMemo, useEffect } from "react";
-import { View, SafeAreaView, KeyboardAvoidingView, Platform } from "react-native";
+import { View, KeyboardAvoidingView, Platform } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { ROUTES } from '@/router/paths';
-import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
+import logger, { generateRequestId } from '@/utils/logger';
 import styles, { COLORS } from './forget-password.style';
 import { useForgetPasswordForm } from "@/hooks/use-forget-password-form";
 
@@ -18,8 +18,8 @@ import { StepResetPassword } from './components/step-reset-password';
 import { StepSuccess } from './components/step-success';
 
 export default function ForgetPasswordPage() {
-  const requestId = useEnvStore.getState().currentRequestId;
-  const form = useForgetPasswordForm();
+  const requestId = useMemo(() => generateRequestId(), []);
+  const form = useForgetPasswordForm(requestId);
 
   useEffect(() => {
     // Page 层负责业务流程起点的 info 日志记录

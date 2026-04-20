@@ -9,10 +9,10 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Check } from "lucide-react-native";
 
@@ -65,27 +65,26 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ active, isCompleted, labe
 export default function RegisterPage() {
   const router = useRouter();
   const { register } = useAuth();
-  const { isMockMode, setCurrentRequestId } = useEnvStore();
+  const { isMockMode } = useEnvStore();
 
   /**
    * 链路追踪初始化
-   * 遵循规范：Page 入口层 generateRequestId，并显式同步至全局 Store
+   * 遵循规范：Page 入口层 generateRequestId，仅用于本页面日志，不覆盖全局 Store
    */
   const requestId = useMemo(() => generateRequestId(), []);
 
   useEffect(() => {
-    setCurrentRequestId(requestId);
     logger.info({
       module: 'Register',
       operate: 'PAGE_ENTRY',
       params: { isMockMode, platform: Platform.OS },
       requestId: requestId
     });
-  }, [requestId, isMockMode, setCurrentRequestId]);
+  }, [requestId, isMockMode]);
 
   // --- 状态管理 ---
   // 获取强类型的 state 与 actions
-  const { state, actions } = useRegisterForm(isMockMode, register);
+  const { state, actions } = useRegisterForm(isMockMode, register, requestId);
 
   /**
    * 处理导航回退逻辑
@@ -128,7 +127,7 @@ export default function RegisterPage() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flexOne}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
+        <ScrollView contentContainerStyle={styles.scrollContent} bounces={false} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <TouchableOpacity
               onPress={handleBackPress}
@@ -178,9 +177,9 @@ export default function RegisterPage() {
               与 useRegisterForm 返回的泛型方法完全一致。
             */}
             {state.currentStep === 1 ? (
-              <StepInfoForm state={state} actions={actions} />
+              <StepInfoForm requestId={requestId} state={state} actions={actions} />
             ) : (
-              <StepPasswordForm state={state} actions={actions} />
+              <StepPasswordForm requestId={requestId} state={state} actions={actions} />
             )}
           </View>
 

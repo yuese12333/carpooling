@@ -7,7 +7,6 @@ import { Alert, TextInput } from "react-native";
 import { useRouter } from 'expo-router';
 import { passwordApi } from '../api/password-api';
 import logger from "@/utils/logger";
-import { useEnvStore } from '@/store/env-store';
 import {
     validatePhoneNumber,
     validatePassword,
@@ -22,10 +21,8 @@ type Step = 1 | 2 | 3 | 4;
  * 找回密码业务逻辑封装 Hook
  * @returns 包含表单状态、引用、及业务处理函数
  */
-export const useForgetPasswordForm = () => {
+export const useForgetPasswordForm = (requestId: string) => {
     const router = useRouter();
-    // 获取全局链路跟踪 ID
-    const requestId = useEnvStore.getState().currentRequestId;
 
     // --- 状态管理 ---
     const [step, setStep] = useState<Step>(1);

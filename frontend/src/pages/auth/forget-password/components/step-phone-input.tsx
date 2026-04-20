@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text, TextInput, ActivityIndicator, } from 'react-native';
 import { Phone } from "lucide-react-native";
-import styles, { COLORS } from '../forget-password.style';
+import forgetPasswordStyles, { COLORS } from '../forget-password.style';
 import { Button } from "@/../components/button";
 import { Label } from "@/../components/label";
 
@@ -33,33 +33,35 @@ export const StepPhoneInput: React.FC<StepPhoneInputProps> = ({
     onChangePhone,
     onSubmit
 }) => (
-    <View style={styles.fullWidth}>
-        <Label style={styles.label}>手机号码</Label>
-        <View style={[styles.inputWrapper, error && styles.inputError]}>
-            <Phone size={18} color={COLORS.textPlaceholder} style={styles.inputIcon} />
-            <Text style={styles.prefix}>+86</Text>
+    <View style={forgetPasswordStyles.fullWidth}>
+        <Label style={forgetPasswordStyles.label}>手机号码</Label>
+        <View style={[forgetPasswordStyles.inputWrapper, error && forgetPasswordStyles.inputError]}>
+            <Phone size={18} color={COLORS.textPlaceholder} style={forgetPasswordStyles.inputIcon} />
+            <Text style={forgetPasswordStyles.prefix}>+86</Text>
             <TextInput
                 placeholder="请输入注册手机号"
                 placeholderTextColor={COLORS.textPlaceholder}
-                style={styles.input}
+                style={forgetPasswordStyles.input}
                 keyboardType="phone-pad"
                 maxLength={11}
                 value={phone}
                 onChangeText={onChangePhone}
             />
         </View>
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        {error && <Text style={forgetPasswordStyles.errorText}>{error}</Text>}
 
         <Button
             onPress={onSubmit}
             loading={loading}
-            style={styles.submitBtn}
+            style={forgetPasswordStyles.submitBtn}
         >
             {loading ? (
                 <ActivityIndicator color={COLORS.white} />
             ) : (
-                <Text style={styles.submitBtnText}>下一步</Text>
+                <Text style={forgetPasswordStyles.submitBtnText}>下一步</Text>
             )}
         </Button>
     </View>
 );
+
+export default StepPhoneInput;
