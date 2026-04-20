@@ -190,8 +190,15 @@ export const styles = StyleSheet.create({
         marginTop: 25,
         height: 56,
         borderRadius: 16,
-        backgroundColor: COLORS.primary
+        backgroundColor: COLORS.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
     } as ViewStyle,
+    submitBtnText: {
+        color: COLORS.white, // 确保是白色
+        fontSize: 16,
+        fontWeight: 'bold',
+    } as TextStyle,
     stepHint: {
         fontSize: 14,
         color: COLORS.textMuted,
