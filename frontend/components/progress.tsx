@@ -17,8 +17,6 @@ import Animated, {
   withSpring,
   useDerivedValue,
 } from "react-native-reanimated";
-import logger from "@/utils/logger";
-import { useEnvStore } from '@/store/env-store';
 
 /**
  * @interface ProgressProps
@@ -68,16 +66,7 @@ export const Progress: React.FC<ProgressProps> = ({
    */
   const safeValue = useMemo(() => {
     if (value < 0 || value > 100) {
-      const requestId = useEnvStore.getState().currentRequestId;
-      logger.error({
-        module: moduleName,
-        operate: "value_check",
-        params: { value },
-        result: undefined,
-        error: `Value ${value} is out of range 0-100`,
-        errorType: "VALIDATION_ERROR",
-        requestId: requestId,
-      });
+      console.warn(`[UI_ERROR] [module:${moduleName}] [operate:value_check] [error:Value ${value} is out of range 0-100]`);
     }
     return Math.min(Math.max(value, 0), 100);
   }, [value, moduleName]);
@@ -86,16 +75,7 @@ export const Progress: React.FC<ProgressProps> = ({
    * 生命周期日志
    */
   useEffect(() => {
-    const requestId = useEnvStore.getState().currentRequestId;
-    logger.info({
-      module: moduleName,
-      operate: "mount",
-      params: { value: safeValue },
-      result: undefined,
-      error: undefined,
-      errorType: undefined,
-      requestId: requestId,
-    });
+    console.log(`[UI_LOG] [module:${moduleName}] [operate:mount] [params:{"value":${safeValue}}]`);
   }, []);
 
   // 1. 驱动动画：使用纯数值并引用静态配置

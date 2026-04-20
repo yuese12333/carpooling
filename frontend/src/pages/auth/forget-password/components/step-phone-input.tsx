@@ -3,7 +3,7 @@
  * @description 找回密码第一步：手机号输入与校验。
  */
 import React from 'react';
-import { View, Text, TextInput } from 'react-native';
+import { View, Text, TextInput, ActivityIndicator, } from 'react-native';
 import { Phone } from "lucide-react-native";
 import styles, { COLORS } from '../forget-password.style';
 import { Button } from "@/../components/button";
@@ -55,7 +55,11 @@ export const StepPhoneInput: React.FC<StepPhoneInputProps> = ({
             loading={loading}
             style={styles.submitBtn}
         >
-            下一步
+            {loading ? (
+                <ActivityIndicator color={COLORS.white} />
+            ) : (
+                <Text style={styles.submitBtnText}>下一步</Text>
+            )}
         </Button>
     </View>
 );
