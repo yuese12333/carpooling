@@ -30,3 +30,7 @@ dist/
 .expo/
 web-build/
 *.tsbuildinfo
+
+# 后端上传文件（仅保留目录结构）
+backend/uploads/*
+!backend/uploads/.gitkeep
