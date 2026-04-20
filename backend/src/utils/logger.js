@@ -88,7 +88,8 @@ function formatParams(params) {
   if (!params) return '';
   if (typeof params === 'string') return params;
   try {
-    return Object.entries(params)
+    const masked = maskSensitive(params);
+    return Object.entries(masked)
       .map(([k, v]) => `${k}:${typeof v === 'object' ? JSON.stringify(v) : v}`)
       .join(',');
   } catch {

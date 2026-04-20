@@ -8,6 +8,7 @@ const {
   buildSuccessResponse,
   buildFailureResponse,
 } = require('../utils/response');
+const { logger, maskSensitive } = require('../utils/logger');
 const {
   sendVerifyCode,
   checkVerifyCode,
@@ -20,7 +21,7 @@ const {
  * 异常场景：参数缺失或三方服务失败时返回 4xx/5xx
  */
 async function sendVerifyCodeController(req, res) {
-  const requestId = createRequestId();
+  const requestId = req.headers['x-request-id'] || createRequestId();
 
   try {
     const {
@@ -40,6 +41,13 @@ async function sendVerifyCodeController(req, res) {
     } = req.body || {};
 
     if (!phoneNumber || !signName || !templateCode || !templateParam) {
+      logger.warn({
+        module: 'sms-controller',
+        operate: 'send-verify-code',
+        params: maskSensitive({ phoneNumber }),
+        result: '缺少必要参数',
+        requestId,
+      });
       return res.status(400).json(
         buildFailureResponse(
           400,
@@ -68,6 +76,13 @@ async function sendVerifyCodeController(req, res) {
 
     // 发送失败时不返回 verifyCode，避免验证码被误暴露给前端
     if (!data?.success) {
+      logger.warn({
+        module: 'sms-controller',
+        operate: 'send-verify-code',
+        params: maskSensitive({ phoneNumber }),
+        result: data?.aliyunMessage || '短信发送失败',
+        requestId,
+      });
       return res.status(500).json(
         buildFailureResponse(
           500,
@@ -93,12 +108,28 @@ async function sendVerifyCodeController(req, res) {
       delete dataForClient.verifyCode;
     }
 
+    logger.info({
+      module: 'sms-controller',
+      operate: 'send-verify-code',
+      params: maskSensitive({ phoneNumber }),
+      result: 'SMS sent successfully',
+      requestId,
+    });
+
     return res.json(buildSuccessResponse(dataForClient, requestId));
   } catch (err) {
     const message =
       process.env.NODE_ENV === 'production'
         ? '短信发送失败'
         : err?.message || '短信发送失败';
+    logger.error({
+      module: 'sms-controller',
+      operate: 'send-verify-code',
+      params: maskSensitive({ phoneNumber: req.body?.phoneNumber }),
+      error: message,
+      errorType: err?.name || 'SmsServiceError',
+      requestId,
+    });
     return res.status(500).json(buildFailureResponse(500, message, null, requestId));
   }
 }
@@ -110,12 +141,19 @@ async function sendVerifyCodeController(req, res) {
  * 异常场景：参数缺失或三方服务失败时返回 4xx/5xx
  */
 async function checkVerifyCodeController(req, res) {
-  const requestId = createRequestId();
+  const requestId = req.headers['x-request-id'] || createRequestId();
 
   try {
     const { phoneNumber, verifyCode, schemeName, caseAuthPolicy, outId } = req.body || {};
 
     if (!phoneNumber || !verifyCode) {
+      logger.warn({
+        module: 'sms-controller',
+        operate: 'check-verify-code',
+        params: maskSensitive({ phoneNumber }),
+        result: '缺少必要参数',
+        requestId,
+      });
       return res.status(400).json(
         buildFailureResponse(400, '缺少必要参数：phoneNumber、verifyCode', null, requestId),
       );
@@ -130,6 +168,13 @@ async function checkVerifyCodeController(req, res) {
     });
 
     if (!data?.success) {
+      logger.warn({
+        module: 'sms-controller',
+        operate: 'check-verify-code',
+        params: maskSensitive({ phoneNumber }),
+        result: data?.aliyunMessage || '短信校验失败',
+        requestId,
+      });
       return res.status(500).json(
         buildFailureResponse(
           500,
@@ -146,12 +191,28 @@ async function checkVerifyCodeController(req, res) {
       );
     }
 
+    logger.info({
+      module: 'sms-controller',
+      operate: 'check-verify-code',
+      params: maskSensitive({ phoneNumber }),
+      result: 'Code verified successfully',
+      requestId,
+    });
+
     return res.json(buildSuccessResponse(data, requestId));
   } catch (err) {
     const message =
       process.env.NODE_ENV === 'production'
         ? '短信校验失败'
         : err?.message || '短信校验失败';
+    logger.error({
+      module: 'sms-controller',
+      operate: 'check-verify-code',
+      params: maskSensitive({ phoneNumber: req.body?.phoneNumber }),
+      error: message,
+      errorType: err?.name || 'SmsServiceError',
+      requestId,
+    });
     return res.status(500).json(buildFailureResponse(500, message, null, requestId));
   }
 }

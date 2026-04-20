@@ -5,7 +5,7 @@ const crypto = require('crypto');
  * 出参：string（RN-开头的唯一标识）
  */
 function createRequestId() {
-  return `RN-${crypto.randomUUID()}`;
+  return `BE-${crypto.randomUUID()}`;
 }
 
 /**

@@ -11,7 +11,7 @@ const { logger, maskSensitive } = require('../utils/logger');
 const { initUsersSchema, registerUser } = require('../service/users-service');
 
 async function initUsersSchemaController(req, res) {
-  const requestId = createRequestId();
+  const requestId = req.headers['x-request-id'] || createRequestId();
 
   try {
     const data = await initUsersSchema(requestId);
@@ -35,7 +35,7 @@ async function initUsersSchemaController(req, res) {
 }
 
 async function createUserController(req, res) {
-  const requestId = createRequestId();
+  const requestId = req.headers['x-request-id'] || createRequestId();
 
   try {
     const { phone, nickname } = req.body || {};
