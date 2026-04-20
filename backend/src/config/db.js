@@ -1,5 +1,5 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+// 依赖入口先执行 ./config/load-env；单测或脚本需先 require('./config/load-env')
 
 const requiredEnvVars = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);

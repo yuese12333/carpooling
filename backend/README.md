@@ -40,7 +40,7 @@ cp .env.example .env
 ```
 
 1. 编辑 **`.env`**：至少配置 [环境变量](#环境变量) 中的阿里云 AK/SK 与 `DB_*`（并先在 MySQL 中 [创建数据库](#数据库)）。  
-2. 启动：`npm start` 或 `npm run dev`（监听默认 `0.0.0.0:3000`）。  
+2. 启动：`npm start` 或 `npm run dev`（默认监听 `0.0.0.0:3000`；可通过 `PORT` 覆盖，本项目公网示例常用 `3005`）。  
 3. 探活：`curl http://localhost:3000/health` — 成功时返回 `status: ok` 与 `db_connected: true`；数据库不可用时 HTTP 500，正文为固定文案「数据库暂不可用」（不返回数据库内部错误信息）。  
 4. 建表（联调/首次）：`curl -X POST http://localhost:3000/api/users/init-schema`  
 5. 短信联调说明见 [`docx/短信验证接口联调文档.md`](../docx/短信验证接口联调文档.md)。
@@ -55,6 +55,7 @@ cp .env.example .env
 | 2 | POST | `/api/sms/check-verify-code` | 校验短信验证码 |
 | 3 | POST | `/api/users/init-schema` | 初始化 `users` 表（`CREATE TABLE IF NOT EXISTS`） |
 | 4 | POST | `/api/users/create` | 创建用户（联调/最小用户数据） |
+| 5 | POST | `/api/auth/login/password` | 用户密码登录（返回 access/refresh token） |
 
 ### 用户接口补充
 
@@ -84,6 +85,31 @@ cp .env.example .env
 校验：`phone` 为字符串、11 位数字且以 `1` 开头；`nickname` 为字符串、长度 1～50。  
 HTTP **201** 创建成功，响应 `code` 仍为 200 包装体；手机号已存在时 **409**，`data.reason` 为 `PHONE_ALREADY_EXISTS`。
 
+### 认证接口补充
+
+**`POST /api/auth/login/password`**  
+
+请求体：
+
+```json
+{
+  "phone": "13812345678",
+  "password": "your_password",
+  "rememberMe": false
+}
+```
+
+说明：`rememberMe=true` 时 token 有效期更长；成功返回 `token`、`refreshToken`、`userId`、`userName`、`avatarUrl`、`expireIn`。  
+失败场景：手机号或密码错误返回 **401**。
+
+> 注意：当前版本不再自动播种默认登录账号。首次联调前请先在数据库 `auth_users` 表中插入测试账号（`password_hash` 支持 sha256 或 bcrypt），例如：
+>
+> ```sql
+> INSERT INTO auth_users (user_id, phone, password_hash, user_name, avatar_url)
+> VALUES ('u_demo_1', '13812345678', SHA2('your_password', 256), '测试用户', '')
+> ON DUPLICATE KEY UPDATE user_id = user_id;
+> ```
+
 ---
 
 ## 数据库
@@ -111,6 +137,20 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 | nickname | VARCHAR(50) | 昵称 |
 | created_at / updated_at | TIMESTAMP | 创建 / 更新时间 |
 
+### `auth_users` 表字段（登录鉴权）
+
+> 说明：登录接口 `POST /api/auth/login/password` 使用 `auth_users` 表，不依赖 `users` 表中的昵称数据。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| user_id | VARCHAR(64) | 登录用户 ID，主键 |
+| phone | VARCHAR(20) | 登录手机号，唯一 |
+| password_hash | VARCHAR(255) | 密码哈希（支持 sha256 / bcrypt） |
+| user_name | VARCHAR(50) | 登录展示名 |
+| avatar_url | VARCHAR(255) | 头像 URL |
+| last_login_at | DATETIME | 最近登录时间 |
+| last_login_device_info | TEXT | 最近登录设备信息（JSON 字符串） |
+
 ---
 
 ## 环境变量
@@ -123,6 +163,7 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 |------|------|
 | `ALIBABA_CLOUD_ACCESS_KEY_ID` / `ALIBABA_CLOUD_ACCESS_KEY_SECRET` | 阿里云短信相关能力 |
 | `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` | MySQL |
+| `JWT_SECRET` / `JWT_REFRESH_SECRET` | 登录鉴权签名密钥（后端启动必填） |
 | `PORT` / `HOST` | 服务监听，默认 `3000` / `0.0.0.0` |
 
 **可选**
@@ -156,7 +197,7 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 
 **公网建议**
 
-- 仅对外暴露 **80/443**，反代到本进程（如 `http://127.0.0.1:3000`），由 Nginx/Caddy 提供 HTTPS。  
+- 仅对外暴露 **80/443**，反代到本进程（默认 `http://127.0.0.1:3000`；若你服务跑在 `3005`，请同步修改反代目标），由 Nginx/Caddy 提供 HTTPS。  
 - 使用 PM2 或 systemd 守护进程。  
 - 生产环境按需收紧 **CORS**（当前开发期多为 `origin: true`）。  
 - 探活使用 **`GET /health`**。
@@ -169,11 +210,11 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 backend/
 ├── src/
 │   ├── config/          # db.js 等
-│   ├── router/          # sms-router.js, users-router.js
-│   ├── controller/      # sms-controller.js, users-controller.js
-│   ├── service/         # aliyun-sms-service.js, users-service.js
-│   ├── dao/             # users-dao.js
-│   ├── utils/           # response.js, logger.js
+│   ├── router/          # sms-router.js, users-router.js, auth-router.js
+│   ├── controller/      # sms-controller.js, users-controller.js, auth-controller.js
+│   ├── service/         # aliyun-sms-service.js, users-service.js, auth-service.js
+│   ├── dao/             # users-dao.js, user-dao.js
+│   ├── utils/           # response.js, logger.js, jwt-utils.js, password-utils.js
 │   ├── middleware/      # 预留
 │   ├── constants/       # 预留
 │   └── index.js
