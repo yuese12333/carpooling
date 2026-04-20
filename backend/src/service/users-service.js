@@ -11,21 +11,7 @@ const { logger } = require('../utils/logger');
 
 async function initUsersSchema(requestId) {
   try {
-    logger.info({
-      module: 'users-service',
-      operate: 'init-users-schema',
-      requestId,
-      result: 'Starting schema initialization',
-    });
-
     await ensureUsersTable(requestId);
-
-    logger.info({
-      module: 'users-service',
-      operate: 'init-users-schema',
-      requestId,
-      result: 'Schema initialization completed',
-    });
 
     return { initialized: true };
   } catch (error) {
@@ -42,22 +28,8 @@ async function initUsersSchema(requestId) {
 
 async function registerUser({ phone, nickname }, requestId) {
   try {
-    logger.info({
-      module: 'users-service',
-      operate: 'register-user',
-      requestId,
-      params: { phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'), nickname },
-      result: 'Starting user registration',
-    });
-
     const existed = await findUserByPhone(phone, requestId);
     if (existed) {
-      logger.info({
-        module: 'users-service',
-        operate: 'register-user',
-        requestId,
-        result: 'User already exists',
-      });
       return {
         created: false,
         user: existed,
@@ -81,13 +53,6 @@ async function registerUser({ phone, nickname }, requestId) {
     }
 
     const createdUser = await findUserByPhone(phone, requestId);
-
-    logger.info({
-      module: 'users-service',
-      operate: 'register-user',
-      requestId,
-      result: `User registered successfully with id: ${insertId}`,
-    });
 
     return {
       created: Boolean(insertId),
