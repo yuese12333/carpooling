@@ -8,11 +8,12 @@
 'use strict';
 
 const { logger } = require('../utils/logger');
+const {
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_SIZE,
+} = require('../constants/upload-constants');
 
 const MODULE = 'upload-service';
-
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 /**
  * 函数功能：校验上传文件的合法性
@@ -21,14 +22,14 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
  */
 function validateFile(file, requestId) {
   if (!file) {
-    logger.warn({ module: MODULE, operate: '文件校验', result: '未接收到文件', requestId });
+    logger.warn({ module: MODULE, operate: 'validate-file', result: '未接收到文件', requestId });
     return { valid: false, message: '未接收到文件' };
   }
 
   if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
     logger.warn({
       module: MODULE,
-      operate: '文件校验',
+      operate: 'validate-file',
       params: { mimetype: file.mimetype },
       result: '文件类型不支持',
       requestId,
@@ -39,7 +40,7 @@ function validateFile(file, requestId) {
   if (file.size > MAX_FILE_SIZE) {
     logger.warn({
       module: MODULE,
-      operate: '文件校验',
+      operate: 'validate-file',
       params: { size: file.size },
       result: '文件超过大小限制',
       requestId,
@@ -76,9 +77,9 @@ async function handleUpload(file, requestId) {
 
   logger.info({
     module: MODULE,
-    operate: '文件上传',
+    operate: 'upload-file',
     params: { originalname: file.originalname, size: file.size, mimetype: file.mimetype },
-    result: `上传成功，URL: ${url}`,
+    result: `上传成功，文件名: ${file.filename}`,
     requestId,
   });
 

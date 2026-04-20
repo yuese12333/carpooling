@@ -35,7 +35,7 @@ async function uploadFileController(req, res) {
   } catch (err) {
     logger.error({
       module: MODULE,
-      operate: '文件上传',
+      operate: 'upload-file',
       error: err.message,
       errorType: '服务异常',
       requestId,
