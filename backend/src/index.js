@@ -1,12 +1,13 @@
+// 1) 环境变量 2) 其余模块（部分在加载时即读取 process.env）
+require('./config/load-env');
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
-// 加载 backend/.env（用于 AK/SK 等敏感配置）
-require('dotenv').config();
-
 const smsRouter = require('./router/sms-router');
 const uploadRouter = require('./router/upload-router');
+const authRouter = require('./router/auth-router');
 const usersRouter = require('./router/users-router');
 const pool = require('./config/db');
 const { logger } = require('./utils/logger');
@@ -57,7 +58,7 @@ app.post('/api', (req, res) => {
 });
 
 app.use('/api/sms', smsRouter);
-app.use('/api/upload', uploadRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/upload', uploadRouter);
 
