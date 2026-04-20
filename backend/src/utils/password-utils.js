@@ -33,7 +33,20 @@ async function compare(plainText, hashText) {
   return timingSafeEqualText(encrypted, hashText);
 }
 
+/**
+ * 函数功能：生成 bcrypt 哈希密码
+ * 入参：plainText、saltRounds（可选）
+ * 出参：hash string
+ */
+async function hash(plainText, saltRounds = 10) {
+  if (!plainText || typeof plainText !== 'string' || !plainText.trim()) {
+    throw new Error('密码明文不能为空');
+  }
+  return bcrypt.hash(plainText, saltRounds);
+}
+
 module.exports = {
   compare,
+  hash,
   sha256,
 };

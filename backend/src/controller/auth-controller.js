@@ -9,6 +9,7 @@ const {
   buildSuccessResponse,
   buildFailureResponse,
 } = require('../utils/response');
+const { logger, maskSensitive } = require('../utils/logger');
 
 const CHINA_MAINLAND_PHONE_REGEX = /^1\d{10}$/;
 
@@ -19,19 +20,39 @@ const CHINA_MAINLAND_PHONE_REGEX = /^1\d{10}$/;
  */
 async function loginByPasswordController(req, res) {
   const requestId = createRequestId();
+  const { phone, password, rememberMe } = req.body || {};
 
   try {
-    const { phone, password, rememberMe } = req.body || {};
-
     if (!phone || typeof phone !== 'string' || !CHINA_MAINLAND_PHONE_REGEX.test(phone)) {
+      logger.warn({
+        module: 'auth-controller',
+        operate: 'login-by-password',
+        params: maskSensitive({ phone }),
+        result: '手机号格式不正确',
+        requestId,
+      });
       return res.status(400).json(buildFailureResponse(400, '手机号格式不正确', null, requestId));
     }
 
     if (!password || typeof password !== 'string' || !password.trim()) {
+      logger.warn({
+        module: 'auth-controller',
+        operate: 'login-by-password',
+        params: maskSensitive({ phone }),
+        result: '密码不能为空',
+        requestId,
+      });
       return res.status(400).json(buildFailureResponse(400, '密码不能为空', null, requestId));
     }
 
     if (rememberMe !== undefined && typeof rememberMe !== 'boolean') {
+      logger.warn({
+        module: 'auth-controller',
+        operate: 'login-by-password',
+        params: maskSensitive({ phone }),
+        result: 'rememberMe 必须为布尔值',
+        requestId,
+      });
       return res.status(400).json(buildFailureResponse(400, 'rememberMe 必须为布尔值', null, requestId));
     }
 
@@ -43,6 +64,15 @@ async function loginByPasswordController(req, res) {
         userAgent: req.get('user-agent') || '',
         deviceId: req.get('x-device-id') || '',
       },
+      requestId,
+    });
+
+    logger.info({
+      module: 'auth-controller',
+      operate: 'login-by-password',
+      params: maskSensitive({ phone, rememberMe }),
+      result: 'Login successful',
+      requestId,
     });
 
     return res.json(buildSuccessResponse(data, requestId));
@@ -54,6 +84,25 @@ async function loginByPasswordController(req, res) {
         : process.env.NODE_ENV === 'production'
           ? '登录失败'
           : error?.message || '登录失败';
+
+    const logPayload = {
+      module: 'auth-controller',
+      operate: 'login-by-password',
+      params: maskSensitive({ phone }),
+      requestId,
+    };
+    if (status === 401) {
+      logger.warn({
+        ...logPayload,
+        result: message,
+      });
+    } else {
+      logger.error({
+        ...logPayload,
+        error: message,
+        errorType: error?.name || 'UnknownError',
+      });
+    }
 
     return res.status(status).json(buildFailureResponse(status, message, null, requestId));
   }
