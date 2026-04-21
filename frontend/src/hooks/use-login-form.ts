@@ -10,6 +10,7 @@ import { useRouter, type RelativePathString } from 'expo-router';
 import { validatePhoneNumber, validatePassword } from '../utils/validator';
 import { loginByPassword } from '../api/auth';
 import logger from '../utils/logger';
+import { ROUTES } from '@/router/paths'
 
 /**
  * 登录表单业务逻辑封装钩子
@@ -73,7 +74,7 @@ export const useLoginForm = (isMockMode: boolean, requestId: string) => {
             });
 
             // 登录成功路由跳转
-            router.replace('/home' as RelativePathString);
+            router.replace(ROUTES.HOME);
         } catch (error: any) {
             const errorMessage = error.message || '网络繁忙，请稍后再试';
 
