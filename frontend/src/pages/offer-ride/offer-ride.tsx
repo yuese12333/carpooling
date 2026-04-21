@@ -1,28 +1,30 @@
 /**
  * @file offer-ride.tsx
  * @description 驾驶员发布拼车行程页面。
- * 聚合路线、日期时间、座位价格及备注模块，集成标准化日志链路追踪与原生 Picker 适配。
+ * 遵循生命周期隔离原则，显式注入 requestId 链路，采用标准化日志记录规范。
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Check } from "lucide-react-native";
 import { useRouter } from 'expo-router';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
+// 业务子组件
 import { RouteSection } from "./components/route-section";
 import { DateTimeSection } from "./components/date-time-section";
 import { SeatPriceSection } from "./components/seat-price-section";
 import { NotesSection } from "./components/notes-section";
 import { Button } from "../../../components/button";
 
+// 样式与工具
 import styles, { COLORS } from "./offer-ride.style";
 import { useOfferRideForm } from "@/hooks/use-offer-ride-form";
 import logger from '@/utils/logger';
@@ -32,38 +34,46 @@ const MODULE_NAME = 'OFFER_RIDE_PAGE';
 
 export default function OfferRidePage() {
   const router = useRouter();
-  const { state, actions } = useOfferRideForm();
 
   /**
-   * 动态获取全局唯一 RequestId
-   * @returns {string | undefined}
+   * [规范修复] 显式初始化 RequestId
+   * 遵循生命周期隔离：在 Page 入口处同步生成/获取本次业务流 ID
    */
-  const getRequestId = () => useEnvStore.getState().currentRequestId;
+  const businessRequestId = useMemo(() => {
+    return useEnvStore.getState().currentRequestId || `REQ-${Date.now()}`;
+  }, []);
 
   /**
-   * 页面初始化链路追踪
+   * [规范修复] 将 requestId 显式注入 Hook
+   */
+  const { state, actions } = useOfferRideForm(businessRequestId);
+
+  /**
+   * 页面初始化链路追踪 - 显式注入 requestId
    */
   useEffect(() => {
     logger.info({
       module: MODULE_NAME,
       operate: 'PAGE_ENTER',
-      requestId: getRequestId(),
+      requestId: businessRequestId,
       params: {
         timestamp: Date.now(),
-        platform: Platform.OS
-      }
+        platform: Platform.OS,
+        screen: 'OfferRide'
+      },
+      result: 'SUCCESS'
     });
-  }, []);
+  }, [businessRequestId]);
 
   /**
    * 处理返回交互逻辑
    */
   const handleBack = (): void => {
-    const requestId = getRequestId();
     logger.info({
       module: MODULE_NAME,
       operate: 'NAVIGATE_BACK',
-      requestId
+      requestId: businessRequestId,
+      params: { from: 'OFFER_RIDE' }
     });
     router.back();
   };
@@ -72,14 +82,14 @@ export default function OfferRidePage() {
    * 处理最终发布行程逻辑
    */
   const handlePublish = async (): Promise<void> => {
-    const requestId = getRequestId();
     logger.info({
       module: MODULE_NAME,
       operate: 'TRIGGER_PUBLISH_RIDE',
-      requestId,
+      requestId: businessRequestId,
       params: {
         hasDeparture: !!state.departureLocation,
-        hasDestination: !!state.destinationLocation
+        hasDestination: !!state.destinationLocation,
+        seatCount: state.availableSeats
       }
     });
 
@@ -89,55 +99,49 @@ export default function OfferRidePage() {
       logger.error({
         module: MODULE_NAME,
         operate: 'PUBLISH_RIDE_FAILED',
-        requestId,
+        requestId: businessRequestId,
         error: error instanceof Error ? error.message : String(error),
-        errorType: 'API_SUBMISSION_ERROR'
+        errorType: 'API_SUBMISSION_ERROR',
+        params: undefined // 显式使用 undefined 替代 null
       });
     }
   };
 
   /**
-   * 原生时间选择器变更回调逻辑
-   * @param {DateTimePickerEvent} event - 选择器事件对象
-   * @param {Date} [selectedDate] - 选中的日期对象
+   * 原生时间选择器变更回调
    */
   const onTimeChange = (event: DateTimePickerEvent, selectedDate?: Date): void => {
-    const requestId = getRequestId();
-
-    // 1. 处理用户取消/关闭行为
     if (event.type === 'dismissed') {
       logger.info({
         module: MODULE_NAME,
         operate: 'TIME_PICK_CANCEL',
-        requestId,
+        requestId: businessRequestId,
         params: { eventType: event.type }
       });
       actions.hideTimePicker();
       return;
     }
 
-    // 2. 处理确认选择逻辑
     if (selectedDate) {
       logger.info({
         module: MODULE_NAME,
         operate: 'TIME_PICK_CONFIRM',
-        requestId,
+        requestId: businessRequestId,
         params: {
           eventType: event.type,
-          selectedTime: selectedDate.toLocaleTimeString()
+          selectedTime: selectedDate.toISOString()
         }
       });
       actions.handleTimeConfirm(selectedDate);
     }
 
-    // 3. Android 平台特有逻辑：确认后需手动关闭 Picker 状态
     if (Platform.OS === 'android') {
       actions.hideTimePicker();
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* 头部导航栏 */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -151,8 +155,9 @@ export default function OfferRidePage() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* 1. 路线模块 */}
+        {/* 1. 路线模块 - 显式传递 requestId */}
         <RouteSection
+          requestId={businessRequestId}
           departure={state.departureLocation}
           destination={state.destinationLocation}
           waypointStops={state.waypointStops}
@@ -164,8 +169,9 @@ export default function OfferRidePage() {
           onRemoveStop={actions.handleRemoveStop}
         />
 
-        {/* 2. 时间日期模块 */}
+        {/* 2. 时间日期模块 - 显式传递 requestId */}
         <DateTimeSection
+          requestId={businessRequestId}
           selectedDate={state.selectedDateObj}
           selectedTime={state.selectedTime}
           isCalendarVisible={state.isCalendarVisible}
@@ -174,29 +180,29 @@ export default function OfferRidePage() {
           onToggleCalendar={() => actions.setIsCalendarVisible(!state.isCalendarVisible)}
           onShowTimePicker={actions.showTimePicker}
           onDateSelect={(date: Date) => {
-            const requestId = getRequestId();
             actions.setSelectedDateObj(date);
-
             logger.info({
               module: MODULE_NAME,
               operate: 'SET_DATE_STATE',
-              requestId,
+              requestId: businessRequestId,
               params: { targetDate: date.toISOString() }
             });
           }}
           onRecurringChange={actions.setIsRecurringMode}
         />
 
-        {/* 3. 座位价格模块 */}
+        {/* 3. 座位价格模块 - 显式传递 requestId */}
         <SeatPriceSection
+          requestId={businessRequestId}
           seats={state.availableSeats}
           price={state.pricePerPerson}
           onUpdateSeats={actions.setAvailableSeats}
           onUpdatePrice={actions.setPricePerPerson}
         />
 
-        {/* 4. 备注标签模块 */}
+        {/* 4. 备注标签模块 - 显式传递 requestId */}
         <NotesSection
+          requestId={businessRequestId}
           notes={state.additionalNotes}
           tags={state.presetTags}
           onUpdateNotes={actions.setAdditionalNotes}
@@ -206,7 +212,7 @@ export default function OfferRidePage() {
         <View style={styles.scrollSpacer} />
       </ScrollView>
 
-      {/* 5. 原生时间选择器挂载 (Portal 逻辑) */}
+      {/* 5. 原生时间选择器 */}
       {state.isTimePickerVisible && (
         <DateTimePicker
           value={state.selectedDateObj instanceof Date ? state.selectedDateObj : new Date()}
@@ -217,10 +223,9 @@ export default function OfferRidePage() {
         />
       )}
 
-      {/* 底部固定操作区 */}
       <View style={styles.footer}>
         {state.isPublishingSuccess ? (
-          <View style={styles.successBtn}>
+          <View style={[styles.successBtn, { backgroundColor: COLORS.primary }]}>
             <Check size={20} color="white" style={styles.successIcon} />
             <Text style={styles.publishBtnText}>发布成功！</Text>
           </View>
@@ -228,13 +233,19 @@ export default function OfferRidePage() {
           <Button
             onPress={handlePublish}
             disabled={!state.departureLocation || !state.destinationLocation}
-            className={`w-full py-4 rounded-2xl ${(state.departureLocation && state.destinationLocation)
-                ? "bg-green-500"
-                : "bg-gray-200"
-              }`}
+            // 动态切换背景色
+            style={[
+              styles.publishBtn,
+              {
+                backgroundColor: (state.departureLocation && state.destinationLocation)
+                  ? COLORS.primary
+                  : COLORS.textButtonGrey
+              }
+            ]}
           >
             <Text style={[
               styles.publishBtnText,
+              // 如果禁用状态下文字颜色也需要变，可以在这里加逻辑
               !(state.departureLocation && state.destinationLocation) && styles.disabledText
             ]}>
               发布行程

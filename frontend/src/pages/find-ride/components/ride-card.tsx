@@ -1,16 +1,15 @@
 /**
  * @file ride-card.tsx
- * @description 拼车行程卡片组件，集成交互行为审计与链路追踪
+ * @description 拼车行程卡片组件。
  */
 
-import React from "react";
+import React, { useCallback } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Users, Star, Clock, ChevronRight } from "lucide-react-native";
 import { Avatar, AvatarImage, AvatarFallback } from "@/../components/avatar";
 import { Badge } from "@/../components/badge";
 import styles, { COLORS } from "../find-ride.style";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 /**
  * 行程数据模型（基于 API 实体结构）
@@ -40,6 +39,10 @@ interface RideCardProps {
     ride: RideEntity;
     /** 点击卡片回调 */
     onPress: () => void;
+    /** * [规范注入] 链路追踪请求 ID 
+     * 严禁组件内部隐式获取，必须由父级业务层显式传递
+     */
+    requestId: string | undefined;
 }
 
 /**
@@ -47,7 +50,11 @@ interface RideCardProps {
  * @param {RideCardProps} props 组件属性
  * @returns {JSX.Element | null}
  */
-export const RideCard: React.FC<RideCardProps> = ({ ride, onPress }) => {
+export const RideCard: React.FC<RideCardProps> = ({
+    ride,
+    onPress,
+    requestId
+}) => {
     // 基础防御逻辑
     if (!ride || !ride.driver) {
         return null;
@@ -57,11 +64,10 @@ export const RideCard: React.FC<RideCardProps> = ({ ride, onPress }) => {
 
     /**
      * 处理卡片点击并注入链路审计
+     * [优化] 使用 useCallback 确保引用稳定，显式使用外部注入的 requestId
      */
-    const handlePress = () => {
-        const requestId = useEnvStore.getState().currentRequestId;
-
-        // 记录用户交互行为日志
+    const handlePress = useCallback(() => {
+        // 记录用户交互行为日志：严格遵循统一日志结构
         logger.info({
             module: 'component.rideCard',
             operate: 'clickRideDetail',
@@ -70,13 +76,17 @@ export const RideCard: React.FC<RideCardProps> = ({ ride, onPress }) => {
                 driverName: ride.driver.name,
                 from: ride.from,
                 to: ride.to
-            } as unknown as Record<string, unknown>,
+            },
             result: 'User navigated to ride detail',
-            requestId: requestId
+            requestId: requestId, // 显式消费
+            error: undefined,
+            errorType: undefined
         });
 
-        onPress();
-    };
+        if (typeof onPress === 'function') {
+            onPress();
+        }
+    }, [ride.id, ride.driver.name, ride.from, ride.to, onPress, requestId]);
 
     return (
         <TouchableOpacity
@@ -123,7 +133,7 @@ export const RideCard: React.FC<RideCardProps> = ({ ride, onPress }) => {
                         <View style={styles.priceRow}>
                             <Text style={styles.currencySymbol}>¥</Text>
                             <Text style={styles.priceValue}>{ride.price}</Text>
-                            <Text style={styles.priceUnit}>/人</Text>
+                            <Text style={styles.priceValue}>/人</Text>
                         </View>
                     </View>
                 </View>

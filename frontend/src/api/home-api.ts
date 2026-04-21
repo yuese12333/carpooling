@@ -1,11 +1,11 @@
 /**
  * @file home-api.ts
- * @description 首页相关业务 API 接口定义与实现，包含用户信息、推荐行程及统计数据。
+ * @description 首页相关业务 API 接口实现
  */
 
 import axios, { AxiosResponse } from 'axios';
 import { mockRides, currentUser as mockUser } from "../store/mock-data";
-import { useEnvStore } from '../store/env-store';
+import { useEnvStore } from '../store/env-store'; // 仅用于获取 isMockMode
 import logger from '@/utils/logger';
 
 // --- 类型定义 ---
@@ -50,7 +50,6 @@ interface ApiResponse<T> {
 }
 
 // --- 配置 ---
-// 注意：建议生产环境通过 env 配置文件获取
 const API_BASE_URL = 'https://your-api-domain.com/api';
 
 const api = axios.create({
@@ -58,26 +57,15 @@ const api = axios.create({
     timeout: 10000,
 });
 
-// --- 辅助工具 ---
-
-/**
- * 获取当前的链路 ID
- * @returns {string | undefined}
- */
-const getContextRequestId = (): string | undefined => {
-    return useEnvStore.getState().currentRequestId;
-};
-
 // --- 接口实现 ---
 
 export const HomeService = {
     /**
      * 获取当前登录用户信息
-     * @returns {Promise<UserInfo>}
+     * @param {string} requestId - 显式注入的链路 ID
      */
-    getUserInfo: async (): Promise<UserInfo> => {
+    getUserInfo: async (requestId: string): Promise<UserInfo> => {
         const isMock = useEnvStore.getState().isMockMode;
-        const requestId = getContextRequestId();
 
         try {
             if (isMock) {
@@ -88,17 +76,19 @@ export const HomeService = {
                     verifiedStatus: true
                 };
             }
-            const res: AxiosResponse<ApiResponse<UserInfo>> = await api.get('/home/user-info');
+            const res: AxiosResponse<ApiResponse<UserInfo>> = await api.get('/home/user-info', {
+                headers: { 'X-Request-Id': requestId }
+            });
             return res.data.data;
         } catch (error) {
             logger.error({
                 module: 'HomeService',
                 operate: 'getUserInfo',
-                params: undefined,
+                params: { requestId }, // 记录触发参数
                 result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'API_ERROR',
-                requestId
+                requestId: requestId // 显式绑定
             });
             throw error;
         }
@@ -108,15 +98,13 @@ export const HomeService = {
      * 根据坐标获取推荐行程列表
      * @param {number} lat - 纬度
      * @param {number} lng - 经度
-     * @returns {Promise<RideItem[]>}
+     * @param {string} requestId - 显式注入的链路 ID
      */
-    getRecommendRides: async (lat: number, lng: number): Promise<RideItem[]> => {
+    getRecommendRides: async (lat: number, lng: number, requestId: string): Promise<RideItem[]> => {
         const isMock = useEnvStore.getState().isMockMode;
-        const requestId = getContextRequestId();
 
         try {
             if (isMock) {
-                // 移除 any 转换，通过显式映射确保类型安全
                 return mockRides.map(r => ({
                     id: String(r.id),
                     from: r.from,
@@ -134,7 +122,8 @@ export const HomeService = {
                 }));
             }
             const res: AxiosResponse<ApiResponse<{ list: RideItem[] }>> = await api.get('/rides/recommend', {
-                params: { latitude: lat, longitude: lng, limit: 3 }
+                params: { latitude: lat, longitude: lng, limit: 3 },
+                headers: { 'X-Request-Id': requestId }
             });
             return res.data.data.list;
         } catch (error) {
@@ -145,7 +134,7 @@ export const HomeService = {
                 result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'API_ERROR',
-                requestId
+                requestId: requestId
             });
             throw error;
         }
@@ -153,17 +142,18 @@ export const HomeService = {
 
     /**
      * 获取全站今日统计数据
-     * @returns {Promise<HomeStats>}
+     * @param {string} requestId - 显式注入的链路 ID
      */
-    getStatistics: async (): Promise<HomeStats> => {
+    getStatistics: async (requestId: string): Promise<HomeStats> => {
         const isMock = useEnvStore.getState().isMockMode;
-        const requestId = getContextRequestId();
 
         try {
             if (isMock) {
                 return { todayRidesCount: 12847, totalUsers: 48000, positiveRate: 98 };
             }
-            const res: AxiosResponse<ApiResponse<HomeStats>> = await api.get('/home/statistics');
+            const res: AxiosResponse<ApiResponse<HomeStats>> = await api.get('/home/statistics', {
+                headers: { 'X-Request-Id': requestId }
+            });
             const d = res.data.data;
             return {
                 todayRidesCount: d.todayRidesCount,
@@ -174,11 +164,11 @@ export const HomeService = {
             logger.error({
                 module: 'HomeService',
                 operate: 'getStatistics',
-                params: undefined,
+                params: { requestId },
                 result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'API_ERROR',
-                requestId
+                requestId: requestId
             });
             throw error;
         }
@@ -186,25 +176,26 @@ export const HomeService = {
 
     /**
      * 获取用户未读通知状态
-     * @returns {Promise<boolean>}
+     * @param {string} requestId - 显式注入的链路 ID
      */
-    getUnreadStatus: async (): Promise<boolean> => {
+    getUnreadStatus: async (requestId: string): Promise<boolean> => {
         const isMock = useEnvStore.getState().isMockMode;
-        const requestId = getContextRequestId();
 
         try {
             if (isMock) return true;
-            const res: AxiosResponse<ApiResponse<{ hasUnread: boolean }>> = await api.get('/notifications/unread-status');
+            const res: AxiosResponse<ApiResponse<{ hasUnread: boolean }>> = await api.get('/notifications/unread-status', {
+                headers: { 'X-Request-Id': requestId }
+            });
             return res.data.data.hasUnread;
         } catch (error) {
             logger.error({
                 module: 'HomeService',
                 operate: 'getUnreadStatus',
-                params: undefined,
+                params: { requestId },
                 result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'API_ERROR',
-                requestId
+                requestId: requestId
             });
             throw error;
         }

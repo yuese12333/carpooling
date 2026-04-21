@@ -1,6 +1,6 @@
 /**
  * @file notes-section.tsx
- * @description 拼车发布模块的备注说明区块，支持预设标签快捷输入与标准化日志追踪
+ * @description 拼车发布模块的备注说明区块。
  */
 
 import React from 'react';
@@ -11,12 +11,13 @@ import { Textarea } from "@/components/textarea";
 import { Badge } from "@/components/badge";
 import styles, { COLORS } from "../offer-ride.style";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 /**
  * 备注区块组件属性定义
  */
 interface NotesSectionProps {
+    /** [显式注入] 业务流唯一链路 ID */
+    requestId: string;
     /** 当前备注文本内容 */
     notes: string;
     /** 预设快捷标签列表 */
@@ -34,31 +35,22 @@ const MODULE_NAME = 'NOTES_SECTION';
  * @param {NotesSectionProps} props
  */
 export const NotesSection: React.FC<NotesSectionProps> = ({
+    requestId,
     notes,
     tags,
     onUpdateNotes,
     onAddTag
 }) => {
-    // 全局统一消费 requestId
-    const requestId = useEnvStore.getState().currentRequestId;
 
     /**
      * 处理备注输入变化
-     * 遵循隐私保护原则，仅记录行为和长度，不记录具体文本
+     * 遵循隐私保护原则：仅透传行为，不再在子组件内进行隐式高频日志记录
      */
     const handleNotesChange = (val: string) => {
         onUpdateNotes(val);
 
-        // 仅在文本长度跨越特定阈值或结束输入时记录，避免频繁触发
-        if (val.length % 10 === 0) {
-            logger.info({
-                module: MODULE_NAME,
-                operate: 'UPDATE_NOTES_CONTENT',
-                requestId,
-                params: { length: val.length }, // 严禁泄露用户原始输入内容
-                result: 'SUCCESS'
-            });
-        }
+        // 注意：根据日志分层职责规范，此处高频变更建议由 Page 层在提交时或特定时机记录，
+        // 若业务确需感知，需确保 requestId 链路透明。
     };
 
     /**
@@ -66,13 +58,17 @@ export const NotesSection: React.FC<NotesSectionProps> = ({
      * @param {string} label 标签文本内容
      */
     const handleTagPress = (label: string) => {
+        // 显式链路日志记录
         logger.info({
             module: MODULE_NAME,
             operate: 'APPEND_PRESET_TAG',
-            requestId,
+            requestId: requestId,
             params: { tagLabel: label },
-            result: 'SUCCESS'
+            result: 'SUCCESS',
+            error: undefined,
+            errorType: undefined
         });
+
         onAddTag(label);
     };
 

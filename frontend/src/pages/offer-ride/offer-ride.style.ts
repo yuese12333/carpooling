@@ -28,6 +28,7 @@ export const COLORS = Object.freeze({
     textPrimary: '#1f2937',  // 深灰/黑
     textSecondary: '#4b5563', // 中灰
     textTertiary: '#9ca3af',  // 浅灰
+    textButtonGrey: '#EFEFF4',
     textLight: '#ffffff',     // 白色文字
     textLink: '#10B981',
     textTip: '#166534',
@@ -111,32 +112,31 @@ export default StyleSheet.create({
     timelineContainer: {
         alignItems: 'center',
         marginRight: 12,
-        paddingTop: 18,
-        paddingBottom: 30,
+        paddingTop: 20,
     },
     dotGreen: {
-        width: 10,
-        height: 10,
+        width: 15,
+        height: 15,
         backgroundColor: COLORS.primary,
         borderRadius: 5,
     },
     dotOrange: {
-        width: 10,
-        height: 10,
+        width: 15,
+        height: 15,
         backgroundColor: COLORS.warning,
         borderRadius: 5,
     },
     dotGray: {
-        width: 8,
-        height: 8,
+        width: 9,
+        height: 9,
         borderWidth: 2,
         borderColor: COLORS.borderLight,
         borderRadius: 4,
         backgroundColor: COLORS.card,
     },
     dotGrayLight: {
-        width: 8,
-        height: 8,
+        width: 9,
+        height: 9,
         borderWidth: 1.5,
         borderColor: COLORS.borderExtraLight,
         borderRadius: 4,
@@ -152,7 +152,7 @@ export default StyleSheet.create({
     lineSmall: {
         width: 2,
         backgroundColor: COLORS.border,
-        height: 40,
+        height: 37,
         marginVertical: 4,
     },
     stopTimeline: {
@@ -432,6 +432,14 @@ export default StyleSheet.create({
         padding: 16,
         borderTopWidth: 1,
         borderTopColor: COLORS.border,
+    },
+    publishBtn: {
+        width: '100%',
+        height: 56, // 给定高度或 padding
+        borderRadius: 16,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     successBtn: {
         backgroundColor: COLORS.primary,

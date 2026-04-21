@@ -7,7 +7,6 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { Alert } from "react-native";
 import { useRouter } from 'expo-router';
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 import { myTrips } from "../store/mock-data";
 import { tripsApi } from "../api/trips-api";
 import { ROUTES } from '../router/paths';
@@ -64,12 +63,18 @@ export interface TransformedTrip {
 }
 
 /**
+ * Hook 参数定义：强制显式接收 requestId
+ */
+interface UseTripsFormProps {
+    requestId: string;
+}
+
+/**
  * @description 增强型结构适配器：兼容 Mock 与真实 API 字段。
  * @param item 原始行程数据
  * @returns 统一格式化的行程对象
  */
 const transformApiData = (item: RawTripItem): TransformedTrip => {
-    // 优先采用业务 ID，若不存在则生成带前缀的临时 ID 以满足渲染 Key 要求
     const stableId = item.tripId || item.id || `fallback-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     return {
@@ -85,12 +90,17 @@ const transformApiData = (item: RawTripItem): TransformedTrip => {
             time: item.time || item.ride?.time || '',
             duration: item.duration || item.ride?.duration || '',
             price: item.price || item.ride?.price || 0,
-            driver: item.driverInfo || item.ride?.driver || null,
+            // 修正：严禁使用 null，统一为 undefined
+            driver: item.driverInfo || item.ride?.driver || undefined,
         }
     };
 };
 
-export const useTripsForm = () => {
+/**
+ * @description 行程业务逻辑 Hook
+ * @param {UseTripsFormProps} props 
+ */
+export const useTripsForm = ({ requestId }: UseTripsFormProps) => {
     const router = useRouter();
 
     // 状态定义
@@ -101,11 +111,10 @@ export const useTripsForm = () => {
 
     /**
      * @description 获取行程列表数据
+     * 显式使用注入的 requestId 进行链路透传
      */
     const fetchTrips = useCallback(async () => {
-        const requestId = useEnvStore.getState().currentRequestId;
         const isMockMode = process.env.NODE_ENV === 'development';
-
         setLoading(true);
 
         try {
@@ -114,11 +123,12 @@ export const useTripsForm = () => {
             if (isMockMode) {
                 dataList = (myTrips || []) as RawTripItem[];
             } else {
+                // 链路注入：将 requestId 显式传给 API 层
                 const response = await tripsApi.getList({
                     page: 1,
                     pageSize: 50,
                     role: activeRole === 'all' ? undefined : activeRole
-                });
+                }, requestId);
                 dataList = response.list || [];
             }
 
@@ -129,7 +139,9 @@ export const useTripsForm = () => {
                 module: MODULE_NAME,
                 operate: 'fetchTrips',
                 params: { activeRole, isMock: isMockMode },
-                result: `Successfully loaded ${formatted.length} items`,
+                result: `Loaded ${formatted.length} items`,
+                error: undefined,
+                errorType: undefined,
                 requestId
             });
         } catch (error) {
@@ -137,6 +149,7 @@ export const useTripsForm = () => {
                 module: MODULE_NAME,
                 operate: 'fetchTrips',
                 params: { activeRole },
+                result: undefined,
                 error: error instanceof Error ? error.message : 'Unknown network error',
                 errorType: 'API_FETCH_FAILED',
                 requestId
@@ -145,7 +158,7 @@ export const useTripsForm = () => {
         } finally {
             setLoading(false);
         }
-    }, [activeRole]);
+    }, [activeRole, requestId]);
 
     useEffect(() => {
         fetchTrips();
@@ -171,15 +184,16 @@ export const useTripsForm = () => {
      * @param id 行程ID
      */
     const handleCancelTrip = (id: string) => {
-        const requestId = useEnvStore.getState().currentRequestId;
         logger.info({
             module: MODULE_NAME,
             operate: 'handleCancelTrip',
             params: { tripId: id },
-            result: 'User initiated cancellation',
+            result: 'Cancellation logic triggered',
+            error: undefined,
+            errorType: undefined,
             requestId
         });
-        // 具体的取消 API 调用逻辑在此扩展
+        // 此处应继续透传 requestId 给 cancel API
     };
 
     /**
@@ -188,12 +202,13 @@ export const useTripsForm = () => {
      * @param role 对方角色
      */
     const handleContactAction = (id: string, role: string) => {
-        const requestId = useEnvStore.getState().currentRequestId;
         logger.info({
             module: MODULE_NAME,
             operate: 'handleContactAction',
             params: { tripId: id, targetRole: role },
-            result: 'User initiated contact',
+            result: 'Contact logic triggered',
+            error: undefined,
+            errorType: undefined,
             requestId
         });
     };

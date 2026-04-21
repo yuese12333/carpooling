@@ -1,50 +1,31 @@
 /**
  * @file quick-actions.tsx
  * @description 首页快捷操作区组件，提供找拼车、发布行程及历史行程的快速入口。
+ * 修复项：
+ * 1. 彻底移除从 useEnvStore 隐式读取 requestId 的逻辑。
+ * 2. 强制通过 Props 显式注入 requestId，确保链路透明。
+ * 3. 规范日志上报结构，确保参数化消费。
  */
 
 import React from "react";
 import { View, Text, TouchableOpacity, GestureResponderEvent } from "react-native";
 import { Href } from 'expo-router';
-import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 import styles from "../home.style";
 import { ROUTES } from '@/router/paths';
 
 /**
- * 快捷操作项属性接口
+ * 内部复用的动作单元组件 (原子UI层)
+ * 规范：严禁感知 requestId，不直接记录业务日志
  */
 interface ActionItemProps {
-    /** 显示图标（Emoji 或图标组件） */
     icon: string;
-    /** 操作标题 */
     label: string;
-    /** 操作副标题/描述 */
     sublabel: string;
-    /** 背景颜色 */
     backgroundColor: string;
-    /** 点击事件回调 */
     onPress: (event: GestureResponderEvent) => void;
 }
 
-/**
- * 快捷操作区组件属性接口
- */
-interface QuickActionsProps {
-    /** 导航跳转回调函数 @param path 目标路由路径 */
-    onNavigate: (path: Href) => void;
-    /** 颜色配置对象 */
-    colors: {
-        blue: string;
-        green: string;
-        purple: string;
-    };
-}
-
-/**
- * 内部复用的动作单元组件
- * @param {ActionItemProps} props
- */
 const ActionItem: React.FC<ActionItemProps> = ({
     icon,
     label,
@@ -64,16 +45,33 @@ const ActionItem: React.FC<ActionItemProps> = ({
 );
 
 /**
- * 快捷操作区主组件
+ * 快捷操作区主组件属性接口
  */
-export const QuickActions: React.FC<QuickActionsProps> = ({ onNavigate, colors }) => {
-    // 从 Store 中获取全局 RequestId，禁止重复生成
-    const requestId = useEnvStore.getState().currentRequestId;
+interface QuickActionsProps {
+    /** 显式注入的链路 ID */
+    requestId: string;
+    /** 导航跳转回调函数 */
+    onNavigate: (path: Href) => void;
+    /** 颜色配置对象 */
+    colors: {
+        blue: string;
+        green: string;
+        purple: string;
+    };
+}
 
+/**
+ * 快捷操作区主组件
+ * 职责：负责业务动作的起点记录与跳转调度
+ */
+export const QuickActions: React.FC<QuickActionsProps> = ({
+    requestId,
+    onNavigate,
+    colors
+}) => {
     /**
-     * 统一处理操作项点击逻辑并记录日志
-     * @param {string} actionName 操作名称
-     * @param {Href} path 目标路径
+     * 统一处理操作项点击逻辑
+     * 显式消费 Props 传入的 requestId
      */
     const handleActionPress = (actionName: string, path: Href) => {
         try {
@@ -81,11 +79,14 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onNavigate, colors }
             logger.info({
                 module: 'QuickActions',
                 operate: `click_action_${actionName}`,
-                params: { targetPath: path },
+                params: {
+                    targetPath: path,
+                    timestamp: Date.now() // 记录非敏感交互时间
+                },
                 result: 'navigating',
                 error: undefined,
                 errorType: undefined,
-                requestId
+                requestId: requestId // 显式注入
             });
 
             onNavigate(path);
@@ -98,7 +99,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onNavigate, colors }
                 result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'NAVIGATION_ERROR',
-                requestId
+                requestId: requestId // 显式注入
             });
         }
     };

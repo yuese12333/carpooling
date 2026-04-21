@@ -1,6 +1,6 @@
 /**
  * @file seat-price-section.tsx
- * @description 拼车发布模块的座位数与定价配置组件，集成标准化日志追踪与交互限流逻辑。
+ * @description 拼车发布模块的座位数与定价配置组件。
  */
 
 import React from 'react';
@@ -9,12 +9,13 @@ import { Users, DollarSign } from 'lucide-react-native';
 import { Card } from "@/components/card";
 import styles, { COLORS } from "../offer-ride.style";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 /**
  * 座位与价格区块组件属性定义
  */
 interface SeatPriceSectionProps {
+    /** [显式注入] 业务流唯一链路 ID */
+    requestId: string;
     /** 当前选中的座位数 */
     seats: number;
     /** 当前输入的单价字符串 */
@@ -31,64 +32,78 @@ const MAX_SEATS = 4;
 
 /**
  * 拼车发布页 - 座位与费用配置区块
+ * @param {SeatPriceSectionProps} props
  */
 export const SeatPriceSection: React.FC<SeatPriceSectionProps> = ({
+    requestId,
     seats,
     price,
     onUpdateSeats,
     onUpdatePrice
 }) => {
-    // 全局取值：通过 store 获取已存在的 requestId，严禁在此 generate
-    const requestId = useEnvStore.getState().currentRequestId;
 
     /**
      * 处理座位数调节
      * @param {number} delta 变化量
      */
     const handleSeatAdjustment = (delta: number) => {
+        const operate = 'ADJUST_SEATS';
         const nextSeats = seats + delta;
+
         if (nextSeats < MIN_SEATS || nextSeats > MAX_SEATS) return;
 
+        // 显式链路日志记录
         logger.info({
             module: MODULE_NAME,
-            operate: 'ADJUST_SEATS',
-            requestId,
+            operate,
+            requestId: requestId,
             params: {
                 before: seats,
                 after: nextSeats,
                 delta
             },
-            result: 'SUCCESS'
+            result: 'SUCCESS',
+            error: undefined,
+            errorType: undefined
         });
+
         onUpdateSeats(nextSeats);
     };
 
     /**
      * 处理价格输入变更
+     * 遵循职责分离：子组件仅负责数据清洗与回调，高频日志由调用层决定是否记录
      * @param {string} text 输入的文本
      */
     const handlePriceChange = (text: string) => {
+        const operate = 'CHANGE_PRICE_INPUT';
         try {
             // 基础校验：仅允许数字输入
             const sanitizedText = text.replace(/[^0-9]/g, '');
 
-            // 仅在关键节点或失焦时记录详情，输入过程中记录状态
-            logger.info({
-                module: MODULE_NAME,
-                operate: 'CHANGE_PRICE_INPUT',
-                requestId,
-                params: { priceLength: sanitizedText.length }, // 隐私保护：不直接记录具体金额明细
-                result: 'SUCCESS'
-            });
+            // 仅记录关键的行为触发，不记录高频字符变更明细以符合隐私及分层职责
+            if (sanitizedText.length === 0 || sanitizedText.length > 5) {
+                logger.info({
+                    module: MODULE_NAME,
+                    operate,
+                    requestId: requestId,
+                    params: { inputLength: sanitizedText.length },
+                    result: 'CLEANED_AND_PASSED',
+                    error: undefined,
+                    errorType: undefined
+                });
+            }
 
             onUpdatePrice(sanitizedText);
         } catch (error) {
             logger.error({
                 module: MODULE_NAME,
-                operate: 'CHANGE_PRICE_ERROR',
-                requestId,
+                operate,
+                requestId: requestId,
                 error: error instanceof Error ? error.message : String(error),
-                errorType: 'INPUT_PROCESSING_FAILED'
+                errorType: 'INPUT_PROCESSING_FAILED',
+                params: { rawInput: '***' }, // 隐私脱敏
+                result: 'FAILED'
             });
         }
     };

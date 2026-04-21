@@ -32,6 +32,9 @@ export const COLORS = Object.freeze({
     black: "#000000",
     transparent: "transparent",
     overlay: "rgba(249, 250, 251, 0.8)", // 卡片头部半透明遮罩
+
+    backgroundv1: "#DCFCE7", // 页面背景色
+    backgroundv2: "#FEF2F2", // 卡片背景色
 });
 
 /**

@@ -13,9 +13,10 @@ import logger from '@/utils/logger';
 
 /**
  * 首页业务逻辑自定义 Hook
+ * @param {string} requestId - 必须显式注入的链路追踪 ID
  * @returns {Object} 包含状态、计算属性与操作方法
  */
-export const useHomeForm = () => {
+export const useHomeForm = (requestId: string) => {
     const router = useRouter();
 
     // --- 状态管理 ---
@@ -37,29 +38,29 @@ export const useHomeForm = () => {
          * 异步初始化首页数据
          */
         const fetchHomeData = async () => {
-            const requestId = useEnvStore.getState().currentRequestId;
-            const params = { latitude: 24.14, longitude: 120.67 }; // 模拟业务参数
+            // 业务参数准备
+            const locationParams = { latitude: 24.14, longitude: 120.67 };
 
             try {
                 setIsLoading(true);
 
-                // 记录请求起点
+                // 记录请求起点，显式消费参数注入的 requestId
                 logger.info({
                     module: 'useHomeForm',
                     operate: 'fetchHomeData_Start',
-                    params,
+                    params: locationParams,
                     result: undefined,
                     error: undefined,
                     errorType: undefined,
                     requestId
                 });
 
-                // 并发请求提升性能
+                // 并发请求：强制透传 requestId 至 Service 层
                 const [u, r, s, n] = await Promise.all([
-                    HomeService.getUserInfo(),
-                    HomeService.getRecommendRides(params.latitude, params.longitude),
-                    HomeService.getStatistics(),
-                    HomeService.getUnreadStatus()
+                    HomeService.getUserInfo(requestId),
+                    HomeService.getRecommendRides(locationParams.latitude, locationParams.longitude, requestId),
+                    HomeService.getStatistics(requestId),
+                    HomeService.getUnreadStatus(requestId)
                 ]);
 
                 setUserInfo(u);
@@ -80,7 +81,7 @@ export const useHomeForm = () => {
                 logger.error({
                     module: 'useHomeForm',
                     operate: 'fetchHomeData_Error',
-                    params,
+                    params: locationParams,
                     result: undefined,
                     error: error instanceof Error ? error.message : String(error),
                     errorType: 'DATA_FETCH_FAILED',
@@ -93,12 +94,11 @@ export const useHomeForm = () => {
         };
 
         fetchHomeData();
-    }, [isMockMode]);
+    }, [isMockMode, requestId]); // requestId 变化时重新绑定链路
 
     // --- 计算属性 ---
     /**
      * 过滤并返回前三个推荐行程
-     * @type {RideItem[]}
      */
     const featuredRides = useMemo((): RideItem[] => {
         return rides.slice(0, 3);
@@ -107,11 +107,9 @@ export const useHomeForm = () => {
     // --- 事件处理函数 ---
 
     /**
-     * 执行搜索并跳转至行程搜索结果页
-     * @returns {void}
+     * 执行搜索并跳转
      */
     const handleSearch = () => {
-        const requestId = useEnvStore.getState().currentRequestId;
         const searchParams = {
             from: fromLocation,
             to: toLocation,
@@ -127,7 +125,7 @@ export const useHomeForm = () => {
             logger.info({
                 module: 'useHomeForm',
                 operate: 'handleSearch_Navigation',
-                params: searchParams,
+                params: { ...searchParams },
                 result: 'Navigating to FIND_RIDE',
                 error: undefined,
                 errorType: undefined,
@@ -142,7 +140,7 @@ export const useHomeForm = () => {
             logger.error({
                 module: 'useHomeForm',
                 operate: 'handleSearch_Error',
-                params: searchParams,
+                params: { ...searchParams },
                 result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'NAVIGATION_FAILED',
@@ -155,27 +153,26 @@ export const useHomeForm = () => {
     /**
      * 通用导航跳转封装
      * @param {Href} path - 目标路径
-     * @returns {void}
      */
-    const navigateTo = (path: Href) => {
-        const requestId = useEnvStore.getState().currentRequestId;
-
+    const navigateTo = (path: Href | { pathname: Href; params: any }) => {
         try {
             logger.info({
                 module: 'useHomeForm',
                 operate: 'navigateTo',
-                params: { targetPath: path },
+                params: { target: typeof path === 'string' ? path : path.pathname },
                 result: 'Executing router push',
                 error: undefined,
                 errorType: undefined,
                 requestId
             });
-            router.push(path);
+
+            // Expo Router push 支持对象或字符串
+            router.push(path as any);
         } catch (error) {
             logger.error({
                 module: 'useHomeForm',
                 operate: 'navigateTo_Error',
-                params: { targetPath: path },
+                params: { target: typeof path === 'string' ? path : 'complex_path' },
                 result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'ROUTER_PUSH_FAILED',

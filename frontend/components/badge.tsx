@@ -1,14 +1,13 @@
 /**
  * @file badge.tsx
  * @description 高性能徽章组件，支持多种语义化变体。
- * 适配 NativeWind 样式系统，并集成标准化 UI 生命周期监控。
+ * 采用原子化设计，剔除业务耦合日志，适配 NativeWind 样式系统。
  */
 
 import * as React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, type ViewProps } from "react-native";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../src/utils";
-import logger from '@/utils/logger';
 
 /**
  * 徽章容器样式变体定义
@@ -56,87 +55,77 @@ const badgeTextVariants = cva(
 
 /**
  * @interface BadgeProps
- * @description 徽章组件属性
+ * @description 徽章组件属性定义
  */
 export interface BadgeProps
-  extends React.ComponentPropsWithoutRef<typeof View>,
+  extends ViewProps,
   VariantProps<typeof badgeVariants> {
   /** 徽章显示的文本内容，优先于 children */
   label?: string;
+  /** 可选：透传给内部 Text 组件的类名 */
+  textClassName?: string;
 }
-
-const MODULE_NAME = 'Badge';
 
 /**
  * @component Badge
- * @description 基于 NativeWind 的通用徽章组件
+ * @description 纯净、高性能的通用徽章组件
  */
-const Badge: React.FC<BadgeProps> = ({
+const Badge = React.forwardRef<View, BadgeProps>(({
   className,
   variant,
   label,
   children,
+  textClassName: textClassNameProp,
+  style,
   ...props
-}) => {
+}, ref) => {
 
-  // 1. 记录组件挂载/渲染日志
-  React.useEffect(() => {
-    logger.info({
-      module: MODULE_NAME,
-      operate: 'COMPONENT_MOUNT',
-      params: { variant: variant || 'default', hasLabel: !!label }
-    });
-  }, []);
-
-  // 2. 性能优化：缓存类名计算结果
+  // 1. 缓存容器类名计算结果，减少重绘开销
   const containerClassName = React.useMemo(() =>
     cn(badgeVariants({ variant }), className),
     [variant, className]);
 
+  // 2. 缓存文本类名计算结果
   const textClassName = React.useMemo(() =>
-    badgeTextVariants({ variant }),
-    [variant]);
+    cn(badgeTextVariants({ variant }), textClassNameProp),
+    [variant, textClassNameProp]);
 
-  // 3. 异常边界：捕获非法 children 渲染
+  // 3. 渲染逻辑：优先使用 label，其次支持 string children 或自定义元素
   const renderContent = () => {
-    try {
-      if (label) {
-        return <Text className={textClassName}>{label}</Text>;
-      }
-      if (typeof children === 'string') {
-        return <Text className={textClassName}>{children}</Text>;
-      }
-      return children;
-    } catch (error) {
-      logger.error({
-        module: MODULE_NAME,
-        operate: 'RENDER_CONTENT_ERROR',
-        error: error instanceof Error ? error.message : String(error)
-      });
-      return null;
+    if (label) {
+      return <Text className={textClassName}>{label}</Text>;
     }
+
+    if (typeof children === 'string') {
+      return <Text className={textClassName}>{children}</Text>;
+    }
+
+    return children;
   };
 
   return (
     <View
+      ref={ref}
       className={containerClassName}
-      style={baseStyles.container} // 注入基础兜底样式
+      style={[styles.base, style]} // 合并基础样式与外部 style
       {...props}
     >
       {renderContent()}
     </View>
   );
-};
+});
 
 /**
- * 基础样式定义 - 确保在没有 Tailwind 环境下组件不坍塌
+ * 基础兜底样式
+ * 仅用于定义 NativeWind 无法覆盖的运行时关键尺寸约束
  */
-const baseStyles = StyleSheet.create({
-  container: {
+const styles = StyleSheet.create({
+  base: {
     minHeight: 20,
     minWidth: 40,
   }
 });
 
-// 导出组件及变体定义
+Badge.displayName = "Badge";
+
 export { Badge, badgeVariants };

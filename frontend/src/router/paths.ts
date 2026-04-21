@@ -5,10 +5,10 @@
 export const ROUTES = {
     // 根层级
     INDEX: '/',
-    HOME: '/home',
-    FIND_RIDE: '/find-ride',
-    OFFER_RIDE: '/offer-ride',
-    TRIPS: '/trips',
+    HOME: '/home/home',
+    FIND_RIDE: '/find-ride/find-ride',
+    OFFER_RIDE: '/offer-ride/offer-ride',
+    TRIPS: '/trips/trips',
     PROFILE_MAIN: '/profile',
 
     // 认证模块
