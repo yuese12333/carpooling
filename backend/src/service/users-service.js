@@ -2,14 +2,29 @@
  * 文件功能：用户业务服务层
  * 关联业务：用户数据初始化与最小注册能力
  */
-const {
-  ensureUsersTable,
-  createUser,
-  findUserByPhone,
-} = require('../dao/users-dao');
-const { logger } = require('../utils/logger');
+const crypto = require('crypto');
+const { ensureAuthUsersTableOnce, createAuthUser, findByPhone } = require('../dao/user-dao');
+const passwordUtils = require('../utils/password-utils');
+const { logger, maskSensitive } = require('../utils/logger');
 
-async function initUsersSchema(requestId) {
+function buildUserId() {
+  return `u_${crypto.randomUUID().replace(/-/g, '').slice(0, 24)}`;
+}
+
+function buildRegisterUserView(authUser) {
+  if (!authUser) return null;
+  return {
+    userId: authUser.userId,
+    phone: authUser.phone,
+    nickname: authUser.userName,
+    userName: authUser.userName,
+    avatarUrl: authUser.avatarUrl || '',
+    createdAt: authUser.createdAt || null,
+    updatedAt: authUser.updatedAt || null,
+  };
+}
+
+async function initAuthUsersSchema(requestId) {
   try {
     await ensureUsersTable(requestId);
 
@@ -17,7 +32,7 @@ async function initUsersSchema(requestId) {
   } catch (error) {
     logger.error({
       module: 'users-service',
-      operate: 'init-users-schema',
+      operate: 'init-auth-users-schema',
       requestId,
       error: error.message,
       errorType: 'ServiceSchemaInitError',
@@ -26,37 +41,45 @@ async function initUsersSchema(requestId) {
   }
 }
 
-async function registerUser({ phone, nickname }, requestId) {
+async function registerUser({ phone, nickname, password }, requestId) {
   try {
     const existed = await findUserByPhone(phone, requestId);
     if (existed) {
       return {
         created: false,
-        user: existed,
+        user: buildRegisterUserView(existed),
         reason: 'PHONE_ALREADY_EXISTS',
       };
     }
 
-    let insertId;
+    const passwordHash = await passwordUtils.hash(password);
+    const userId = buildUserId();
+
     try {
-      insertId = await createUser({ phone, nickname }, requestId);
+      await createAuthUser({
+        userId,
+        phone,
+        passwordHash,
+        userName: nickname,
+        avatarUrl: '',
+      }, requestId);
     } catch (error) {
       if (error && error.code === 'ER_DUP_ENTRY') {
-        const duplicatedUser = await findUserByPhone(phone, requestId);
+        const duplicatedUser = await findByPhone(phone, requestId);
         return {
           created: false,
-          user: duplicatedUser,
+          user: buildRegisterUserView(duplicatedUser),
           reason: 'PHONE_ALREADY_EXISTS',
         };
       }
       throw error;
     }
 
-    const createdUser = await findUserByPhone(phone, requestId);
+    const createdUser = await findByPhone(phone, requestId);
 
     return {
-      created: Boolean(insertId),
-      user: createdUser,
+      created: true,
+      user: buildRegisterUserView(createdUser),
     };
   } catch (error) {
     logger.error({
@@ -71,6 +94,6 @@ async function registerUser({ phone, nickname }, requestId) {
 }
 
 module.exports = {
-  initUsersSchema,
+  initAuthUsersSchema,
   registerUser,
 };
