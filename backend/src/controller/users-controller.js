@@ -8,29 +8,31 @@ const {
   buildFailureResponse,
 } = require('../utils/response');
 const { logger, maskSensitive } = require('../utils/logger');
-const { initUsersSchema, registerUser } = require('../service/users-service');
+const { initAuthUsersSchema, registerUser } = require('../service/users-service');
 
-async function initUsersSchemaController(req, res) {
+async function initAuthUsersSchemaController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
 
   try {
-    const data = await initUsersSchema(requestId);
+    const data = await initAuthUsersSchema(requestId);
     logger.info({
       module: 'users-controller',
-      operate: 'init-users-schema',
+      operate: 'init-auth-users-schema',
       requestId,
-      result: 'Users schema initialized',
+      result: 'Auth users schema initialized',
     });
     return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
     logger.error({
       module: 'users-controller',
-      operate: 'init-users-schema',
+      operate: 'init-auth-users-schema',
       requestId,
       error: error.message,
       errorType: 'DatabaseSchemaInitError',
     });
-    return res.status(500).json(buildFailureResponse(500, '初始化用户表失败', null, requestId));
+    return res
+      .status(500)
+      .json(buildFailureResponse(500, '初始化认证用户表(auth_users)失败', null, requestId));
   }
 }
 
@@ -38,26 +40,33 @@ async function createUserController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
 
   try {
-    const { phone, nickname } = req.body || {};
+    const { phone, phoneNumber, nickname, userName, password } = req.body || {};
+    const inputPhone = phone || phoneNumber;
+    const inputNickname = nickname || userName;
 
     // 参数必填性校验
-    if (!phone || !nickname) {
+    if (!inputPhone || !inputNickname || !password) {
       return res
         .status(400)
-        .json(buildFailureResponse(400, '缺少必要参数：phone、nickname', null, requestId));
+        .json(buildFailureResponse(400, '缺少必要参数：phone(或phoneNumber)、nickname(或userName)、password', null, requestId));
     }
 
     // 参数类型校验
-    if (typeof phone !== 'string' || typeof nickname !== 'string') {
+    if (
+      typeof inputPhone !== 'string' ||
+      typeof inputNickname !== 'string' ||
+      typeof password !== 'string'
+    ) {
       return res
         .status(400)
-        .json(buildFailureResponse(400, '参数类型错误：phone和nickname必须为字符串', null, requestId));
+        .json(buildFailureResponse(400, '参数类型错误：phone/nickname/password必须为字符串', null, requestId));
     }
 
-    const normalizedPhone = phone.trim();
-    const normalizedNickname = nickname.trim();
+    const normalizedPhone = inputPhone.trim();
+    const normalizedNickname = inputNickname.trim();
+    const normalizedPassword = password.trim();
 
-    if (!normalizedPhone || !normalizedNickname) {
+    if (!normalizedPhone || !normalizedNickname || !normalizedPassword) {
       return res
         .status(400)
         .json(buildFailureResponse(400, '参数不能为空白字符', null, requestId));
@@ -78,8 +87,19 @@ async function createUserController(req, res) {
         .json(buildFailureResponse(400, '昵称长度必须在1-50个字符之间', null, requestId));
     }
 
+    // 密码长度校验
+    if (normalizedPassword.length < 6 || normalizedPassword.length > 128) {
+      return res
+        .status(400)
+        .json(buildFailureResponse(400, '密码长度必须在6-128个字符之间', null, requestId));
+    }
+
     const result = await registerUser(
-      { phone: normalizedPhone, nickname: normalizedNickname },
+      {
+        phone: normalizedPhone,
+        nickname: normalizedNickname,
+        password: normalizedPassword,
+      },
       requestId,
     );
 
@@ -120,6 +140,6 @@ async function createUserController(req, res) {
 }
 
 module.exports = {
-  initUsersSchemaController,
+  initAuthUsersSchemaController,
   createUserController,
 };
