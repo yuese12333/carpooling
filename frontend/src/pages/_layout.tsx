@@ -8,6 +8,7 @@ import { PortalHost } from "@rn-primitives/portal";
 import { View } from 'react-native';
 import "../global.css";
 import { AuthProvider } from "../store/auth-context";
+import { PaperProvider } from 'react-native-paper';
 
 /**
  * 根布局组件
@@ -16,18 +17,20 @@ import { AuthProvider } from "../store/auth-context";
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <View style={{ flex: 1 }}>
-        {/* 路由容器配置：隐藏原生标题栏 */}
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: 'slide_from_right'
-          }}
-        />
+      <PaperProvider>
+        <View style={{ flex: 1 }}>
+          {/* 路由容器配置：隐藏原生标题栏 */}
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: 'slide_from_right'
+            }}
+          />
 
-        {/* 弹窗宿主：用于渲染 Select, Dialog, Tooltip 等跨层级组件 */}
-        <PortalHost name="reusables" />
-      </View>
+          {/* 弹窗宿主：用于渲染 Select, Dialog, Tooltip 等跨层级组件 */}
+          <PortalHost />
+        </View>
+      </PaperProvider>
     </AuthProvider>
   );
 }
