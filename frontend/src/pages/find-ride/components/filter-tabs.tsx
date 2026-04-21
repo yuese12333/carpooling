@@ -103,3 +103,5 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
         </ScrollView>
     );
 };
+
+export default FilterTabs;

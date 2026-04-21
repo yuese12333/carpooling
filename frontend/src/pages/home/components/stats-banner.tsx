@@ -34,7 +34,7 @@ export const StatsBanner: React.FC<StatsBannerProps> = ({ stats }) => {
         try {
             // 严禁在计算逻辑中使用 null，统一以 undefined 或常量兜底
             return `${(count / 10000).toFixed(1)}万`;
-        } catch (error) {
+        } catch {
             return '0.0万';
         }
     };
@@ -81,3 +81,5 @@ export const StatsBanner: React.FC<StatsBannerProps> = ({ stats }) => {
         </View>
     );
 };
+
+export default StatsBanner;

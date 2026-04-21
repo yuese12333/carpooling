@@ -230,3 +230,5 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
         </Card>
     );
 };
+
+export default DateTimeSection;

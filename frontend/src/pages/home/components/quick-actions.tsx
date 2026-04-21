@@ -132,3 +132,5 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
         </View>
     );
 };
+
+export default QuickActions;

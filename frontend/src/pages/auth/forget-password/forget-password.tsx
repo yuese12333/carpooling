@@ -8,7 +8,7 @@ import { View, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ROUTES } from '@/router/paths';
 import logger, { generateRequestId } from '@/utils/logger';
-import styles, { COLORS } from './forget-password.style';
+import forgetPasswordStyles, { COLORS } from './forget-password.style';
 import { useForgetPasswordForm } from "@/hooks/use-forget-password-form";
 
 import { PasswordHeader } from './components/password-header';
@@ -48,12 +48,12 @@ export default function ForgetPasswordPage() {
   }[form.step]), [form.step]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={forgetPasswordStyles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.flexCenter}
+        style={forgetPasswordStyles.flexCenter}
       >
-        <View style={styles.card}>
+        <View style={forgetPasswordStyles.card}>
           <PasswordHeader
             step={form.step}
             title={headerConfig?.title || ""}
@@ -67,7 +67,7 @@ export default function ForgetPasswordPage() {
             }}
           />
 
-          <View style={styles.formContent}>
+          <View style={forgetPasswordStyles.formContent}>
             {form.step === 1 && (
               <StepPhoneInput
                 phone={form.phone}

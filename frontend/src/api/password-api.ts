@@ -3,13 +3,12 @@
  * @description 身份认证与密码管理相关 API 模块，包含手机号状态校验、验证码发送与重置密码功能。
  */
 
-import axios from 'axios';
+import request from '@/utils/request';
 import logger from '@/utils/logger';
 import { useEnvStore } from '@/store/env-store';
 
 /** ----------------配置项---------------- */
 const IS_MOCK = true;
-const API_BASE_URL = "http://localhost:3000";
 
 /** ----------------类型定义---------------- */
 export interface BaseResponse<T = any> {
@@ -46,7 +45,7 @@ export const passwordApi = {
                 await new Promise(resolve => setTimeout(resolve, 800));
                 return { code: 200, message: "success", data: { isRegistered: true, userStatus: "active" } };
             }
-            const res = await axios.get(`${API_BASE_URL}/api/auth/password/check-phone`, { params: { phone } });
+            const res = await request.get<BaseResponse<PhoneStatusData>>('/auth/password/check-phone', { params: { phone } });
             return res.data;
         } catch (error) {
             logger.error({
@@ -74,7 +73,7 @@ export const passwordApi = {
                 await new Promise(resolve => setTimeout(resolve, 800));
                 return { code: 200, message: "success", data: { success: true } };
             }
-            const res = await axios.post(`${API_BASE_URL}/api/sms/send-verify-code`, { phoneNumber: phone });
+            const res = await request.post<BaseResponse<SmsSendData>>('/sms/send-verify-code', { phoneNumber: phone });
             return res.data;
         } catch (error) {
             logger.error({
@@ -103,7 +102,7 @@ export const passwordApi = {
                 await new Promise(resolve => setTimeout(resolve, 800));
                 return { code: 200, message: "success", data: { isValid: true, tempToken: "mock_temp_token_123456" } };
             }
-            const res = await axios.post(`${API_BASE_URL}/api/auth/register/verify-code`, { phoneNumber: phone, verifyCode: code });
+            const res = await request.post<BaseResponse<VerifyCodeData>>('/auth/register/verify-code', { phoneNumber: phone, verifyCode: code });
             return res.data;
         } catch (error) {
             logger.error({
@@ -125,14 +124,14 @@ export const passwordApi = {
      * @param password 新密码
      * @returns 操作结果
      */
-    resetPassword: async (token: string, password: string): Promise<BaseResponse<{}>> => {
+    resetPassword: async (token: string, password: string): Promise<BaseResponse<Record<string, never>>> => {
         const requestId = useEnvStore.getState().currentRequestId;
         try {
             if (IS_MOCK) {
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 return { code: 200, message: "success", data: {} };
             }
-            const res = await axios.post(`${API_BASE_URL}/api/auth/password/reset`, { verifyToken: token, newPassword: password });
+            const res = await request.post<BaseResponse<Record<string, never>>>('/auth/password/reset', { verifyToken: token, newPassword: password });
             return res.data;
         } catch (error) {
             logger.error({

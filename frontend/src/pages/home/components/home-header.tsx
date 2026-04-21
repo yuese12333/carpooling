@@ -33,7 +33,7 @@ interface HomeHeaderProps {
     /** 设置目的地的回调 */
     onSetTo: (val: string) => void;
     /** 触发搜索的回调 */
-    onSearch: (requestId: string) => void;
+    onSearch: () => void;
     /** 跳转至个人资料页的回调 */
     onNavigateToProfile: () => void;
     /** 跳转至通知中心的回调 */
@@ -107,7 +107,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             requestId: requestId
         });
         // 将链路 ID 传递给回调，确保后续 API 调用能继承此链路
-        onSearch(requestId);
+        onSearch();
     };
 
     return (
@@ -180,3 +180,5 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
         </View>
     );
 };
+
+export default HomeHeader;

@@ -6,7 +6,7 @@
 import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { CheckCircle2 } from "lucide-react-native";
-import styles, { COLORS } from '../forget-password.style';
+import forgetPasswordStyles, { COLORS } from '../forget-password.style';
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 
@@ -30,18 +30,18 @@ export const StepSuccess: React.FC = () => {
     }, [requestId]);
 
     return (
-        <View style={styles.successWrapper}>
-            <View style={styles.successIconContainer}>
+        <View style={forgetPasswordStyles.successWrapper}>
+            <View style={forgetPasswordStyles.successIconContainer}>
                 <CheckCircle2 size={56} color={COLORS.primary} strokeWidth={1.5} />
             </View>
-            <Text style={styles.successTitle}>设置成功</Text>
-            <Text style={styles.successSubtitle}>您的账号安全信息已更新，即将跳转。</Text>
+            <Text style={forgetPasswordStyles.successTitle}>设置成功</Text>
+            <Text style={forgetPasswordStyles.successSubtitle}>您的账号安全信息已更新，即将跳转。</Text>
 
             {/* 装饰点布局 */}
-            <View style={styles.dotContainer}>
-                <View style={styles.dot} />
-                <View style={[styles.dot, styles.dotOpacity6]} />
-                <View style={[styles.dot, styles.dotOpacity3]} />
+            <View style={forgetPasswordStyles.dotContainer}>
+                <View style={forgetPasswordStyles.dot} />
+                <View style={[forgetPasswordStyles.dot, forgetPasswordStyles.dotOpacity6]} />
+                <View style={[forgetPasswordStyles.dot, forgetPasswordStyles.dotOpacity3]} />
             </View>
         </View>
     );

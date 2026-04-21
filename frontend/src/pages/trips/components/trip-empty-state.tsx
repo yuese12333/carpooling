@@ -83,5 +83,7 @@ export const TripEmptyState: React.FC<TripEmptyStateProps> = ({
     );
 };
 
+export default TripEmptyState;
+
 // 导出类型供父级 Page 层进行 Props 校验
 export type { TripEmptyStateProps };

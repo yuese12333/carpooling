@@ -3,17 +3,12 @@
  * @description 拼车发布相关 API 封装。
  */
 
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import logger from '@/utils/logger';
+import request from '@/utils/request';
+import { useEnvStore } from '@/store/env-store';
 
-const IS_MOCK_MODE = process.env.NODE_ENV === 'development';
-const BASE_URL = 'https://api.rideshare.com/api';
 const MODULE_NAME = 'OFFER_RIDE_API';
-
-const api = axios.create({
-    baseURL: BASE_URL,
-    timeout: 10000,
-});
 
 // --- 类型定义 ---
 
@@ -40,7 +35,7 @@ export interface PublishRideParams {
 export interface PublishConfigResponse {
     timeSlots: string[];
     seatLimit: { min: number; max: number };
-    presetTags: Array<{ label: string; value: string }>;
+    presetTags: { label: string; value: string }[];
 }
 
 export interface StandardResponse<T> {
@@ -69,7 +64,7 @@ export const getPublishConfig = async (requestId: string): Promise<StandardRespo
     const operate = 'GET_PUBLISH_CONFIG';
 
     try {
-        if (IS_MOCK_MODE) {
+        if (useEnvStore.getState().isMockMode) {
             const MOCK_CONFIG: StandardResponse<PublishConfigResponse> = {
                 code: 200,
                 data: {
@@ -83,7 +78,7 @@ export const getPublishConfig = async (requestId: string): Promise<StandardRespo
             });
         }
 
-        const response = await api.get<StandardResponse<PublishConfigResponse>>('/rides/publish-config');
+        const response = await request.get<StandardResponse<PublishConfigResponse>>('/rides/publish-config');
         return response.data;
     } catch (error) {
         // API 层仅保留关键异常日志，确保包含所有标准化字段
@@ -114,7 +109,7 @@ export const publishRide = async (
     const operate = 'PUBLISH_RIDE';
 
     try {
-        if (IS_MOCK_MODE) {
+        if (useEnvStore.getState().isMockMode) {
             const mockResult = {
                 code: 200,
                 data: { rideId: "mock_12345", status: "pending" }
@@ -124,7 +119,7 @@ export const publishRide = async (
             });
         }
 
-        const response = await api.post<StandardResponse<{ rideId: string, status: string }>>('/rides/publish', params);
+        const response = await request.post<StandardResponse<{ rideId: string, status: string }>>('/rides/publish', params);
         return response.data;
     } catch (error) {
         const axiosError = error as AxiosError;
@@ -149,11 +144,11 @@ export const checkPublishPermission = async (requestId: string): Promise<Standar
     const operate = 'CHECK_PERMISSION';
 
     try {
-        if (IS_MOCK_MODE) {
+        if (useEnvStore.getState().isMockMode) {
             return { code: 200, data: { canPublish: true, creditScore: 99 } };
         }
 
-        const response = await api.get<StandardResponse<{ canPublish: boolean, creditScore: number }>>('/rides/publish-permission');
+        const response = await request.get<StandardResponse<{ canPublish: boolean, creditScore: number }>>('/rides/publish-permission');
         return response.data;
     } catch (error) {
         logger.error({

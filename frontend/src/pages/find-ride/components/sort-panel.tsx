@@ -96,3 +96,5 @@ export const SortPanel: React.FC<SortPanelProps> = ({
         </View>
     );
 };
+
+export default SortPanel;

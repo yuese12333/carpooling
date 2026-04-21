@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { ArrowLeft, Check } from "lucide-react-native";
-import styles, { COLORS } from '../forget-password.style';
+import forgetPasswordStyles, { COLORS } from '../forget-password.style';
 
 interface PasswordHeaderProps {
     /** 当前步骤 1-4 */
@@ -23,25 +23,25 @@ interface PasswordHeaderProps {
  * @param props PasswordHeaderProps
  */
 export const PasswordHeader: React.FC<PasswordHeaderProps> = ({ step, onBack, title, subtitle }) => (
-    <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.7}>
+    <View style={forgetPasswordStyles.header}>
+        <TouchableOpacity onPress={onBack} style={forgetPasswordStyles.backButton} activeOpacity={0.7}>
             <ArrowLeft size={20} color={COLORS.white} />
         </TouchableOpacity>
 
-        <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>{title}</Text>
-            <Text style={styles.headerSubtitle}>{subtitle}</Text>
+        <View style={forgetPasswordStyles.headerContent}>
+            <Text style={forgetPasswordStyles.headerTitle}>{title}</Text>
+            <Text style={forgetPasswordStyles.headerSubtitle}>{subtitle}</Text>
         </View>
 
         {step < 4 && (
-            <View style={styles.stepperContainer}>
-                <View style={styles.stepperLine} />
+            <View style={forgetPasswordStyles.stepperContainer}>
+                <View style={forgetPasswordStyles.stepperLine} />
                 {[1, 2, 3].map((s) => (
                     <View
                         key={s}
                         style={[
-                            styles.stepCircle,
-                            step >= s ? styles.stepCircleActive : styles.stepCircleInactive
+                            forgetPasswordStyles.stepCircle,
+                            step >= s ? forgetPasswordStyles.stepCircleActive : forgetPasswordStyles.stepCircleInactive
                         ]}
                     >
                         {step > s ? (
@@ -49,8 +49,8 @@ export const PasswordHeader: React.FC<PasswordHeaderProps> = ({ step, onBack, ti
                         ) : (
                             <Text
                                 style={[
-                                    styles.stepText,
-                                    step >= s ? styles.stepTextActive : styles.stepTextInactive
+                                    forgetPasswordStyles.stepText,
+                                    step >= s ? forgetPasswordStyles.stepTextActive : forgetPasswordStyles.stepTextInactive
                                 ]}
                             >
                                 {s}

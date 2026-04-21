@@ -105,3 +105,5 @@ export const NotesSection: React.FC<NotesSectionProps> = ({
         </Card>
     );
 };
+
+export default NotesSection;

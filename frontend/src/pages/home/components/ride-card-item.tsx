@@ -101,3 +101,5 @@ export const RideCardItem: React.FC<RideCardItemProps> = ({ ride, onPress }) => 
         </TouchableOpacity>
     );
 };
+
+export default RideCardItem;

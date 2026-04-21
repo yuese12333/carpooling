@@ -3,9 +3,9 @@
  * @description 首页相关业务 API 接口实现
  */
 
-import axios, { AxiosResponse } from 'axios';
 import { mockRides, currentUser as mockUser } from "../store/mock-data";
 import { useEnvStore } from '../store/env-store'; // 仅用于获取 isMockMode
+import request from '../utils/request';
 import logger from '@/utils/logger';
 
 // --- 类型定义 ---
@@ -49,14 +49,6 @@ interface ApiResponse<T> {
     message: string;
 }
 
-// --- 配置 ---
-const API_BASE_URL = 'https://your-api-domain.com/api';
-
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 10000,
-});
-
 // --- 接口实现 ---
 
 export const HomeService = {
@@ -76,9 +68,7 @@ export const HomeService = {
                     verifiedStatus: true
                 };
             }
-            const res: AxiosResponse<ApiResponse<UserInfo>> = await api.get('/home/user-info', {
-                headers: { 'X-Request-Id': requestId }
-            });
+            const res = await request.get<ApiResponse<UserInfo>>('/home/user-info');
             return res.data.data;
         } catch (error) {
             logger.error({
@@ -121,9 +111,8 @@ export const HomeService = {
                     }
                 }));
             }
-            const res: AxiosResponse<ApiResponse<{ list: RideItem[] }>> = await api.get('/rides/recommend', {
+            const res = await request.get<ApiResponse<{ list: RideItem[] }>>('/rides/recommend', {
                 params: { latitude: lat, longitude: lng, limit: 3 },
-                headers: { 'X-Request-Id': requestId }
             });
             return res.data.data.list;
         } catch (error) {
@@ -151,9 +140,7 @@ export const HomeService = {
             if (isMock) {
                 return { todayRidesCount: 12847, totalUsers: 48000, positiveRate: 98 };
             }
-            const res: AxiosResponse<ApiResponse<HomeStats>> = await api.get('/home/statistics', {
-                headers: { 'X-Request-Id': requestId }
-            });
+            const res = await request.get<ApiResponse<HomeStats>>('/home/statistics');
             const d = res.data.data;
             return {
                 todayRidesCount: d.todayRidesCount,
@@ -183,9 +170,7 @@ export const HomeService = {
 
         try {
             if (isMock) return true;
-            const res: AxiosResponse<ApiResponse<{ hasUnread: boolean }>> = await api.get('/notifications/unread-status', {
-                headers: { 'X-Request-Id': requestId }
-            });
+            const res = await request.get<ApiResponse<{ hasUnread: boolean }>>('/notifications/unread-status');
             return res.data.data.hasUnread;
         } catch (error) {
             logger.error({

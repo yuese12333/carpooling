@@ -6,6 +6,8 @@
 
 在开始开发前，请按以下步骤配置本地开发环境。本项目使用 **Expo**，无需单独安装 Android Studio、Xcode 或 JDK 即可用真机调试。
 
+> **首次克隆后**：在 `frontend/` 目录下执行 `copy .env.example .env`（Windows）或 `cp .env.example .env`（macOS/Linux），然后按需编辑 `.env`。
+
 ### 前置要求
 
 - **操作系统**：Windows 10/11、macOS 或 Linux
@@ -63,22 +65,31 @@ echo "registry=https://registry.npmmirror.com" > .npmrc
 
 ---
 
+## 环境变量（`.env`）
+
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `EXPO_PUBLIC_API_URL` | 后端 API 根地址（不含 `/api` 后缀，不以 `/` 结尾） | `http://localhost:3000` |
+| `EXPO_PUBLIC_AMAP_API_KEY` | 高德地图 Android SDK Key | `8f73ea04...` |
+| `EXPO_PUBLIC_AMAP_KEY_NAME` | 高德控制台 Key 名称 | `carpooling` |
+
+所有 API 请求通过 `src/utils/request.ts` 统一发出，`baseURL` 自动拼接为 `${EXPO_PUBLIC_API_URL}/api`。**不要**在各 API 文件中自行创建 axios 实例或硬编码 URL。
+
+切换开发内网与公网测试时，只需修改 `.env` 中的 `EXPO_PUBLIC_API_URL` 并重启 Expo 即可。
+
+---
+
 ## 开发环境与测试环境（内网 / 公网）
 
-前端需同时支持两种环境：
+前端通过 `.env` 中的 `EXPO_PUBLIC_API_URL` 切换后端地址：
 
-| 环境 | 后端位置 | 前端配置 |
-|------|----------|----------|
-| **开发环境** | 内网（本机或局域网），如 `http://localhost:3000` 或 `http://192.168.x.x:3000` | 在 `.env` 中设置 `EXPO_PUBLIC_API_URL` 为上述内网地址，或不设置（默认 `http://localhost:3000`） |
-| **测试环境** | 公网服务器，如 `https://api-test.yourdomain.com` | 在 `.env` 中设置 `EXPO_PUBLIC_API_URL=https://api-test.yourdomain.com`，再启动或构建 |
+| 场景 | `.env` 配置 |
+|------|------------|
+| **本地开发**（后端本机运行） | `EXPO_PUBLIC_API_URL=http://localhost:3000` |
+| **局域网联调**（手机真机） | `EXPO_PUBLIC_API_URL=http://192.168.x.x:3000` |
+| **公网测试服务器** | `EXPO_PUBLIC_API_URL=http://1.15.45.125` |
 
-操作步骤：
-
-1. 在 frontend 目录复制 `.env.example` 为 `.env`：`cp .env.example .env`（Windows：`copy .env.example .env`）。
-2. 开发时：`.env` 里使用内网地址（或删掉该行用默认本地）；运行 `npx expo start` 连内网后端。
-3. 测公网时：修改 `.env` 中 `EXPO_PUBLIC_API_URL` 为测试公网地址，保存后重启 `npx expo start`（或重新构建）。
-
-请求接口时使用 **`config/api.ts`**（路径：`frontend/config/api.ts`，与 `src/` 同级）中的 `API_BASE_URL` 作为根地址（由 `app.config.js` 根据 `EXPO_PUBLIC_API_URL` 注入）。**不要**把非页面模块放在 `src/` 下，否则 Expo Router 会当作路由并告警。
+修改 `.env` 后需重启 `npx expo start` 使环境变量生效。
 
 ---
 
@@ -115,17 +126,31 @@ npx expo start
 ## 项目结构
 
 ```
-carpooling/
-├── components/             # 可复用组件（与 src 同级，勿放 src 内，见 CONTRIBUTING.md）
-├── config/                 # 环境配置与常量（与 src 同级）
-│   └── api.ts              # API_BASE_URL（开发内网 / 测试公网）
-├── src/                    # Expo Router 路由根目录（仅页面与路由相关）
-│   ├── pages/              # 业务页面组件
-│   ├── _layout.tsx
-│   ├── index.tsx
+frontend/
+├── components/             # 全局公共组件（与 src/ 同级，避免被 Expo Router 扫描为路由）
+│   ├── button.tsx
+│   ├── input.tsx
+│   ├── card.tsx
 │   └── ...
-├── assets/                 # 静态资源（图标、图片等）
-├── scripts/                # 脚本（如 reset-project）
+├── config/                 # 环境配置（与 src/ 同级）
+│   └── api.ts              # 保留兼容，实际 baseURL 由 src/utils/request.ts 读取环境变量
+├── src/                    # Expo Router 路由根目录
+│   ├── pages/              # 业务页面（按模块拆分）
+│   │   ├── index.tsx       # 应用入口，重定向至登录页并初始化链路追踪
+│   │   ├── _layout.tsx     # 根布局（AuthProvider、Stack 路由、PortalHost）
+│   │   ├── auth/           # 认证模块（login / register / forget-password）
+│   │   ├── home/           # 首页
+│   │   ├── find-ride/      # 找拼车
+│   │   ├── offer-ride/     # 发布行程
+│   │   └── trips/          # 我的行程
+│   ├── hooks/              # 自定义 Hook（各页面业务逻辑）
+│   ├── api/                # API 接口封装（各模块对应一个文件）
+│   ├── store/              # 全局状态（Zustand env-store、AuthContext）
+│   ├── router/             # 路由常量（paths.ts）
+│   └── utils/              # 工具类（logger、request、validator 等）
+├── assets/                 # 静态资源（图标、图片）
+├── .env                    # 本地环境变量（不提交 Git）
+├── .env.example            # 环境变量模板
 ├── app.json                # Expo 配置
 ├── package.json
 └── tsconfig.json

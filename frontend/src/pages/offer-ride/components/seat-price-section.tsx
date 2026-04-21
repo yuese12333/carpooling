@@ -167,3 +167,5 @@ export const SeatPriceSection: React.FC<SeatPriceSectionProps> = ({
         </Card>
     );
 };
+
+export default SeatPriceSection;

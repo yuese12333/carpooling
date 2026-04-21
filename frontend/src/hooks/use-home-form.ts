@@ -38,7 +38,7 @@ export const useHomeForm = (requestId: string) => {
          * 异步初始化首页数据
          */
         const fetchHomeData = async () => {
-            // 业务参数准备
+            // TODO: 替换为真实设备定位（调用 expo-location 获取当前坐标）
             const locationParams = { latitude: 24.14, longitude: 120.67 };
 
             try {
@@ -201,6 +201,5 @@ export const useHomeForm = (requestId: string) => {
         toggleMockMode,
         handleSearch,
         navigateTo,
-        router,
     };
 };

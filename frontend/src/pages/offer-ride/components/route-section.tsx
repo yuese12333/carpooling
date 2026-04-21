@@ -197,3 +197,5 @@ export const RouteSection: React.FC<RouteSectionProps> = ({
         </Card>
     );
 };
+
+export default RouteSection;

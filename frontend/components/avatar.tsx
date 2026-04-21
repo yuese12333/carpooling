@@ -13,7 +13,6 @@ import {
   type ImageProps,
   type ColorValue,
   type StyleProp,
-  type ViewStyle,
   type TextStyle,
   type ImageStyle,
   type NativeSyntheticEvent,
@@ -108,27 +107,19 @@ export const AvatarImage = React.forwardRef<Image, AvatarImageProps>(
       return null;
     }
 
-    const { setIsLoaded, setHasError } = context;
+    const handleLoad = (event: NativeSyntheticEvent<ImageLoadEventData>) => {
+      context.setIsLoaded(true);
+      context.setHasError(false);
+      onLoadingStatusChange?.("success");
+      onLoad?.(event);
+    };
 
-    const handleLoad = React.useCallback(
-      (event: NativeSyntheticEvent<ImageLoadEventData>) => {
-        setIsLoaded(true);
-        setHasError(false);
-        onLoadingStatusChange?.("success");
-        onLoad?.(event);
-      },
-      [setIsLoaded, setHasError, onLoadingStatusChange, onLoad]
-    );
-
-    const handleError = React.useCallback(
-      (event: NativeSyntheticEvent<ImageErrorEventData>) => {
-        setHasError(true);
-        setIsLoaded(false);
-        onLoadingStatusChange?.("error");
-        onError?.(event);
-      },
-      [setHasError, setIsLoaded, onLoadingStatusChange, onError]
-    );
+    const handleError = (event: NativeSyntheticEvent<ImageErrorEventData>) => {
+      context.setHasError(true);
+      context.setIsLoaded(false);
+      onLoadingStatusChange?.("error");
+      onError?.(event);
+    };
 
     return (
       <Image

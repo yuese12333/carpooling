@@ -202,7 +202,7 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
                 agreeProtocol: isAgreed,
             };
 
-            const result = await registerUser(registerParams, isMockMode);
+            await registerUser(registerParams, isMockMode);
 
             // 记录注册成功日志，严禁记录 password
             logger.info({

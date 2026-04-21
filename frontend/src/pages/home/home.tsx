@@ -3,7 +3,7 @@
  * @description 乘客端首页入口组件
  */
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import { ScrollView, View, Text, Switch, TouchableOpacity } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronRight, Shield, Star, Zap } from "lucide-react-native";
@@ -45,7 +45,6 @@ export default function HomePage({ requestId }: HomePageProps) {
     toggleMockMode,
     handleSearch,
     navigateTo,
-    router
   } = useHomeForm(requestId);
 
   /**
@@ -125,7 +124,7 @@ export default function HomePage({ requestId }: HomePageProps) {
           onSetFrom={setFromLocation}
           onSetTo={setToLocation}
           onSearch={() => handleSearch()}
-          onNavigateToProfile={() => router.push(ROUTES.PROFILE_MAIN)}
+          onNavigateToProfile={() => navigateTo(ROUTES.PROFILE_MAIN)}
           onNavigateToNotifications={() => navigateTo(ROUTES.RIDE.NAVIGATION)}
         />
 

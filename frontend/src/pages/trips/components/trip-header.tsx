@@ -105,3 +105,5 @@ export const TripHeader: React.FC<TripHeaderProps> = ({
         </View>
     );
 };
+
+export default TripHeader;

@@ -30,7 +30,7 @@
       [
         "expo-router",
         {
-          "root": "src/pages"
+          "root": "src/pages/routes"
         }
       ],
       [

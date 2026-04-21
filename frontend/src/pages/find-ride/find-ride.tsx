@@ -3,7 +3,7 @@
  * @description 找拼车主页面。
  */
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -91,7 +91,7 @@ export default function FindRidePage() {
       error: undefined,
       errorType: undefined
     });
-  }, [requestId]);
+  }, [requestId, searchFrom, searchTo]);
 
   /**
    * 增强型返回处理

@@ -3,7 +3,7 @@
  * @description 拼车行程卡片组件。
  */
 
-import React, { useCallback } from "react";
+import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Users, Star, Clock, ChevronRight } from "lucide-react-native";
 import { Avatar, AvatarImage, AvatarFallback } from "@/../components/avatar";
@@ -66,7 +66,7 @@ export const RideCard: React.FC<RideCardProps> = ({
      * 处理卡片点击并注入链路审计
      * [优化] 使用 useCallback 确保引用稳定，显式使用外部注入的 requestId
      */
-    const handlePress = useCallback(() => {
+    const handlePress = () => {
         // 记录用户交互行为日志：严格遵循统一日志结构
         logger.info({
             module: 'component.rideCard',
@@ -86,7 +86,7 @@ export const RideCard: React.FC<RideCardProps> = ({
         if (typeof onPress === 'function') {
             onPress();
         }
-    }, [ride.id, ride.driver.name, ride.from, ride.to, onPress, requestId]);
+    };
 
     return (
         <TouchableOpacity
@@ -182,3 +182,5 @@ export const RideCard: React.FC<RideCardProps> = ({
         </TouchableOpacity>
     );
 };
+
+export default RideCard;

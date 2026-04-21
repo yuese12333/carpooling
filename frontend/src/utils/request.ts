@@ -13,7 +13,7 @@ import logger from './logger';
  * 封装后的 Axios 实例
  */
 const request: AxiosInstance = axios.create({
-    baseURL: '/api',
+    baseURL: `${process.env.EXPO_PUBLIC_API_URL}/api`,
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',

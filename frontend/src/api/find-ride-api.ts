@@ -38,17 +38,8 @@ export interface RideListResponse {
  * 搜索元数据返回数据结构
  */
 export interface SearchMetadataResponse {
-    sortOptions: Array<{ label: string; value: string }>;
-    filterTags: Array<{ label: string; value: string }>;
-}
-
-/**
- * 注入式 API 参数接口
- */
-interface TracedRequest<T = undefined> {
-    params: T;
-    /** 必须显式传入当前业务流的 RequestId */
-    requestId: string;
+    sortOptions: { label: string; value: string }[];
+    filterTags: { label: string; value: string }[];
 }
 
 // --- 接口函数 (API Functions) ---

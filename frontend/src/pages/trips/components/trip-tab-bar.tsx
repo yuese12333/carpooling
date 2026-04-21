@@ -72,3 +72,5 @@ export const TripTabBar: React.FC<TripTabBarProps> = ({
         </View>
     );
 };
+
+export default TripTabBar;

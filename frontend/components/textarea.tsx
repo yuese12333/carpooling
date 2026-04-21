@@ -22,8 +22,6 @@ export interface TextareaProps extends TextInputProps {
   className?: string;
 }
 
-const MODULE_NAME = 'Textarea';
-
 /**
  * @component Textarea
  * @description 封装后的多行输入组件，确保多端表现一致性。
@@ -50,7 +48,7 @@ export const Textarea: React.FC<TextareaProps> = ({
   // 3. 交互日志处理器：获取焦点
   const handleFocus = React.useCallback((e: any) => {
     onFocus?.(e);
-  }, [onFocus, props.placeholder]);
+  }, [onFocus]);
 
   // 4. 交互日志处理器：失去焦点
   const handleBlur = React.useCallback((e: any) => {

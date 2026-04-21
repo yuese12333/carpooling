@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import styles, { COLORS } from '../forget-password.style';
+import forgetPasswordStyles, { COLORS } from '../forget-password.style';
 import { Button } from "@/../components/button";
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
@@ -54,19 +54,19 @@ export const StepVerifyOtp: React.FC<StepVerifyOtpProps> = ({
     };
 
     return (
-        <View style={styles.fullWidth}>
-            <Text style={styles.stepHint}>
-                验证码已发送至 <Text style={styles.boldText}>{phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')}</Text>
+        <View style={forgetPasswordStyles.fullWidth}>
+            <Text style={forgetPasswordStyles.stepHint}>
+                验证码已发送至 <Text style={forgetPasswordStyles.boldText}>{phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')}</Text>
             </Text>
 
-            <View style={styles.otpContainer}>
+            <View style={forgetPasswordStyles.otpContainer}>
                 {code.map((digit, i) => (
                     <TextInput
                         key={i}
                         ref={(el) => { codeRefs.current[i] = el; }}
                         style={[
-                            styles.otpInput,
-                            digit ? styles.otpInputActive : styles.otpInputInactive
+                            forgetPasswordStyles.otpInput,
+                            digit ? forgetPasswordStyles.otpInputActive : forgetPasswordStyles.otpInputInactive
                         ]}
                         keyboardType="number-pad"
                         placeholderTextColor={COLORS.textPlaceholder}
@@ -82,10 +82,10 @@ export const StepVerifyOtp: React.FC<StepVerifyOtpProps> = ({
             <TouchableOpacity
                 disabled={countdown > 0 || loading}
                 onPress={handleResendPress}
-                style={styles.resendBtn}
+                style={forgetPasswordStyles.resendBtn}
                 activeOpacity={0.7}
             >
-                <Text style={[styles.resendText, countdown > 0 && styles.disabledText]}>
+                <Text style={[forgetPasswordStyles.resendText, countdown > 0 && forgetPasswordStyles.disabledText]}>
                     {countdown > 0 ? `${countdown}s 后重新发送` : "重新获取验证码"}
                 </Text>
             </TouchableOpacity>
@@ -94,7 +94,7 @@ export const StepVerifyOtp: React.FC<StepVerifyOtpProps> = ({
                 disabled={code.some(c => !c) || loading}
                 onPress={onSubmit}
                 loading={loading}
-                style={styles.submitBtn}
+                style={forgetPasswordStyles.submitBtn}
             >
                 确认验证
             </Button>
