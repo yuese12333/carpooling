@@ -3,13 +3,13 @@
  * @description 乘客端首页入口组件
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { ScrollView, View, Text, Switch, TouchableOpacity } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChevronRight, Shield, Star, Zap } from "lucide-react-native";
 
 import { useHomeForm } from '@/hooks/use-home-form';
-import logger from '@/utils/logger';
+import logger, { generateRequestId } from '@/utils/logger';
 import styles, { COLORS } from "./home.style";
 import { ROUTES } from '@/router/paths';
 
@@ -18,17 +18,9 @@ import { RideCardItem } from "./components/ride-card-item";
 import { StatsBanner } from "./components/stats-banner";
 import { QuickActions } from "./components/quick-actions";
 
-/**
- * 首页页面组件
- * @param {Object} props - 属性
- * @param {string} props.requestId - 业务流唯一的请求ID（由入口路由显式注入）
- */
-interface HomePageProps {
-  requestId: string;
-}
-
-export default function HomePage({ requestId }: HomePageProps) {
+export default function HomePage() {
   const insets = useSafeAreaInsets();
+  const requestId = useMemo(() => generateRequestId(), []);
 
   // 将 requestId 显式注入业务 Hook 逻辑层
   const {
@@ -60,7 +52,7 @@ export default function HomePage({ requestId }: HomePageProps) {
       errorType: undefined,
       requestId: requestId
     });
-  }, [requestId, isMockMode]);
+  }, [requestId]);
 
   /**
    * 切换 Mock 模式并记录轨迹
@@ -100,6 +92,7 @@ export default function HomePage({ requestId }: HomePageProps) {
           { paddingTop: insets.top } // 动态处理顶部安全距离
         ]}
         bounces={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* 1. 环境切换 - 显式化 requestId 消费 */}
         <View style={styles.envSwitcher}>

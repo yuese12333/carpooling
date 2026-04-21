@@ -7,7 +7,6 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import forgetPasswordStyles, { COLORS } from '../forget-password.style';
 import { Button } from "@/../components/button";
-import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 
 interface StepVerifyOtpProps {
@@ -29,6 +28,8 @@ interface StepVerifyOtpProps {
     onResend: () => void;
     /** 手动提交校验回调 */
     onSubmit: () => void;
+    /** 全链路追踪 ID */
+    requestId: string;
 }
 
 /**
@@ -36,10 +37,8 @@ interface StepVerifyOtpProps {
  * @param props StepVerifyOtpProps
  */
 export const StepVerifyOtp: React.FC<StepVerifyOtpProps> = ({
-    phone, code, countdown, loading, codeRefs, onCodeChange, onKeyDown, onResend, onSubmit
+    phone, code, countdown, loading, codeRefs, onCodeChange, onKeyDown, onResend, onSubmit, requestId
 }) => {
-    // 获取全局链路跟踪 ID
-    const requestId = useEnvStore.getState().currentRequestId;
 
     /** 处理重新发送点击日志记录 */
     const handleResendPress = () => {

@@ -10,6 +10,7 @@ import logger from '@/utils/logger';
 import { myTrips } from "../store/mock-data";
 import { tripsApi } from "../api/trips-api";
 import { ROUTES } from '../router/paths';
+import { useEnvStore } from '@/store/env-store';
 
 const MODULE_NAME = 'use-trips-form';
 
@@ -114,7 +115,7 @@ export const useTripsForm = ({ requestId }: UseTripsFormProps) => {
      * 显式使用注入的 requestId 进行链路透传
      */
     const fetchTrips = useCallback(async () => {
-        const isMockMode = process.env.NODE_ENV === 'development';
+        const isMockMode = useEnvStore.getState().isMockMode;
         setLoading(true);
 
         try {
@@ -219,7 +220,7 @@ export const useTripsForm = ({ requestId }: UseTripsFormProps) => {
             activeRole,
             loading,
             filteredTrips,
-            isMockMode: process.env.NODE_ENV === 'development'
+            isMockMode: useEnvStore.getState().isMockMode
         },
         actions: {
             setActiveTab,

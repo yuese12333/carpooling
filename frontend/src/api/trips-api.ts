@@ -3,7 +3,7 @@
  * @description 行程管理模块 API 请求封装。
  */
 
-import axios from 'axios';
+import request from '@/utils/request';
 import logger from '@/utils/logger';
 
 // --- 类型定义 ---
@@ -52,11 +52,6 @@ export interface RateTripParams {
 
 const MODULE_NAME = 'trips-api';
 
-const apiClient = axios.create({
-    baseURL: process.env.API_BASE_URL ?? '/api',
-    timeout: 10000,
-});
-
 // --- API 请求函数 ---
 
 export const tripsApi = {
@@ -75,9 +70,8 @@ export const tripsApi = {
         requestId: string
     ): Promise<TripListResponse> => {
         try {
-            const response = await apiClient.get<TripListResponse>('/trips/list', {
+            const response = await request.get<TripListResponse>('/trips/list', {
                 params,
-                headers: { 'X-Request-Id': requestId } // 显式注入请求头
             });
             return response.data;
         } catch (error) {
@@ -103,9 +97,7 @@ export const tripsApi = {
     cancelTrip: async (tripId: string, requestId: string, reason?: string): Promise<void> => {
         const params = { tripId, reason: reason ?? undefined };
         try {
-            await apiClient.post('/trips/cancel', params, {
-                headers: { 'X-Request-Id': requestId }
-            });
+            await request.post('/trips/cancel', params);
         } catch (error) {
             logger.error({
                 module: MODULE_NAME,
@@ -127,9 +119,7 @@ export const tripsApi = {
      */
     rateTrip: async (data: RateTripParams, requestId: string): Promise<void> => {
         try {
-            await apiClient.post('/trips/rate', data, {
-                headers: { 'X-Request-Id': requestId }
-            });
+            await request.post('/trips/rate', data);
         } catch (error) {
             logger.error({
                 module: MODULE_NAME,
@@ -151,9 +141,8 @@ export const tripsApi = {
      */
     getRebookTemplate: async (tripId: string, requestId: string): Promise<any> => {
         try {
-            const response = await apiClient.get('/trips/template', {
+            const response = await request.get('/trips/template', {
                 params: { tripId },
-                headers: { 'X-Request-Id': requestId }
             });
             return response.data;
         } catch (error) {
@@ -177,9 +166,8 @@ export const tripsApi = {
      */
     getContact: async (tripId: string, requestId: string): Promise<any> => {
         try {
-            const response = await apiClient.get('/trips/contact', {
+            const response = await request.get('/trips/contact', {
                 params: { tripId },
-                headers: { 'X-Request-Id': requestId }
             });
             return response.data;
         } catch (error) {

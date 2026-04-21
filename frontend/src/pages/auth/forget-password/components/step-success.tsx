@@ -7,16 +7,13 @@ import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { CheckCircle2 } from "lucide-react-native";
 import forgetPasswordStyles, { COLORS } from '../forget-password.style';
-import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 
 /**
  * 成功反馈组件
  * 职责：展示成功状态，记录业务完结日志
  */
-export const StepSuccess: React.FC = () => {
-    // 获取全局链路跟踪 ID
-    const requestId = useEnvStore.getState().currentRequestId;
+export const StepSuccess: React.FC<{ requestId: string }> = ({ requestId }) => {
 
     useEffect(() => {
         // 记录业务流程最终完结审计日志

@@ -2,12 +2,11 @@
  * @file find-ride-api.ts
  * @description 拼车行程相关接口对接。
  */
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import { mockRides } from '../store/mock-data';
 import logger from '@/utils/logger';
-
-// 从环境变量获取 Mock 开关
-const IS_MOCK_MODE = process.env.NODE_ENV === 'development' || true;
+import request from '@/utils/request';
+import { useEnvStore } from '@/store/env-store';
 
 // --- 类型定义 (Type Definitions) ---
 
@@ -42,6 +41,21 @@ export interface SearchMetadataResponse {
     filterTags: { label: string; value: string }[];
 }
 
+// --- 筛选与排序配置常量 ---
+
+/** 排序选项 */
+export const RIDE_SORT_OPTIONS = ["最快出发", "价格最低", "评分最高", "距离最近"] as const;
+
+/** 过滤标签 */
+export const RIDE_FILTER_TAGS = [
+    { label: "今天", value: "today" },
+    { label: "明天", value: "tomorrow" },
+    { label: "女司机", value: "female_driver" },
+    { label: "空调", value: "ac" },
+    { label: "免费等待", value: "free_wait" },
+    { label: "准时出发", value: "on_time" },
+] as const;
+
 // --- 接口函数 (API Functions) ---
 
 /**
@@ -57,8 +71,7 @@ export const fetchRides = async (
     const operation = 'fetchRides';
 
     try {
-        if (IS_MOCK_MODE) {
-            await new Promise((resolve) => setTimeout(resolve, 500));
+        if (useEnvStore.getState().isMockMode) {
             return {
                 code: 200,
                 message: 'success',
@@ -70,9 +83,8 @@ export const fetchRides = async (
             };
         }
 
-        const response = await axios.get<ApiResponse<RideListResponse>>('/api/rides/search', {
+        const response = await request.get<ApiResponse<RideListResponse>>('/rides/search', {
             params,
-            headers: { 'X-Request-Id': requestId } // 将追踪 ID 注入请求头，实现跨端链路打通
         });
         return response.data;
     } catch (error) {
@@ -102,7 +114,7 @@ export const fetchSearchMetadata = async (requestId: string): Promise<ApiRespons
     const operation = 'fetchSearchMetadata';
 
     try {
-        if (IS_MOCK_MODE) {
+        if (useEnvStore.getState().isMockMode) {
             return {
                 code: 200,
                 message: 'success',
@@ -121,9 +133,7 @@ export const fetchSearchMetadata = async (requestId: string): Promise<ApiRespons
             };
         }
 
-        const response = await axios.get<ApiResponse<SearchMetadataResponse>>('/api/rides/search-metadata', {
-            headers: { 'X-Request-Id': requestId }
-        });
+        const response = await request.get<ApiResponse<SearchMetadataResponse>>('/rides/search-metadata');
         return response.data;
     } catch (error) {
         const axiosError = error as AxiosError;

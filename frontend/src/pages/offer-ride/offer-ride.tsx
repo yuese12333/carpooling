@@ -27,8 +27,7 @@ import { Button } from "../../../components/button";
 // 样式与工具
 import styles, { COLORS } from "./offer-ride.style";
 import { useOfferRideForm } from "@/hooks/use-offer-ride-form";
-import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
+import logger, { generateRequestId } from '@/utils/logger';
 
 const MODULE_NAME = 'OFFER_RIDE_PAGE';
 
@@ -39,9 +38,7 @@ export default function OfferRidePage() {
    * [规范修复] 显式初始化 RequestId
    * 遵循生命周期隔离：在 Page 入口处同步生成/获取本次业务流 ID
    */
-  const businessRequestId = useMemo(() => {
-    return useEnvStore.getState().currentRequestId || `REQ-${Date.now()}`;
-  }, []);
+  const businessRequestId = useMemo(() => generateRequestId(), []);
 
   /**
    * [规范修复] 将 requestId 显式注入 Hook
@@ -154,7 +151,7 @@ export default function OfferRidePage() {
         <Text style={styles.headerTitle}>发布行程</Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* 1. 路线模块 - 显式传递 requestId */}
         <RouteSection
           requestId={businessRequestId}

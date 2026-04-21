@@ -16,7 +16,7 @@ import TripCard from "./components/trip-card";
 import { TripEmptyState } from "./components/trip-empty-state";
 
 // 引入日志工具
-import logger from "@/utils/logger";
+import logger, { generateRequestId } from "@/utils/logger";
 
 const TRIP_TABS = ["全部", "即将出发", "已完成", "已取消"];
 const ROLE_FILTERS = [
@@ -32,7 +32,7 @@ export default function TripsPage() {
    * [规范修复] 生命周期隔离：同步初始化本业务流唯一的 requestId
    * 采用当前时间戳与随机偏移量确保业务流 ID 的唯一性，严禁从 Store 隐式获取。
    */
-  const requestId = useMemo(() => `REQ-TRIP-${Date.now()}-${Math.floor(Math.random() * 1000)}`, []);
+  const requestId = useMemo(() => generateRequestId(), []);
 
   /**
    * [规范修复] 参数化消费：显式传递 requestId 至业务 Hook
@@ -54,7 +54,7 @@ export default function TripsPage() {
       result: "SUCCESS",
       requestId
     });
-  }, [requestId, isMockMode, activeRole]);
+  }, [requestId]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>

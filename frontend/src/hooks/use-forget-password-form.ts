@@ -246,6 +246,5 @@ export const useForgetPasswordForm = (requestId: string) => {
         handleKeyDown,
         handleFinalSubmit,
         verifySmsCode,
-        router
     };
 };

@@ -99,6 +99,10 @@ export const useFindRideForm = (requestId: string | undefined) => {
     }, [loadData]);
 
     // --- 计算属性 ---
+    // TODO: 实现前端筛选与排序逻辑
+    // activeFilters 用于按日期(today/tomorrow)、司机特征(female_driver)等字段过滤 rides
+    // sortBy 用于对 rides 按出发时间/价格/评分排序
+    // 目前 activeFilters 和 sortBy 状态已维护，待后端接口稳定后决定前端过滤还是传参重新请求
     const filteredRides = useMemo(() => {
         return rides;
     }, [rides]);

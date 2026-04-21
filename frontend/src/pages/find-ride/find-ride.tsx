@@ -3,7 +3,7 @@
  * @description 找拼车主页面。
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import styles, { COLORS } from "./find-ride.style";
 
 // 导入业务逻辑 Hook
 import { useFindRideForm } from "../../hooks/use-find-ride-form";
+import { RIDE_SORT_OPTIONS, RIDE_FILTER_TAGS } from "@/api/find-ride-api";
 
 // 导入子组件
 import { SearchBar } from "./components/search-bar";
@@ -29,21 +30,13 @@ import { RideCard } from "./components/ride-card";
 
 // 导入路由与工具规范
 import { ROUTES } from '@/router/paths';
-import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
+import logger, { generateRequestId } from '@/utils/logger';
 
 /** 排序选项配置 */
-const SORT_OPTIONS = ["最快出发", "价格最低", "评分最高", "距离最近"] as const;
+const SORT_OPTIONS = RIDE_SORT_OPTIONS;
 
 /** 过滤标签配置 */
-const FILTER_TAGS = [
-  { label: "今天", value: "today" },
-  { label: "明天", value: "tomorrow" },
-  { label: "女司机", value: "female_driver" },
-  { label: "空调", value: "ac" },
-  { label: "免费等待", value: "free_wait" },
-  { label: "准时出发", value: "on_time" },
-];
+const FILTER_TAGS = RIDE_FILTER_TAGS;
 
 /**
  * 找拼车主页面组件
@@ -51,12 +44,7 @@ const FILTER_TAGS = [
  */
 export default function FindRidePage() {
   const router = useRouter();
-
-  /**
-   * [规范执行] 显式获取当前业务流 RequestId
-   * 此处作为业务起点，通过 Store 取值并显式向下游参数化注入
-   */
-  const requestId = useEnvStore((state) => state.currentRequestId);
+  const requestId = useMemo(() => generateRequestId(), []);
 
   // 从自定义 Hook 中解构状态和操作方法，显式注入 requestId
   const {
@@ -91,7 +79,7 @@ export default function FindRidePage() {
       error: undefined,
       errorType: undefined
     });
-  }, [requestId, searchFrom, searchTo]);
+  }, [requestId]);
 
   /**
    * 增强型返回处理
@@ -185,6 +173,7 @@ export default function FindRidePage() {
         style={styles.listContainer}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.resultCount}>
           {loading ? "正在搜索行程..." : `共找到 ${filteredRides.length} 个行程`}

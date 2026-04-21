@@ -6,6 +6,7 @@
 import React, { useMemo, useEffect } from "react";
 import { View, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from 'expo-router';
 import { ROUTES } from '@/router/paths';
 import logger, { generateRequestId } from '@/utils/logger';
 import forgetPasswordStyles, { COLORS } from './forget-password.style';
@@ -18,6 +19,7 @@ import { StepResetPassword } from './components/step-reset-password';
 import { StepSuccess } from './components/step-success';
 
 export default function ForgetPasswordPage() {
+  const router = useRouter();
   const requestId = useMemo(() => generateRequestId(), []);
   const form = useForgetPasswordForm(requestId);
 
@@ -62,7 +64,7 @@ export default function ForgetPasswordPage() {
               if (form.step > 1 && form.step < 4) {
                 form.setStep((form.step - 1) as any);
               } else {
-                form.router.push(ROUTES.AUTH.LOGIN);
+                router.push(ROUTES.AUTH.LOGIN);
               }
             }}
           />
@@ -89,6 +91,7 @@ export default function ForgetPasswordPage() {
                 onKeyDown={form.handleKeyDown}
                 onResend={form.handleInitiateReset}
                 onSubmit={() => form.verifySmsCode(form.code.join(""))}
+                requestId={requestId}
               />
             )}
 
@@ -110,7 +113,7 @@ export default function ForgetPasswordPage() {
               />
             )}
 
-            {form.step === 4 && <StepSuccess />}
+            {form.step === 4 && <StepSuccess requestId={requestId} />}
           </View>
         </View>
       </KeyboardAvoidingView>
