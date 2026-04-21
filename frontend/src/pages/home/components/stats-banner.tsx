@@ -3,11 +3,9 @@
  * @description 首页数据统计横幅组件，负责展示今日行程、注册用户数及好评率。
  */
 
-import React, { useEffect } from "react";
+import React from "react";
 import { View, Text } from "react-native";
-import { useEnvStore } from '@/store/env-store';
 import { HomeStats } from '@/api/home-api';
-import logger from '@/utils/logger';
 import styles from "../home.style";
 
 /**
@@ -21,12 +19,10 @@ interface StatsBannerProps {
 }
 
 /**
- * 首页数据统计横幅组件
- * @param {StatsBannerProps} props - 组件属性
+ * 首页数据统计横幅组件（原子 UI 层）
+ * 职责：仅负责数据格式化与界面展示。
  */
 export const StatsBanner: React.FC<StatsBannerProps> = ({ stats }) => {
-    // 全局取值：RequestId 消费逻辑
-    const requestId = useEnvStore.getState().currentRequestId;
 
     /**
      * 格式化注册用户显示文本
@@ -36,6 +32,7 @@ export const StatsBanner: React.FC<StatsBannerProps> = ({ stats }) => {
     const formatUsersDisplay = (count?: number): string => {
         if (!count) return '0.0万';
         try {
+            // 严禁在计算逻辑中使用 null，统一以 undefined 或常量兜底
             return `${(count / 10000).toFixed(1)}万`;
         } catch (error) {
             return '0.0万';
@@ -51,19 +48,7 @@ export const StatsBanner: React.FC<StatsBannerProps> = ({ stats }) => {
         return count?.toLocaleString() || '--';
     };
 
-    // 链路追踪：组件渲染与数据状态记录
-    useEffect(() => {
-        logger.info({
-            module: 'StatsBanner',
-            operate: 'component_render',
-            params: { hasData: !!stats },
-            result: stats ? 'data_displayed' : 'placeholder_displayed',
-            error: undefined,
-            errorType: undefined,
-            requestId
-        });
-    }, [stats, requestId]);
-
+    // 格式化展示数据
     const ridesCount = formatRidesCount(stats?.todayRidesCount);
     const usersDisplay = formatUsersDisplay(stats?.totalUsers);
     const positiveRate = stats?.positiveRate ? `${stats.positiveRate}%` : '--%';

@@ -1,14 +1,13 @@
 /**
  * @file use-find-ride-form.ts
- * @description 找拼车页面的业务逻辑 Hook，集成链路追踪与标准化日志审计
+ * @description 找拼车页面的业务逻辑 Hook。
  */
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { fetchRides, RideListResponse } from "@/api/find-ride-api";
+import { fetchRides, RideListResponse, RideSearchQuery } from "@/api/find-ride-api";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 interface SearchParams {
     from?: string;
@@ -17,14 +16,14 @@ interface SearchParams {
 
 /**
  * 找拼车页面业务逻辑自定义 Hook
+ * @param {string | undefined} requestId - [规范注入] 从 Page 层显式透传的业务链路 ID
  * @returns {object} 包含搜索状态、受控组件 Setter 及业务处理函数
  */
-export const useFindRideForm = () => {
+export const useFindRideForm = (requestId: string | undefined) => {
     const router = useRouter();
     const params = useLocalSearchParams() as unknown as SearchParams;
 
     // --- 状态管理 ---
-    // 明确类型定义，拒绝 any
     const [rides, setRides] = useState<RideListResponse['list']>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [searchFrom, setSearchFrom] = useState<string>(params.from || "");
@@ -35,40 +34,42 @@ export const useFindRideForm = () => {
 
     /**
      * 内部逻辑：加载数据
-     * 封装为 useCallback 以确保引用稳定性
+     * 修复点：移除了 getState() 的隐式调用，改为消费参数中的 requestId
      */
     const loadData = useCallback(async () => {
-        const requestId = useEnvStore.getState().currentRequestId;
         const moduleName = 'hook.ride';
         const operation = 'loadData';
 
         setLoading(true);
-        try {
-            const searchParams = {
-                from: searchFrom,
-                to: searchTo,
-                page: 1,
-                pageSize: 10
-            };
+        const searchParams: RideSearchQuery = {
+            from: searchFrom,
+            to: searchTo,
+            page: 1,
+            pageSize: 10
+        };
 
-            const res = await fetchRides(searchParams);
+        try {
+            // [显式传递] 将 requestId 透传至 API 层
+            const res = await fetchRides(searchParams, requestId);
 
             if (res.code === 200) {
                 setRides(res.data.list);
-                // 记录成功日志
+                // 记录标准化成功日志
                 logger.info({
                     module: moduleName,
                     operate: operation,
-                    params: searchParams,
+                    params: { ...searchParams },
                     result: `Success: fetched ${res.data.list.length} rides`,
-                    requestId: requestId
+                    requestId: requestId,
+                    error: undefined,
+                    errorType: undefined
                 });
             } else {
-                // 记录业务级异常
+                // 记录业务级异常日志
                 logger.error({
                     module: moduleName,
                     operate: operation,
-                    params: searchParams,
+                    params: { ...searchParams },
                     result: undefined,
                     error: res.message,
                     errorType: 'BIZ_ERROR',
@@ -76,11 +77,11 @@ export const useFindRideForm = () => {
                 });
             }
         } catch (error) {
-            // 记录系统级异常
+            // 记录系统级异常日志
             logger.error({
                 module: moduleName,
                 operate: operation,
-                params: { searchFrom, searchTo },
+                params: { ...searchParams },
                 result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'SYSTEM_ERROR',
@@ -90,12 +91,12 @@ export const useFindRideForm = () => {
         } finally {
             setLoading(false);
         }
-    }, [searchFrom, searchTo]);
+    }, [searchFrom, searchTo, requestId]);
 
     // --- 副作用 ---
     useEffect(() => {
         loadData();
-    }, []);
+    }, [loadData]);
 
     // --- 计算属性 ---
     const filteredRides = useMemo(() => {
@@ -104,17 +105,19 @@ export const useFindRideForm = () => {
 
     /**
      * 执行搜索操作
-     * @returns {Promise<void>}
      */
     const handleSearch = async (): Promise<void> => {
-        const requestId = useEnvStore.getState().currentRequestId;
-
         logger.info({
             module: 'hook.ride',
             operate: 'handleSearch',
-            params: { searchFrom, searchTo },
-            result: undefined,
-            requestId: requestId
+            params: {
+                from: searchFrom,
+                to: searchTo
+            },
+            result: 'Initiating search navigation',
+            requestId: requestId,
+            error: undefined,
+            errorType: undefined
         });
 
         router.setParams({ from: searchFrom, to: searchTo });
@@ -123,7 +126,6 @@ export const useFindRideForm = () => {
 
     /**
      * 切换筛选标签状态
-     * @param {string} tagValue 标签标识
      */
     const handleToggleFilter = (tagValue: string): void => {
         setActiveFilters((prev) =>
@@ -135,7 +137,6 @@ export const useFindRideForm = () => {
 
     /**
      * 选择排序方式
-     * @param {string} option 排序选项标签
      */
     const handleSelectSort = (option: string): void => {
         setSortBy(option);
@@ -158,7 +159,7 @@ export const useFindRideForm = () => {
         isSortDropdownVisible,
         loading,
         filteredRides,
-        // Setter (用于受控组件)
+        // Setter
         setSearchFrom,
         setSearchTo,
         // 操作方法

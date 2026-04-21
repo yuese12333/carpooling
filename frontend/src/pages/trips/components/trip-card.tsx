@@ -1,6 +1,6 @@
 /**
  * @file trip-card.tsx
- * @description 行程卡片组件，负责展示行程简要信息、角色状态、路线以及交互操作。
+ * @description 业务子组件：行程卡片。
  */
 
 import React from "react";
@@ -10,17 +10,15 @@ import { Badge } from "@/components/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/avatar";
 import { Separator } from "@/components/separator";
 import { TransformedTrip } from '@/hooks/use-trips-form';
-import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
-import styles, { COLORS } from "../trips.style"; // 引用已重构的样式文件
+import styles, { COLORS } from "../trips.style";
 
 /**
  * 状态映射常量
  */
 const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor: string }> = {
-    upcoming: { label: "即将出发", bgColor: "#DCFCE7", textColor: COLORS.primary },
+    upcoming: { label: "即将出发", bgColor: COLORS.backgroundv1, textColor: COLORS.primary },
     completed: { label: "已完成", bgColor: COLORS.gray100, textColor: COLORS.gray500 },
-    cancelled: { label: "已取消", bgColor: "#FEF2F2", textColor: COLORS.danger },
+    cancelled: { label: "已取消", bgColor: COLORS.backgroundv2, textColor: COLORS.danger },
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -29,58 +27,45 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 interface TripCardProps {
-    trip: TransformedTrip; // 严格匹配
+    /** 业务对象数据 */
+    trip: TransformedTrip;
+    /** * 显式业务流 ID 注入 
+     * 遵循：显式传递与注入规则 (Explicit Passing)
+     */
+    requestId: string;
+    /** 点击详情回调 */
     onPress: (id: string) => void;
+    /** 取消操作回调 */
     onCancel: (id: string) => void;
+    /** 联系操作回调 */
     onContact: (id: string, role: string) => void;
 }
 
-const MODULE_NAME = 'trip-card-component';
-
 /**
- * @description 行程详情展示卡片
+ * @description 行程详情展示卡片 - 业务级组件
  */
-const TripCard: React.FC<TripCardProps> = ({ trip, onPress, onCancel, onContact }) => {
+const TripCard: React.FC<TripCardProps> = ({
+    trip,
+    requestId,
+    onPress,
+    onCancel,
+    onContact
+}) => {
     const { ride, role, status, id } = trip;
-    const requestId = useEnvStore.getState().currentRequestId;
 
-    // 计算总价：乘客人头费或司机总额
-    const finalPrice = (ride?.price || 0) * (trip.bookedSeats || 1);
-    const currentStatus = STATUS_CONFIG[status] || STATUS_CONFIG.completed;
+    // 计算逻辑校验，避免异常
+    const bookedSeats = trip.bookedSeats ?? 0;
+    const unitPrice = ride?.price ?? 0;
+    const finalPrice = unitPrice * (bookedSeats > 0 ? bookedSeats : 1);
 
-    /**
-     * @description 处理联系动作并记录追踪日志
-     */
-    const internalContactHandler = () => {
-        logger.info({
-            module: MODULE_NAME,
-            operate: 'click_contact',
-            params: { tripId: id, role },
-            result: 'User initiated contact from card ui',
-            requestId
-        });
-        onContact(id, role);
-    };
-
-    /**
-     * @description 处理取消动作并记录追踪日志
-     */
-    const internalCancelHandler = () => {
-        logger.info({
-            module: MODULE_NAME,
-            operate: 'click_cancel',
-            params: { tripId: id },
-            result: 'User initiated cancel from card ui',
-            requestId
-        });
-        onCancel(id);
-    };
+    const currentStatus = STATUS_CONFIG[status] ?? STATUS_CONFIG.completed;
 
     return (
         <TouchableOpacity
             onPress={() => onPress(id)}
             activeOpacity={0.9}
             style={styles.cardContainer}
+        // 提示：此处不记录日志，由父层 TripsPage 的回调处理函数记录并消费 requestId
         >
             {/* 卡片头部：状态与时间 */}
             <View style={styles.cardHeader}>
@@ -91,36 +76,36 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onPress, onCancel, onContact 
                         </Text>
                     </Badge>
                     <View style={styles.roleBadge}>
-                        <Text style={styles.roleBadgeText}>{ROLE_LABELS[role]}</Text>
+                        <Text style={styles.roleBadgeText}>{ROLE_LABELS[role] ?? "未知"}</Text>
                     </View>
                 </View>
                 <Text style={{ fontSize: 11, color: COLORS.gray400 }}>
-                    {ride?.date} {ride?.time}
+                    {ride?.date ?? ""} {ride?.time ?? ""}
                 </Text>
             </View>
 
             <View style={{ padding: 16 }}>
-                {/* 司机/个人信息栏 */}
+                {/* 个人信息栏 */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
                     <Avatar style={{ height: 40, width: 40, marginRight: 12 }}>
-                        <AvatarImage source={{ uri: ride?.driver?.avatar }} />
+                        <AvatarImage source={ride?.driver?.avatar ? { uri: ride.driver.avatar } : undefined} />
                         <AvatarFallback>
-                            <Text>{ride?.driver?.name?.charAt(0) || "?"}</Text>
+                            <Text>{ride?.driver?.name?.charAt(0) ?? "?"}</Text>
                         </AvatarFallback>
                     </Avatar>
                     <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 14, fontWeight: 'bold', color: COLORS.gray800 }}>
-                            {role === "driver" ? "我是司机" : ride?.driver?.name}
+                            {role === "driver" ? "我是司机" : (ride?.driver?.name ?? "匿名用户")}
                         </Text>
                         <Text style={{ fontSize: 12, color: COLORS.gray400 }}>
-                            {ride?.driver?.car} · {ride?.driver?.carPlate}
+                            {ride?.driver?.car ?? "未知车型"} · {ride?.driver?.carPlate ?? "未备案"}
                         </Text>
                     </View>
                     {status === "completed" && (
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
                             <Text style={{ fontSize: 14, fontWeight: 'bold', color: COLORS.gray700, marginLeft: 4 }}>
-                                {ride?.driver?.rating}
+                                {ride?.driver?.rating ?? "5.0"}
                             </Text>
                         </View>
                     )}
@@ -135,10 +120,10 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onPress, onCancel, onContact 
                     </View>
                     <View style={{ flex: 1, marginLeft: 12 }}>
                         <Text style={{ fontSize: 14, color: COLORS.gray700, fontWeight: '500', marginBottom: 24 }} numberOfLines={1}>
-                            {ride?.from}
+                            {ride?.from ?? "未知起点"}
                         </Text>
                         <Text style={{ fontSize: 14, color: COLORS.gray700, fontWeight: '500' }} numberOfLines={1}>
-                            {ride?.to}
+                            {ride?.to ?? "未知终点"}
                         </Text>
                     </View>
                 </View>
@@ -150,14 +135,14 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onPress, onCancel, onContact 
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
                         <Clock size={12} color={COLORS.gray400} />
                         <Text style={{ fontSize: 12, color: COLORS.gray400, marginLeft: 4 }}>
-                            {ride?.duration}
+                            {ride?.duration ?? "--"}
                         </Text>
                     </View>
                     {role === "passenger" && (
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Users size={12} color={COLORS.gray400} />
                             <Text style={{ fontSize: 12, color: COLORS.gray400, marginLeft: 4 }}>
-                                {trip.bookedSeats}座
+                                {bookedSeats}座
                             </Text>
                         </View>
                     )}
@@ -173,7 +158,7 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onPress, onCancel, onContact 
                 <View style={styles.cardFooter}>
                     <TouchableOpacity
                         style={[styles.footerBtn, styles.footerBtnBorder]}
-                        onPress={internalContactHandler}
+                        onPress={() => onContact(id, role)}
                     >
                         <Text style={{ fontSize: 14, color: COLORS.gray700 }}>
                             联系{role === "driver" ? "乘客" : "司机"}
@@ -181,7 +166,7 @@ const TripCard: React.FC<TripCardProps> = ({ trip, onPress, onCancel, onContact 
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.footerBtn}
-                        onPress={internalCancelHandler}
+                        onPress={() => onCancel(id)}
                     >
                         <Text style={{ fontSize: 14, color: COLORS.danger, fontWeight: '500' }}>
                             取消行程

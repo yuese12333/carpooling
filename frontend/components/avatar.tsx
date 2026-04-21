@@ -1,6 +1,6 @@
 /**
  * @file avatar.tsx
- * @description 高性能头像组件，支持加载状态感知、占位回退机制及统一链路日志记录
+ * @description 高性能头像组件，支持加载状态感知、占位回退机制。
  */
 
 import * as React from "react";
@@ -20,14 +20,9 @@ import {
   type ImageLoadEventData,
   type ImageErrorEventData,
 } from "react-native";
-import logger from "@/utils/logger";
-import { useEnvStore } from "@/store/env-store";
 
 // --- Types ---
 
-/**
- * Avatar 内部状态上下文
- */
 interface AvatarContextState {
   hasError: boolean;
   setHasError: (val: boolean) => void;
@@ -35,9 +30,6 @@ interface AvatarContextState {
   setIsLoaded: (val: boolean) => void;
 }
 
-/**
- * 容器组件属性
- */
 export interface AvatarProps extends ViewProps {
   /** 头像圆角大小，默认为 20 */
   borderRadius?: number;
@@ -45,23 +37,15 @@ export interface AvatarProps extends ViewProps {
   backgroundColor?: ColorValue;
 }
 
-/**
- * 图片组件属性
- */
 export interface AvatarImageProps extends Omit<ImageProps, "style"> {
-  /** 显式声明样式支持 */
   style?: StyleProp<ImageStyle>;
-  /** 状态变更回调：loading (初始) | error (失败) | success (成功) */
+  /** 状态变更回调，供外部链路埋点或逻辑感知使用 */
   onLoadingStatusChange?: (status: "loading" | "error" | "success") => void;
 }
 
-/**
- * 后备显示组件属性
- */
 export interface AvatarFallbackProps extends ViewProps {
-  /** 文本样式 */
   textStyle?: StyleProp<TextStyle>;
-  /** 延迟显示时间（毫秒），用于防止网络极快时的闪烁 */
+  /** 延迟显示时间（毫秒），用于平滑网络加载瞬间的视觉闪烁 */
   delayMs?: number;
 }
 
@@ -72,22 +56,24 @@ const AvatarContext = React.createContext<AvatarContextState | undefined>(undefi
 // --- Component: Avatar ---
 
 /**
- * Avatar 根组件，提供状态管理上下文
+ * Avatar 根组件：维护内部加载状态上下文
  */
 export const Avatar = React.forwardRef<View, AvatarProps>(
   ({ style, borderRadius = 20, backgroundColor = "#F4F4F5", ...props }, ref) => {
     const [hasError, setHasError] = React.useState(false);
     const [isLoaded, setIsLoaded] = React.useState(false);
 
-    // 缓存上下文对象，避免 Context 消费者非必要重绘
     const contextValue = React.useMemo(
       () => ({ hasError, setHasError, isLoaded, setIsLoaded }),
       [hasError, isLoaded]
     );
 
-    // 动态容器样式缓存
     const containerStyle = React.useMemo(
-      () => [styles.avatarContainer, { borderRadius, backgroundColor }, style],
+      () => [
+        styles.avatarContainer,
+        { borderRadius, backgroundColor },
+        style
+      ],
       [borderRadius, backgroundColor, style]
     );
 
@@ -102,7 +88,7 @@ export const Avatar = React.forwardRef<View, AvatarProps>(
 // --- Component: AvatarImage ---
 
 /**
- * Avatar 核心图片组件，处理加载逻辑
+ * AvatarImage：处理核心图片加载，移除硬编码日志逻辑
  */
 export const AvatarImage = React.forwardRef<Image, AvatarImageProps>(
   (
@@ -117,15 +103,8 @@ export const AvatarImage = React.forwardRef<Image, AvatarImageProps>(
     ref
   ) => {
     const context = React.useContext(AvatarContext);
-    const requestId = useEnvStore.getState().currentRequestId;
 
     if (!context) {
-      logger.error({
-        module: "AvatarImage",
-        operate: "Render",
-        error: "AvatarContext missing, Image must be wrapped in <Avatar />",
-        requestId,
-      });
       return null;
     }
 
@@ -133,33 +112,22 @@ export const AvatarImage = React.forwardRef<Image, AvatarImageProps>(
 
     const handleLoad = React.useCallback(
       (event: NativeSyntheticEvent<ImageLoadEventData>) => {
-        logger.info({
-          module: "Avatar",
-          operate: "LoadSuccess",
-          params: { source: typeof source === "object" ? source : "require_resource" },
-          requestId,
-        });
         setIsLoaded(true);
+        setHasError(false);
         onLoadingStatusChange?.("success");
         onLoad?.(event);
       },
-      [setIsLoaded, onLoadingStatusChange, onLoad, source, requestId]
+      [setIsLoaded, setHasError, onLoadingStatusChange, onLoad]
     );
 
     const handleError = React.useCallback(
       (event: NativeSyntheticEvent<ImageErrorEventData>) => {
-        logger.error({
-          module: "Avatar",
-          operate: "LoadError",
-          error: "Image resource failed to load",
-          params: { source: typeof source === "object" ? source : "require_resource" },
-          requestId,
-        });
         setHasError(true);
+        setIsLoaded(false);
         onLoadingStatusChange?.("error");
         onError?.(event);
       },
-      [setHasError, onLoadingStatusChange, onError, source, requestId]
+      [setHasError, setIsLoaded, onLoadingStatusChange, onError]
     );
 
     return (
@@ -178,7 +146,7 @@ export const AvatarImage = React.forwardRef<Image, AvatarImageProps>(
 // --- Component: AvatarFallback ---
 
 /**
- * 兜底组件，在加载中或加载失败时显示
+ * AvatarFallback：加载失败或占位状态展示
  */
 export const AvatarFallback = React.forwardRef<View, AvatarFallbackProps>(
   ({ style, children, textStyle, delayMs = 0, ...props }, ref) => {
@@ -195,10 +163,18 @@ export const AvatarFallback = React.forwardRef<View, AvatarFallbackProps>(
       };
     }, [delayMs]);
 
-    if (!context) return null;
+    if (!context) {
+      if (__DEV__) {
+        console.warn("AvatarFallback must be used within an Avatar component.");
+      }
+      return null;
+    }
 
-    // 渲染逻辑：仅在图片未加载成功或发生错误，且满足延迟策略时展示
-    const canRender = (context.hasError || !context.isLoaded) && shouldRender;
+    const { hasError, isLoaded } = context;
+
+    // 逻辑：发生错误 OR (尚未加载成功 AND 满足延迟展示条件)
+    const canRender = (hasError || !isLoaded) && shouldRender;
+
     if (!canRender) return null;
 
     return (
@@ -224,17 +200,17 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   imageFull: {
+    flex: 1,
     aspectRatio: 1,
     height: "100%",
     width: "100%",
+    // 使用绝对定位确保图片遮盖 Fallback
     position: "absolute",
     left: 0,
     top: 0,
   } as ImageStyle,
   fallbackContainer: {
-    flex: 1,
-    height: "100%",
-    width: "100%",
+    ...StyleSheet.absoluteFillObject,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#F4F4F5",
@@ -242,7 +218,7 @@ const styles = StyleSheet.create({
   fallbackText: {
     color: "#71717A",
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
     textTransform: "uppercase",
   },
 });

@@ -1,6 +1,6 @@
 /**
  * @file home-header.tsx
- * @description 首页顶部部头部组件，包含用户信息展现、通知入口及行程搜索表单卡片。
+ * @description 首页顶部头部组件
  */
 
 import React from "react";
@@ -8,8 +8,7 @@ import { View, Text, Image, TouchableOpacity, TextInput } from "react-native";
 import { Bell, Navigation, MapPin, Calendar } from "lucide-react-native";
 import { Card } from "@/../components/card";
 import { Button } from "@/../components/button";
-import { UserInfo } from "@/api/home-api"; // 引用标准类型定义
-import { useEnvStore } from '@/store/env-store';
+import { UserInfo } from "@/api/home-api";
 import logger from '@/utils/logger';
 import styles, { COLORS } from "../home.style";
 
@@ -17,6 +16,8 @@ import styles, { COLORS } from "../home.style";
  * 首页头部组件属性接口
  */
 interface HomeHeaderProps {
+    /** 显式注入业务流唯一请求 ID (必须由 Page 层下发) */
+    requestId: string;
     /** 用户信息对象 */
     userInfo: UserInfo | null;
     /** 出发地文本值 */
@@ -27,12 +28,12 @@ interface HomeHeaderProps {
     selectedDate: string;
     /** 是否有未读通知 */
     hasUnread: boolean;
-    /** 设置出发地的回调 @param val 文本内容 */
+    /** 设置出发地的回调 */
     onSetFrom: (val: string) => void;
-    /** 设置目的地的回调 @param val 文本内容 */
+    /** 设置目的地的回调 */
     onSetTo: (val: string) => void;
     /** 触发搜索的回调 */
-    onSearch: () => void;
+    onSearch: (requestId: string) => void;
     /** 跳转至个人资料页的回调 */
     onNavigateToProfile: () => void;
     /** 跳转至通知中心的回调 */
@@ -42,6 +43,7 @@ interface HomeHeaderProps {
 const DEFAULT_AVATAR = 'https://via.placeholder.com/40';
 
 export const HomeHeader: React.FC<HomeHeaderProps> = ({
+    requestId,
     userInfo,
     fromLocation,
     toLocation,
@@ -53,21 +55,20 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
     onNavigateToProfile,
     onNavigateToNotifications,
 }) => {
-    // 全局取值：RequestId 消费逻辑
-    const requestId = useEnvStore.getState().currentRequestId;
 
     /**
      * 处理个人资料点击日志上报
+     * 修正：严禁在日志 params 中直接打印用户姓名等敏感隐私
      */
     const handleProfilePress = () => {
         logger.info({
             module: 'HomeHeader',
             operate: 'click_profile_avatar',
-            params: { userId: userInfo?.name },
+            params: { hasAvatar: !!userInfo?.avatar }, // 仅记录脱敏状态
             result: 'navigating_to_profile',
             error: undefined,
             errorType: undefined,
-            requestId
+            requestId: requestId // 显式使用从 Props 注入的 ID
         });
         onNavigateToProfile();
     };
@@ -83,7 +84,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             result: 'navigating_to_notifications',
             error: undefined,
             errorType: undefined,
-            requestId
+            requestId: requestId
         });
         onNavigateToNotifications();
     };
@@ -95,13 +96,18 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
         logger.info({
             module: 'HomeHeader',
             operate: 'click_search_button',
-            params: { fromLocation, toLocation, selectedDate },
+            params: {
+                hasFrom: !!fromLocation,
+                hasTo: !!toLocation,
+                dateSet: !!selectedDate
+            },
             result: 'executing_search_callback',
             error: undefined,
             errorType: undefined,
-            requestId
+            requestId: requestId
         });
-        onSearch();
+        // 将链路 ID 传递给回调，确保后续 API 调用能继承此链路
+        onSearch(requestId);
     };
 
     return (
@@ -119,7 +125,11 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                         <Text style={styles.userName}>{userInfo?.name || '加载中...'}</Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.notificationButton} onPress={handleNotificationPress}>
+                <TouchableOpacity
+                    style={styles.notificationButton}
+                    onPress={handleNotificationPress}
+                    accessibilityLabel="通知中心"
+                >
                     <Bell size={18} color={COLORS.white} />
                     {hasUnread && <View style={styles.notificationDot} />}
                 </TouchableOpacity>

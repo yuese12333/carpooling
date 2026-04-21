@@ -1,13 +1,12 @@
 /**
  * @file filter-tabs.tsx
- * @description 过滤标签横向滚动组件，集成交互行为审计与链路追踪
+ * @description 过滤标签横向滚动组件。
  */
 
-import React from "react";
+import React, { useCallback } from "react";
 import { ScrollView, TouchableOpacity, Text } from "react-native";
 import styles from "../find-ride.style";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 /**
  * 过滤标签元数据接口
@@ -29,6 +28,10 @@ interface FilterTabsProps {
      * @param tagValue 触发切换的标签值
      */
     onToggle: (tagValue: string) => void;
+    /** * [规范注入] 链路追踪请求 ID 
+     * 必须由父级业务页面显式传入
+     */
+    requestId: string | undefined;
 }
 
 /**
@@ -40,16 +43,16 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
     tags,
     activeFilters,
     onToggle,
+    requestId,
 }) => {
     /**
      * 处理标签点击事件并记录审计日志
-     * @param tagValue 标签标识
+     * [优化] 使用 useCallback 确保引用稳定，显式消费传入的 requestId
      */
-    const handleTagPress = (tagValue: string) => {
-        const requestId = useEnvStore.getState().currentRequestId;
+    const handleTagPress = useCallback((tagValue: string) => {
         const isActive = activeFilters.includes(tagValue);
 
-        // 记录交互操作日志，确保护送链路追踪 ID
+        // 严格遵循统一日志结构规范
         logger.info({
             module: 'component.filterTabs',
             operate: 'toggleFilter',
@@ -57,14 +60,16 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
                 tagValue,
                 targetStatus: !isActive ? 'active' : 'inactive',
                 currentSelection: activeFilters
-            } as unknown as Record<string, unknown>,
+            },
             result: 'User triggered filter toggle',
-            requestId: requestId
+            requestId: requestId, // 显式注入
+            error: undefined,
+            errorType: undefined
         });
 
         // 执行原始业务逻辑
         onToggle(tagValue);
-    };
+    }, [activeFilters, onToggle, requestId]);
 
     return (
         <ScrollView

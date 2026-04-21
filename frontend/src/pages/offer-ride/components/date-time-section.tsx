@@ -1,7 +1,6 @@
 /**
  * @file date-time-section.tsx
  * @description 拼车发布模块的日期与时间选择组件。
- * 集成标准化日志链路追踪（Logging Tracing）、自动交互流控及多端交互兼容性处理。
  */
 
 import React from 'react';
@@ -13,13 +12,14 @@ import { Calendar } from 'react-native-calendars';
 import { format } from "date-fns";
 import styles, { COLORS } from "../offer-ride.style";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 /**
  * @interface DateTimeSectionProps
  * @description 组件属性定义
  */
 interface DateTimeSectionProps {
+    /** [显式注入] 业务流唯一链路 ID */
+    requestId: string;
     /** 当前选中的日期对象 */
     selectedDate: Date;
     /** 当前选中的时间字符串 (格式: HH:mm) */
@@ -47,6 +47,7 @@ const MODULE_NAME = 'DATE_TIME_SECTION';
  * @description 拼车发布页 - 时间日期选择区块
  */
 export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
+    requestId,
     selectedDate,
     selectedTime,
     isCalendarVisible,
@@ -58,24 +59,18 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
     onRecurringChange
 }) => {
     /**
-     * 获取全局统一的链路请求 ID
-     */
-    const getRequestId = () => useEnvStore.getState().currentRequestId;
-
-    /**
      * 内部方法：处理日历显隐切换
-     * 修正：将 result 序列化为 string 以匹配 logger 类型定义
+     * 使用 Props 注入的 requestId 确保链路透明
      */
     const handleToggleCalendar = (): void => {
-        const requestId = getRequestId();
         const nextStatus = !isCalendarVisible;
 
         logger.info({
             module: MODULE_NAME,
             operate: 'TOGGLE_CALENDAR',
-            requestId,
+            requestId: requestId,
             params: { currentStatus: isCalendarVisible },
-            result: String(nextStatus) // 强制转换为 string 
+            result: String(nextStatus)
         });
 
         onToggleCalendar();
@@ -83,17 +78,14 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
 
     /**
      * 内部方法：处理重复性开关切换
-     * 修正：将 result 序列化为 string
      */
     const handleRecurringChange = (val: boolean): void => {
-        const requestId = getRequestId();
-
         logger.info({
             module: MODULE_NAME,
             operate: 'CHANGE_RECURRING_MODE',
-            requestId,
+            requestId: requestId,
             params: { previousValue: isRecurring },
-            result: String(val) // 强制转换为 string
+            result: String(val)
         });
 
         onRecurringChange(val);
@@ -106,8 +98,9 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
         logger.info({
             module: MODULE_NAME,
             operate: 'MANUAL_SHOW_TIME_PICKER',
-            requestId: getRequestId(),
-            params: { currentTime: selectedTime }
+            requestId: requestId,
+            params: { currentTime: selectedTime },
+            result: undefined
         });
         onShowTimePicker();
     };
@@ -116,15 +109,16 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
      * 核心逻辑：处理日期选中并自动驱动交互流
      */
     const handleDateSelect = (day: { dateString: string }): void => {
-        const requestId = getRequestId();
         try {
             logger.info({
                 module: MODULE_NAME,
                 operate: 'SELECT_DATE_INTERACTION',
-                requestId,
-                params: { selectedString: day.dateString }
+                requestId: requestId,
+                params: { selectedString: day.dateString },
+                result: 'PROCESSING'
             });
 
+            // 替换分隔符以兼容不同环境的 Date 解析
             const parsedDate = new Date(day.dateString.replace(/-/g, '/'));
 
             if (isNaN(parsedDate.getTime())) {
@@ -134,15 +128,16 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
             onDateSelect(parsedDate);
             onToggleCalendar();
 
-            // 针对不同平台的交互延迟处理
+            // 针对不同平台的交互延迟处理，确保 UI 线程流畅
             const INTERACTION_DELAY = Platform.OS === 'android' ? 600 : 400;
 
             setTimeout(() => {
                 logger.info({
                     module: MODULE_NAME,
                     operate: 'AUTO_TRIGGER_TIME_PICKER',
-                    requestId,
-                    params: { delay: INTERACTION_DELAY }
+                    requestId: requestId,
+                    params: { delay: INTERACTION_DELAY },
+                    result: 'TRIGGERED'
                 });
                 onShowTimePicker();
             }, INTERACTION_DELAY);
@@ -151,14 +146,16 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
             logger.error({
                 module: MODULE_NAME,
                 operate: 'SELECT_DATE_ERROR',
-                requestId,
+                requestId: requestId,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'UI_LOGIC_ERROR',
-                params: { input: day.dateString }
+                params: { input: day.dateString },
+                result: undefined // 规范：严禁使用 null
             });
         }
     };
 
+    // 格式化当前日期用于日历组件标记
     const safeSelectedDate = selectedDate instanceof Date ? selectedDate : new Date();
     const calendarCurrentDate = format(safeSelectedDate, 'yyyy-MM-dd');
 
@@ -167,6 +164,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
             <Text style={styles.sectionTitle}>出发时间</Text>
 
             <View style={styles.dateTimeRow}>
+                {/* 日期选择入口 */}
                 <View style={styles.flexOne}>
                     <Text style={styles.fieldLabel}>日期</Text>
                     <TouchableOpacity
@@ -180,6 +178,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
                     </TouchableOpacity>
                 </View>
 
+                {/* 时间选择入口 */}
                 <View style={styles.flexOne}>
                     <Text style={styles.fieldLabel}>时间</Text>
                     <TouchableOpacity
@@ -194,6 +193,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
                 </View>
             </View>
 
+            {/* 日历展示区 */}
             {isCalendarVisible && (
                 <View style={styles.calendarContainer}>
                     <Calendar
@@ -216,6 +216,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
                 </View>
             )}
 
+            {/* 重复选项设置 */}
             <View style={styles.recurringSection}>
                 <View style={styles.recurringInfo}>
                     <Text style={styles.recurringTitle}>工作日重复</Text>

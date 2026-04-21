@@ -12,7 +12,6 @@ import {
   type TextInputProps
 } from "react-native";
 import { cn } from "../src/utils";
-import logger from '@/utils/logger';
 
 /**
  * @interface TextareaProps
@@ -36,15 +35,6 @@ export const Textarea: React.FC<TextareaProps> = ({
   ...props
 }) => {
 
-  // 1. 生命周期监控
-  React.useEffect(() => {
-    logger.info({
-      module: MODULE_NAME,
-      operate: 'COMPONENT_MOUNT',
-      params: { multiline: true, platform: Platform.OS }
-    });
-  }, []);
-
   // 2. 性能优化：缓存复杂类名计算
   const memoizedClassName = React.useMemo(() => {
     return cn(
@@ -59,20 +49,11 @@ export const Textarea: React.FC<TextareaProps> = ({
 
   // 3. 交互日志处理器：获取焦点
   const handleFocus = React.useCallback((e: any) => {
-    logger.info({
-      module: MODULE_NAME,
-      operate: 'ON_FOCUS',
-      params: { placeholder: props.placeholder }
-    });
     onFocus?.(e);
   }, [onFocus, props.placeholder]);
 
   // 4. 交互日志处理器：失去焦点
   const handleBlur = React.useCallback((e: any) => {
-    logger.info({
-      module: MODULE_NAME,
-      operate: 'ON_BLUR',
-    });
     onBlur?.(e);
   }, [onBlur]);
 

@@ -1,83 +1,70 @@
 /**
  * @file trip-tab-bar.tsx
- * @description 我的行程页面状态切换标签栏组件，集成了全链路日志追踪与规范化样式引用。
+ * @description 业务子组件：行程列表状态切换页签。
  */
 
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
-import styles from "../trips.style"; // 修正命名规范为 kebab-case
+import styles from "../trips.style";
 
 /**
  * @description 标签栏组件属性定义
  */
 interface TripTabBarProps {
+    /** * 显式业务流 ID 注入 
+     * 遵循：显式传递与注入规则，确保链路透明
+     */
+    requestId: string;
     /** 标签名称数组 */
     tabs: string[];
     /** 当前激活的标签项名称 */
     activeTab: string;
-    /** 标签切换时的回调函数 */
+    /** * 标签切换时的回调函数 
+     * 职责声明：此处的交互日志由调用方（Page 层）承接记录
+     */
     onTabChange: (tab: string) => void;
 }
 
-const MODULE_NAME = 'trip-tab-bar-component';
-
 /**
  * @description 行程列表状态切换页签组件
- * @param {TripTabBarProps} props - 组件属性
- * @returns {JSX.Element}
+ * 职责分层：业务子组件。
+ * 规范：持有 requestId 确保链路完整，但严禁在内部记录业务日志。
  */
 export const TripTabBar: React.FC<TripTabBarProps> = ({
+    requestId,
     tabs,
     activeTab,
     onTabChange
 }) => {
-    // 严格遵循全局 RequestId 消费逻辑，严禁本地重复生成
-    const requestId = useEnvStore.getState().currentRequestId;
-
-    /**
-     * @description 处理标签点击事件并注入链路日志
-     * @param {string} tab - 用户选中的标签名
-     */
-    const handleTabPress = (tab: string) => {
-        // 记录交互触发点日志
-        logger.info({
-            module: MODULE_NAME,
-            operate: 'switch_trip_tab',
-            params: {
-                from: activeTab,
-                to: tab
-            },
-            result: 'Tab change action dispatched',
-            requestId
-        });
-
-        // 执行原始业务逻辑
-        onTabChange(tab);
-    };
+    // 审计：确保 requestId 存在，防止链路断裂
+    if (!requestId) {
+        console.warn("[Architecture Warning] TripTabBar missing explicit requestId. Tracing link broken.");
+    }
 
     return (
         <View style={styles.tabRow}>
             {tabs.map((tab) => {
-                const isActive = activeTab === tab;
+                // 数据规范：确保对比逻辑不涉及 null
+                const safeTabName = tab ?? "未知";
+                const isActive = activeTab === safeTabName;
 
                 return (
                     <TouchableOpacity
-                        key={tab}
-                        onPress={() => handleTabPress(tab)}
+                        key={safeTabName}
+                        onPress={() => onTabChange(safeTabName)}
                         style={[
                             styles.tabItem,
                             isActive ? styles.tabItemActive : styles.tabItemInactive
                         ]}
-                        activeOpacity={0.7} // 统一交互反馈感
+                        activeOpacity={0.7}
+                    // 记录：requestId 已通过 props 显式透传，回调由父级 TripsPage 捕获并记录日志
                     >
                         <Text
                             style={
                                 isActive ? styles.tabTextActive : styles.tabTextInactive
                             }
                         >
-                            {tab}
+                            {safeTabName}
                         </Text>
                     </TouchableOpacity>
                 );

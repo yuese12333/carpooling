@@ -1,14 +1,12 @@
 /**
  * @file ride-card-item.tsx
- * @description 推荐行程列表卡片组件，负责展示司机信息、行程路径、价格及剩余座位。
+ * @description 推荐行程列表卡片组件（原子 UI 层）
  */
 
 import React from "react";
 import { View, Text, Image, TouchableOpacity, GestureResponderEvent } from "react-native";
 import { Star, Users } from "lucide-react-native";
 import { RideItem } from '@/api/home-api';
-import { useEnvStore } from '@/store/env-store';
-import logger from '@/utils/logger';
 import styles, { COLORS } from "../home.style";
 
 /**
@@ -19,50 +17,23 @@ interface RideCardItemProps {
     ride: RideItem;
     /** * 点击卡片的回调函数 
      * @param id 行程唯一标识符
+     * @param event 手势事件对象（用于业务层处理坐标等埋点）
      */
-    onPress: (id: string) => void;
+    onPress: (id: string, event: GestureResponderEvent) => void;
 }
 
 /**
  * 推荐行程卡片单项组件
- * @param {RideCardItemProps} props - 组件属性
+ * 职责：仅负责 UI 渲染与事件代理，不感知 requestId，不记录业务日志。
  */
 export const RideCardItem: React.FC<RideCardItemProps> = ({ ride, onPress }) => {
-    // 消费全局 RequestId，确保链路一致性
-    const requestId = useEnvStore.getState().currentRequestId;
 
     /**
-     * 处理卡片点击事件并记录追踪日志
-     * @param {GestureResponderEvent} _event - 手势事件对象
+     * 处理点击代理
+     * 规范：由 Page 调用层负责记录点击日志及注入 requestId
      */
-    const handlePress = (_event: GestureResponderEvent) => {
-        try {
-            // 记录用户交互起点
-            logger.info({
-                module: 'RideCardItem',
-                operate: 'click_ride_item',
-                params: {
-                    rideId: ride.id,
-                    driverName: ride.driver?.name // 仅记录非敏感信息
-                },
-                result: 'triggering_onPress_callback',
-                error: undefined,
-                errorType: undefined,
-                requestId
-            });
-
-            onPress(ride.id);
-        } catch (error) {
-            logger.error({
-                module: 'RideCardItem',
-                operate: 'click_ride_item_error',
-                params: { rideId: ride.id },
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'INTERACTION_ERROR',
-                requestId
-            });
-        }
+    const handlePress = (event: GestureResponderEvent) => {
+        onPress(ride.id, event);
     };
 
     return (

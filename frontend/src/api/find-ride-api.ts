@@ -1,13 +1,12 @@
 /**
  * @file find-ride-api.ts
- * @description 拼车行程相关接口对接，集成链路追踪与标准化日志审计
+ * @description 拼车行程相关接口对接。
  */
 import axios, { AxiosError } from 'axios';
 import { mockRides } from '../store/mock-data';
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
-// 从环境变量获取 Mock 开关，避免硬编码修改风险
+// 从环境变量获取 Mock 开关
 const IS_MOCK_MODE = process.env.NODE_ENV === 'development' || true;
 
 // --- 类型定义 (Type Definitions) ---
@@ -43,22 +42,33 @@ export interface SearchMetadataResponse {
     filterTags: Array<{ label: string; value: string }>;
 }
 
+/**
+ * 注入式 API 参数接口
+ */
+interface TracedRequest<T = undefined> {
+    params: T;
+    /** 必须显式传入当前业务流的 RequestId */
+    requestId: string;
+}
+
 // --- 接口函数 (API Functions) ---
 
 /**
  * 5.1 搜索行程列表
- * @param params 搜索过滤参数
+ * @param {TracedRequest<RideSearchQuery>} req - 包含搜索参数与追踪 ID
  * @returns 格式化的 API 响应对象
  */
-export const fetchRides = async (params: RideSearchQuery): Promise<ApiResponse<RideListResponse>> => {
-    const requestId = useEnvStore.getState().currentRequestId;
+export const fetchRides = async (
+    params: RideSearchQuery,
+    requestId: string | undefined
+): Promise<ApiResponse<RideListResponse>> => {
     const moduleName = 'api.ride';
     const operation = 'fetchRides';
 
     try {
         if (IS_MOCK_MODE) {
             await new Promise((resolve) => setTimeout(resolve, 500));
-            const mockResult: ApiResponse<RideListResponse> = {
+            return {
                 code: 200,
                 message: 'success',
                 data: {
@@ -67,22 +77,25 @@ export const fetchRides = async (params: RideSearchQuery): Promise<ApiResponse<R
                     hasNextPage: false,
                 },
             };
-
-            return mockResult;
         }
 
-        const response = await axios.get<ApiResponse<RideListResponse>>('/api/rides/search', { params });
+        const response = await axios.get<ApiResponse<RideListResponse>>('/api/rides/search', {
+            params,
+            headers: { 'X-Request-Id': requestId } // 将追踪 ID 注入请求头，实现跨端链路打通
+        });
         return response.data;
     } catch (error) {
         const axiosError = error as AxiosError;
+
+        // 严格遵循统一日志结构规范
         logger.error({
             module: moduleName,
             operate: operation,
-            params: params as unknown as Record<string, unknown>,
+            params: { ...params },
             result: undefined,
             error: axiosError.message,
             errorType: axiosError.code || 'API_FETCH_ERROR',
-            requestId: requestId,
+            requestId: requestId, // 显式消费传入的 ID
         });
         throw error;
     }
@@ -90,10 +103,10 @@ export const fetchRides = async (params: RideSearchQuery): Promise<ApiResponse<R
 
 /**
  * 5.3 获取搜索筛选元数据
+ * @param {string} requestId - 必须由调用方（如 Hook 或 Page）显式传入
  * @returns 包含排序与标签的元数据
  */
-export const fetchSearchMetadata = async (): Promise<ApiResponse<SearchMetadataResponse>> => {
-    const requestId = useEnvStore.getState().currentRequestId;
+export const fetchSearchMetadata = async (requestId: string): Promise<ApiResponse<SearchMetadataResponse>> => {
     const moduleName = 'api.ride';
     const operation = 'fetchSearchMetadata';
 
@@ -117,10 +130,13 @@ export const fetchSearchMetadata = async (): Promise<ApiResponse<SearchMetadataR
             };
         }
 
-        const response = await axios.get<ApiResponse<SearchMetadataResponse>>('/api/rides/search-metadata');
+        const response = await axios.get<ApiResponse<SearchMetadataResponse>>('/api/rides/search-metadata', {
+            headers: { 'X-Request-Id': requestId }
+        });
         return response.data;
     } catch (error) {
         const axiosError = error as AxiosError;
+
         logger.error({
             module: moduleName,
             operate: operation,

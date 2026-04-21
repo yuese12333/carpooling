@@ -1,6 +1,6 @@
 /**
  * @file route-section.tsx
- * @description 拼车发布模块的路线规划区块，支持起点、终点及动态途经点维护，集成标准化链路追踪。
+ * @description 拼车发布模块的路线规划区块。
  */
 
 import React from 'react';
@@ -10,12 +10,13 @@ import { Card } from "@/components/card";
 import { Input } from "@/components/input";
 import styles, { COLORS } from "../offer-ride.style";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 /**
  * 路线区块组件属性定义
  */
 interface RouteSectionProps {
+    /** [显式注入] 业务流唯一链路 ID */
+    requestId: string;
     /** 出发地文本 */
     departure: string;
     /** 目的地文本 */
@@ -42,6 +43,7 @@ const MODULE_NAME = 'ROUTE_SECTION';
  * 拼车发布页 - 行程路线编辑区块
  */
 export const RouteSection: React.FC<RouteSectionProps> = ({
+    requestId,
     departure,
     destination,
     waypointStops,
@@ -52,39 +54,45 @@ export const RouteSection: React.FC<RouteSectionProps> = ({
     onAddStop,
     onRemoveStop
 }) => {
-    // 全局统一消费 requestId，严禁重复生成
-    const requestId = useEnvStore.getState().currentRequestId;
 
     /**
      * 处理添加途经点交互
+     * 使用 Props 显式传入的 requestId
      */
     const handleAddStop = () => {
         const operate = 'ADD_WAYPOINT_STOP';
         try {
             if (!newStopInput.trim()) return;
 
+            // 显式链路日志记录
             logger.info({
                 module: MODULE_NAME,
                 operate,
-                requestId,
-                params: { stopLabel: '***' }, // 隐私保护：脱敏地址信息
-                result: 'SUCCESS'
+                requestId: requestId,
+                params: {
+                    stopLabel: '***', // 隐私保护：脱敏处理地址
+                    currentStopsCount: waypointStops.length
+                },
+                result: 'SUCCESS',
+                error: undefined,
+                errorType: undefined
             });
             onAddStop();
         } catch (error) {
             logger.error({
                 module: MODULE_NAME,
                 operate,
-                requestId,
+                requestId: requestId,
                 error: error instanceof Error ? error.message : String(error),
-                errorType: 'INTERACTION_ERROR'
+                errorType: 'INTERACTION_ERROR',
+                params: undefined,
+                result: 'FAILED'
             });
         }
     };
 
     /**
      * 处理移除途经点交互
-     * @param {number} index 待移除的目标索引
      */
     const handleRemoveStop = (index: number) => {
         const operate = 'REMOVE_WAYPOINT_STOP';
@@ -93,9 +101,11 @@ export const RouteSection: React.FC<RouteSectionProps> = ({
         logger.info({
             module: MODULE_NAME,
             operate,
-            requestId,
+            requestId: requestId,
             params: { targetIndex: index },
-            result: 'SUCCESS'
+            result: 'SUCCESS',
+            error: undefined,
+            errorType: undefined
         });
         onRemoveStop(index);
     };
@@ -104,7 +114,7 @@ export const RouteSection: React.FC<RouteSectionProps> = ({
         <Card className="p-4 mb-4">
             <Text style={styles.sectionTitle}>行程路线</Text>
             <View style={styles.routeRow}>
-                {/* 路线装饰线：根据动态途经点生成对应长度的装饰轴 */}
+                {/* 路线装饰轴 */}
                 <View style={styles.timelineContainer}>
                     <View style={styles.dotGreen} />
                     <View style={styles.lineSmall} />
@@ -123,7 +133,7 @@ export const RouteSection: React.FC<RouteSectionProps> = ({
 
                 {/* 输入容器 */}
                 <View style={styles.inputContainer}>
-                    {/* 出发地输入 */}
+                    {/* 出发地 */}
                     <View style={styles.inputWrapper}>
                         <Navigation size={16} color={COLORS.primary} style={styles.inputIcon} />
                         <Input
@@ -172,7 +182,7 @@ export const RouteSection: React.FC<RouteSectionProps> = ({
                         )}
                     </View>
 
-                    {/* 目的地输入 */}
+                    {/* 目的地 */}
                     <View style={styles.inputWrapper}>
                         <MapPin size={16} color={COLORS.warning} style={styles.inputIcon} />
                         <Input

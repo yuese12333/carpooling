@@ -1,6 +1,6 @@
 /**
  * @file use-offer-ride-form.ts
- * @description 拼车发布表单业务逻辑 Hook，集成标准化日志链路追踪与权限校验
+ * @description 拼车发布表单业务逻辑 Hook。
  */
 
 import { useState, useEffect } from "react";
@@ -10,7 +10,6 @@ import { format, isSameDay, addDays } from "date-fns";
 import * as RideApi from '@/api/offer-ride-api';
 import { ROUTES } from '@/router/paths';
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 /**
  * 标签对象定义
@@ -22,7 +21,11 @@ interface PresetTag {
 
 const MODULE_NAME = 'USE_OFFER_RIDE_FORM';
 
-export const useOfferRideForm = () => {
+/**
+ * @hook useOfferRideForm
+ * @param {string} requestId - [显式注入] 业务流唯一链路 ID
+ */
+export const useOfferRideForm = (requestId: string) => {
     const router = useRouter();
 
     // --- 状态管理 ---
@@ -41,45 +44,44 @@ export const useOfferRideForm = () => {
     const [selectedTime, setSelectedTime] = useState<string>("08:30");
     const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
 
-    // --- 工具函数 ---
-    /**
-     * 从 Store 获取当前请求 ID
-     */
-    const getRequestId = () => useEnvStore.getState().currentRequestId;
-
     // --- 副作用 ---
     useEffect(() => {
         /**
          * 页面初始化：校验权限并加载配置
+         * 显式使用传入的 requestId
          */
         const initPage = async () => {
-            const requestId = getRequestId();
             const operate = 'INIT_PUBLISH_PAGE';
 
             try {
-                // 权限校验
-                const permRes = await RideApi.checkPublishPermission();
+                // 1. 权限校验 (显式透传 requestId)
+                const permRes = await RideApi.checkPublishPermission(requestId);
                 if (!permRes.data.canPublish) {
                     logger.warn({
                         module: MODULE_NAME,
                         operate,
                         requestId,
+                        params: undefined,
                         result: 'PERMISSION_DENIED',
-                        error: '信用分不足或配额耗尽'
+                        error: '信用分不足或配额耗尽',
+                        errorType: 'BUSINESS_RESTRICTION'
                     });
                     Alert.alert("权限受限", "您的信用分较低或今日配额已用完");
                     return;
                 }
 
-                // 配置加载
-                const configRes = await RideApi.getPublishConfig();
+                // 2. 配置加载 (显式透传 requestId)
+                const configRes = await RideApi.getPublishConfig(requestId);
                 if (configRes.code === 200) {
                     setPresetTags(configRes.data.presetTags);
                     logger.info({
                         module: MODULE_NAME,
                         operate,
                         requestId,
-                        result: 'SUCCESS'
+                        params: undefined,
+                        result: 'SUCCESS',
+                        error: undefined,
+                        errorType: undefined
                     });
                 }
             } catch (error) {
@@ -87,14 +89,19 @@ export const useOfferRideForm = () => {
                     module: MODULE_NAME,
                     operate,
                     requestId,
+                    params: undefined,
                     error: error instanceof Error ? error.message : String(error),
-                    errorType: 'INITIALIZATION_FAILED'
+                    errorType: 'INITIALIZATION_FAILED',
+                    result: 'FAILED'
                 });
                 Alert.alert("加载失败", "初始化基础配置时出错");
             }
         };
-        initPage();
-    }, []);
+
+        if (requestId) {
+            initPage();
+        }
+    }, [requestId]);
 
     // --- 事件处理函数 ---
     const showTimePicker = () => setTimePickerVisibility(true);
@@ -102,7 +109,6 @@ export const useOfferRideForm = () => {
 
     /**
      * 确认选择时间
-     * @param {Date} date 选择的日期对象
      */
     const handleTimeConfirm = (date: Date) => {
         setSelectedTime(format(date, "HH:mm"));
@@ -111,8 +117,6 @@ export const useOfferRideForm = () => {
 
     /**
      * 生成日期显示文本
-     * @param {Date} date 目标日期
-     * @returns {string} 格式化后的标签（如：今天、明天）
      */
     const getDateLabel = (date: Date) => {
         const today = new Date();
@@ -123,11 +127,9 @@ export const useOfferRideForm = () => {
     };
 
     /**
-     * 执行发布行程业务
-     * @returns {Promise<void>}
+     * 执行发布行程业务 (显式链路追踪)
      */
     const handlePublishRide = async (): Promise<void> => {
-        const requestId = getRequestId();
         const operate = 'SUBMIT_PUBLISH_RIDE';
 
         if (!departureLocation.trim() || !destinationLocation.trim()) {
@@ -153,10 +155,14 @@ export const useOfferRideForm = () => {
                 module: MODULE_NAME,
                 operate,
                 requestId,
-                params: { ...params, notes: '***' } // 脱敏处理
+                params: { ...params, notes: '***' }, // 隐私脱敏
+                result: 'START_SUBMISSION',
+                error: undefined,
+                errorType: undefined
             });
 
-            const result = await RideApi.publishRide(params);
+            // 显式将 requestId 注入 API 层
+            const result = await RideApi.publishRide(params, requestId);
 
             if (result.code === 200) {
                 setIsPublishingSuccess(true);
@@ -164,7 +170,10 @@ export const useOfferRideForm = () => {
                     module: MODULE_NAME,
                     operate,
                     requestId,
-                    result: 'PUBLISH_SUCCESS'
+                    params: { rideId: result.data.rideId },
+                    result: 'PUBLISH_SUCCESS',
+                    error: undefined,
+                    errorType: undefined
                 });
 
                 setTimeout(() => {
@@ -180,9 +189,10 @@ export const useOfferRideForm = () => {
                 module: MODULE_NAME,
                 operate,
                 requestId,
-                params: { from: departureLocation, to: destinationLocation },
+                params: { from: '***', to: '***' }, // 隐私保护
                 error: errorMsg,
-                errorType: 'SUBMISSION_FAILED'
+                errorType: 'SUBMISSION_FAILED',
+                result: 'FAILED'
             });
 
             Alert.alert("发布失败", errorMsg);
@@ -191,27 +201,45 @@ export const useOfferRideForm = () => {
     };
 
     /**
-     * 添加途径点
+     * 添加途径点 (业务逻辑层日志)
      */
     const handleAddStop = (): void => {
         const trimmedStop = newStopInput.trim();
         if (trimmedStop) {
             setWaypointStops((prev) => [...prev, trimmedStop]);
             setNewStopInput("");
+
+            logger.info({
+                module: MODULE_NAME,
+                operate: 'ADD_WAYPOINT_STOP_LOGIC',
+                requestId,
+                params: { stopsCount: waypointStops.length + 1 },
+                result: 'SUCCESS',
+                error: undefined,
+                errorType: undefined
+            });
         }
     };
 
     /**
      * 移除途径点
-     * @param {number} index 途径点索引
      */
     const handleRemoveStop = (index: number): void => {
         setWaypointStops((prev) => prev.filter((_, i) => i !== index));
+
+        logger.info({
+            module: MODULE_NAME,
+            operate: 'REMOVE_WAYPOINT_STOP_LOGIC',
+            requestId,
+            params: { targetIndex: index },
+            result: 'SUCCESS',
+            error: undefined,
+            errorType: undefined
+        });
     };
 
     /**
      * 快捷追加备注标签
-     * @param {string} tag 预设标签文本
      */
     const appendNoteTag = (tag: string): void => {
         setAdditionalNotes((prev) => (prev ? `${prev}，${tag}` : tag));
@@ -219,7 +247,6 @@ export const useOfferRideForm = () => {
 
     /**
      * 处理日期变化
-     * @param date 
      */
     const handleDateChange = (date: Date) => {
         setSelectedDateObj(date);

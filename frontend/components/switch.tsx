@@ -1,7 +1,6 @@
 /**
  * @file switch.tsx
  * @description 高性能受控开关组件。
- * 包含平滑的颜色插值动画、触感反馈优化及标准化 UI 日志监控。
  */
 
 import * as React from "react";
@@ -11,9 +10,8 @@ import {
   Animated,
   Platform,
   ViewStyle,
-  StyleProp
+  StyleProp,
 } from "react-native";
-import logger from '@/utils/logger';
 
 /**
  * @interface SwitchProps
@@ -32,7 +30,6 @@ export interface SwitchProps {
   testID?: string;
 }
 
-const MODULE_NAME = 'Switch';
 const TRACK_WIDTH = 44;
 const TRACK_HEIGHT = 24;
 const THUMB_SIZE = 20;
@@ -42,57 +39,30 @@ const ANIM_DURATION = 250;
  * @component Switch
  * @description 标准化受控开关，支持颜色与位移同步插值动画。
  */
-export const Switch: React.FC<SwitchProps> = ({
+export const Switch = React.memo<SwitchProps>(({
   checked = false,
   onCheckedChange,
   disabled = false,
   style,
   testID
 }) => {
-  // 1. 动画值初始化 (0: 未选中, 1: 选中)
+  // 1. 动画值初始化
   const thumbAnim = React.useRef(new Animated.Value(checked ? 1 : 0)).current;
 
   // 2. 监听外部状态变更并驱动动画
   React.useEffect(() => {
-    logger.info({
-      module: MODULE_NAME,
-      operate: 'ANIMATION_TRIGGER',
-      params: { toValue: checked, duration: ANIM_DURATION }
-    });
-
     Animated.timing(thumbAnim, {
       toValue: checked ? 1 : 0,
       duration: ANIM_DURATION,
-      useNativeDriver: false, // 颜色插值与位移在部分 RN 版本不支持原生驱动组合
-    }).start((result) => {
-      if (!result.finished) {
-        logger.warn({
-          module: MODULE_NAME,
-          operate: 'ANIMATION_INTERRUPTED',
-          params: { checked }
-        });
-      }
-    });
+      useNativeDriver: false, // 颜色插值在 RN 中不支持 Native Driver
+    }).start();
   }, [checked, thumbAnim]);
 
-  // 3. 性能优化：缓存交互回调
+  // 3. 性能优化：缓存交互回调，移除交互日志
   const handlePress = React.useCallback(() => {
-    if (disabled) return;
-
-    const nextValue = !checked;
-
-    // UI 日志记录
-    logger.info({
-      module: MODULE_NAME,
-      operate: 'USER_INTERACTION_PRESS',
-      params: {
-        currentStatus: checked,
-        nextStatus: nextValue,
-        disabled
-      }
-    });
-
-    onCheckedChange?.(nextValue);
+    if (!disabled && onCheckedChange) {
+      onCheckedChange(!checked);
+    }
   }, [checked, disabled, onCheckedChange]);
 
   // 4. 插值逻辑计算
@@ -106,7 +76,7 @@ export const Switch: React.FC<SwitchProps> = ({
     outputRange: ["#E5E7EB", "#10B981"],
   });
 
-  // 5. 样式合并优化
+  // 5. 样式合并
   const containerStyle = React.useMemo(() => [
     styles.track,
     style,
@@ -132,10 +102,10 @@ export const Switch: React.FC<SwitchProps> = ({
       </Animated.View>
     </Pressable>
   );
-};
+});
 
 /**
- * 样式定义 - 与逻辑解耦
+ * 样式定义
  */
 const styles = StyleSheet.create({
   track: {
@@ -153,7 +123,6 @@ const styles = StyleSheet.create({
     height: THUMB_SIZE,
     borderRadius: THUMB_SIZE / 2,
     backgroundColor: "#FFFFFF",
-    // 阴影适配
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -170,3 +139,5 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 });
+
+Switch.displayName = "Switch";

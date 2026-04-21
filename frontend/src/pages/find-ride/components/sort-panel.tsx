@@ -1,13 +1,12 @@
 /**
  * @file sort-panel.tsx
- * @description 排序选项面板组件，集成交互行为审计与链路追踪追踪
+ * @description 排序选项面板组件。
  */
 
-import React from "react";
+import React, { useCallback } from "react";
 import { View, ScrollView, TouchableOpacity, Text } from "react-native";
 import styles from "../find-ride.style";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 /**
  * 排序面板组件属性接口
@@ -21,6 +20,10 @@ interface SortPanelProps {
      * @param option 选中的选项字符串
      */
     onSelect: (option: string) => void;
+    /** * [规范注入] 链路追踪请求 ID 
+     * 严禁组件内部隐式获取，必须由父级业务层显式传递
+     */
+    requestId: string | undefined;
 }
 
 /**
@@ -32,32 +35,32 @@ export const SortPanel: React.FC<SortPanelProps> = ({
     options,
     currentSort,
     onSelect,
+    requestId,
 }) => {
 
     /**
      * 处理排序项点击事件
-     * 集成日志审计逻辑，注入全局 RequestId
+     * [优化] 使用 useCallback 确保引用稳定
      * @param option 目标排序项
      */
-    const handleSortPress = (option: string): void => {
-        // 从全局 Store 获取已存在的 RequestId，严禁重复生成
-        const requestId = useEnvStore.getState().currentRequestId;
-
-        // 记录排序交互审计日志
+    const handleSortPress = useCallback((option: string): void => {
+        // 记录排序交互审计日志，严格遵循统一日志结构要求
         logger.info({
             module: 'component.sortPanel',
             operate: 'changeSort',
             params: {
                 previousSort: currentSort,
                 targetSort: option
-            } as unknown as Record<string, unknown>,
+            },
             result: 'User updated sorting preference',
-            requestId: requestId
+            requestId: requestId, // 显式注入消费
+            error: undefined,
+            errorType: undefined
         });
 
         // 执行原始业务回调逻辑
         onSelect(option);
-    };
+    }, [currentSort, onSelect, requestId]);
 
     return (
         <View style={styles.sortDropdown}>

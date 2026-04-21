@@ -1,18 +1,17 @@
 /**
  * @file find-ride.tsx
  * @description 找拼车主页面。
- * 核心架构：采用受控组件模式，集成 Hook 逻辑抽象与全局链路追踪审计。
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from 'expo-router';
 import { ArrowLeft, SlidersHorizontal } from "lucide-react-native";
 
@@ -53,7 +52,13 @@ const FILTER_TAGS = [
 export default function FindRidePage() {
   const router = useRouter();
 
-  // 从自定义 Hook 中解构状态和操作方法
+  /**
+   * [规范执行] 显式获取当前业务流 RequestId
+   * 此处作为业务起点，通过 Store 取值并显式向下游参数化注入
+   */
+  const requestId = useEnvStore((state) => state.currentRequestId);
+
+  // 从自定义 Hook 中解构状态和操作方法，显式注入 requestId
   const {
     searchFrom,
     searchTo,
@@ -68,62 +73,64 @@ export default function FindRidePage() {
     handleToggleFilter,
     handleSelectSort,
     toggleSortDropdown
-  } = useFindRideForm();
+  } = useFindRideForm(requestId);
 
   /**
-   * 页面生命周期审计：记录入口日志并消费 RequestId
+   * 页面生命周期审计：记录入口日志
    */
   useEffect(() => {
-    const requestId = useEnvStore.getState().currentRequestId;
     logger.info({
       module: 'page.findRide',
       operate: 'initPage',
       params: {
         initialFrom: searchFrom,
         initialTo: searchTo
-      } as unknown as Record<string, unknown>,
+      },
       result: 'FindRide page initialized',
-      requestId: requestId
+      requestId: requestId,
+      error: undefined,
+      errorType: undefined
     });
-  }, []);
+  }, [requestId]);
 
   /**
-   * 增强型返回处理：注入交互日志
+   * 增强型返回处理
    */
   const handleBackPress = (): void => {
-    const requestId = useEnvStore.getState().currentRequestId;
     logger.info({
       module: 'page.findRide',
       operate: 'navigateBack',
       params: undefined,
       result: 'User triggered back navigation',
-      requestId: requestId
+      requestId: requestId,
+      error: undefined,
+      errorType: undefined
     });
     router.back();
   };
 
   /**
-   * 增强型排序切换：注入交互日志
+   * 增强型排序切换
    */
   const handleToggleSort = (): void => {
-    const requestId = useEnvStore.getState().currentRequestId;
     logger.info({
       module: 'page.findRide',
       operate: 'toggleSortPanel',
-      params: { currentVisible: isSortDropdownVisible } as unknown as Record<string, unknown>,
-      result: `Sort panel set to ${!isSortDropdownVisible}`,
-      requestId: requestId
+      params: { currentVisible: isSortDropdownVisible },
+      result: `Sort panel visibility toggled to ${!isSortDropdownVisible}`,
+      requestId: requestId,
+      error: undefined,
+      errorType: undefined
     });
     toggleSortDropdown();
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" />
 
-      {/* 头部区域：包含导航、搜索和过滤 */}
+      {/* 头部区域 */}
       <View style={styles.header}>
-        {/* 顶部导航栏 */}
         <View style={styles.topBar}>
           <TouchableOpacity
             onPress={handleBackPress}
@@ -144,13 +151,14 @@ export default function FindRidePage() {
           </TouchableOpacity>
         </View>
 
-        {/* 搜索组件：受控组件模式 */}
+        {/* 搜索组件：参数化注入 requestId (假设子组件已适配 props 接收) */}
         <SearchBar
           from={searchFrom}
           to={searchTo}
           onFromChange={setSearchFrom}
           onToChange={setSearchTo}
           onSearch={handleSearch}
+          requestId={requestId}
         />
 
         {/* 过滤标签组件 */}
@@ -158,6 +166,7 @@ export default function FindRidePage() {
           tags={FILTER_TAGS}
           activeFilters={activeFilters}
           onToggle={handleToggleFilter}
+          requestId={requestId}
         />
       </View>
 
@@ -167,6 +176,7 @@ export default function FindRidePage() {
           options={SORT_OPTIONS}
           currentSort={sortBy}
           onSelect={handleSelectSort}
+          requestId={requestId}
         />
       )}
 
@@ -184,14 +194,16 @@ export default function FindRidePage() {
           <RideCard
             key={ride.id}
             ride={ride}
+            requestId={requestId}
             onPress={() => {
-              const requestId = useEnvStore.getState().currentRequestId;
               logger.info({
                 module: 'page.findRide',
                 operate: 'selectRide',
-                params: { rideId: ride.id } as unknown as Record<string, unknown>,
+                params: { rideId: ride.id },
                 result: 'Navigating to ride detail',
-                requestId: requestId
+                requestId: requestId,
+                error: undefined,
+                errorType: undefined
               });
               router.push({
                 pathname: ROUTES.RIDE.DETAIL,
@@ -204,7 +216,9 @@ export default function FindRidePage() {
         {/* 列表为空时的占位提示 */}
         {!loading && filteredRides.length === 0 && (
           <View style={{ alignItems: 'center', marginTop: 40 }}>
-            <Text style={{ color: COLORS.textLight }}>未找到匹配行程，请尝试更改搜索条件</Text>
+            <Text style={{ color: COLORS.textLight }}>
+              未找到匹配行程，请尝试更改搜索条件
+            </Text>
           </View>
         )}
       </ScrollView>

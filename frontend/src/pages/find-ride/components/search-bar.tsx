@@ -1,6 +1,6 @@
 /**
  * @file search-bar.tsx
- * @description 搜索栏组件，支持出发地与目的地输入，集成自动化埋点与链路追踪审计
+ * @description 搜索栏组件。
  */
 
 import React from "react";
@@ -8,7 +8,6 @@ import { View, TextInput, TouchableOpacity } from "react-native";
 import { MapPin, Navigation as NavIcon, Search } from "lucide-react-native";
 import styles, { COLORS } from "../find-ride.style";
 import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 /**
  * 搜索栏组件属性接口
@@ -24,6 +23,10 @@ interface SearchBarProps {
     onToChange: (text: string) => void;
     /** 搜索触发回调 */
     onSearch: () => void;
+    /** * [规范注入] 链路追踪请求 ID 
+     * 严禁组件内部隐式获取，必须由父级业务层显式传递
+     */
+    requestId: string | undefined;
 }
 
 /**
@@ -37,29 +40,29 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     onFromChange,
     onToChange,
     onSearch,
+    requestId,
 }) => {
 
     /**
      * 处理搜索点击并记录审计日志
-     * 遵循全局 RequestId 消费规范
+     * 执行显式注入的 RequestId 消费规范
      */
     const handleSearchPress = (): void => {
-        // 1. 从全局 Store 获取已存在的 RequestId，禁止生成新 ID
-        const requestId = useEnvStore.getState().currentRequestId;
-
-        // 2. 构造标准化日志结构
+        // 构造标准化日志结构，严禁缺失字段
         logger.info({
             module: 'component.searchBar',
             operate: 'triggerSearch',
             params: {
                 from: from.trim(),
                 to: to.trim()
-            } as unknown as Record<string, unknown>,
+            },
             result: 'Search interaction triggered',
-            requestId: requestId
+            requestId: requestId, // 显式消费传入的 ID
+            error: undefined,
+            errorType: undefined
         });
 
-        // 3. 执行原始业务逻辑
+        // 执行原始业务逻辑
         onSearch();
     };
 
@@ -78,7 +81,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 />
             </View>
 
-            {/* 分隔线 - 引用重构后的样式名以避免冲突 */}
+            {/* 分隔线 */}
             <View style={styles.searchDivider} />
 
             {/* 目的地输入行 */}
