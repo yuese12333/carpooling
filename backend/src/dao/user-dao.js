@@ -4,7 +4,7 @@
  * 说明：使用 MySQL 持久化存储登录用户数据
  */
 const pool = require('../config/db');
-const { logger } = require('../utils/logger');
+const { logger, maskSensitive } = require('../utils/logger');
 
 let ensureAuthUsersTablePromise;
 
@@ -86,6 +86,8 @@ async function findByPhone(phone, requestId) {
       password_hash AS passwordHash,
       user_name AS userName,
       avatar_url AS avatarUrl,
+      created_at AS createdAt,
+      updated_at AS updatedAt,
       last_login_at AS lastLoginAt,
       last_login_device_info AS lastLoginDeviceInfo
     FROM auth_users
@@ -95,6 +97,49 @@ async function findByPhone(phone, requestId) {
 
   const [rows] = await pool.execute(sql, { phone });
   return rows?.[0] || null;
+}
+
+/**
+ * 函数功能：创建登录用户账号
+ * 入参：userId/phone/passwordHash/userName/avatarUrl
+ * 出参：boolean（是否创建成功）
+ */
+async function createAuthUser({ userId, phone, passwordHash, userName, avatarUrl = '' }, requestId) {
+  await ensureAuthUsersTableOnce(requestId);
+
+  const sql = `
+    INSERT INTO auth_users (
+      user_id,
+      phone,
+      password_hash,
+      user_name,
+      avatar_url
+    ) VALUES (
+      :userId,
+      :phone,
+      :passwordHash,
+      :userName,
+      :avatarUrl
+    )
+  `;
+
+  await pool.execute(sql, {
+    userId,
+    phone,
+    passwordHash,
+    userName,
+    avatarUrl,
+  });
+
+  logger.info({
+    module: 'user-dao',
+    operate: 'create-auth-user',
+    requestId,
+    params: { userId, phone: maskSensitive({ phone }).phone },
+    result: 'Auth user created',
+  });
+
+  return true;
 }
 
 /**
@@ -130,6 +175,8 @@ async function updateLastLoginInfo(userId, { lastLoginAt, deviceInfo }, requestI
 }
 
 module.exports = {
+  ensureAuthUsersTableOnce,
   findByPhone,
+  createAuthUser,
   updateLastLoginInfo,
 };

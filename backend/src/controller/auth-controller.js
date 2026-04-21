@@ -19,7 +19,7 @@ const CHINA_MAINLAND_PHONE_REGEX = /^1\d{10}$/;
  * 出参：标准化 JSON 响应
  */
 async function loginByPasswordController(req, res) {
-  const requestId = createRequestId();
+  const requestId = req.headers['x-request-id'] || createRequestId();
   const { phone, password, rememberMe } = req.body || {};
 
   try {

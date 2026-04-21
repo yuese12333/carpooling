@@ -25,13 +25,6 @@ async function loginByPassword({ phone, password, rememberMe, deviceInfo, reques
   const user = await userDao.findByPhone(phone, requestId);
 
   if (!user) {
-    logger.warn({
-      module: 'auth-service',
-      operate: 'login-by-password',
-      params: maskSensitive({ phone }),
-      result: '用户不存在',
-      requestId,
-    });
     const error = new Error('用户不存在');
     error.statusCode = 401;
     throw error;
@@ -39,13 +32,6 @@ async function loginByPassword({ phone, password, rememberMe, deviceInfo, reques
 
   const isPasswordValid = await passwordUtils.compare(password, user.passwordHash);
   if (!isPasswordValid) {
-    logger.warn({
-      module: 'auth-service',
-      operate: 'login-by-password',
-      params: maskSensitive({ phone }),
-      result: '密码错误',
-      requestId,
-    });
     const error = new Error('密码错误');
     error.statusCode = 401;
     throw error;

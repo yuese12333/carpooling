@@ -8,8 +8,6 @@ import * as React from "react";
 import { View, Text, StyleSheet, type ViewProps, type TextProps } from "react-native";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import logger from '@/utils/logger';
-import { useEnvStore } from '@/store/env-store';
 
 // --- 辅助工具 ---
 
@@ -40,17 +38,6 @@ export interface CardTextProps extends TextProps {
  * Card 容器组件
  */
 const Card = React.forwardRef<View, CardProps>(({ className, style, children, ...props }, ref) => {
-  const requestId = useEnvStore.getState().currentRequestId;
-
-  React.useEffect(() => {
-    logger.info({
-      module: 'Card',
-      operate: 'onMount',
-      params: { className },
-      requestId
-    });
-  }, [requestId]);
-
   return (
     <View
       ref={ref}
