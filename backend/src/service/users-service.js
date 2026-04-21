@@ -5,7 +5,7 @@
 const crypto = require('crypto');
 const { ensureAuthUsersTableOnce, createAuthUser, findByPhone } = require('../dao/user-dao');
 const passwordUtils = require('../utils/password-utils');
-const { logger } = require('../utils/logger');
+const { logger, maskSensitive } = require('../utils/logger');
 
 function buildUserId() {
   return `u_${crypto.randomUUID().replace(/-/g, '').slice(0, 24)}`;
@@ -24,20 +24,20 @@ function buildRegisterUserView(authUser) {
   };
 }
 
-async function initUsersSchema(requestId) {
+async function initAuthUsersSchema(requestId) {
   try {
     logger.info({
       module: 'users-service',
-      operate: 'init-users-schema',
+      operate: 'init-auth-users-schema',
       requestId,
-      result: 'Starting schema initialization',
+      result: 'Starting auth_users schema initialization',
     });
 
     await ensureAuthUsersTableOnce(requestId);
 
     logger.info({
       module: 'users-service',
-      operate: 'init-users-schema',
+      operate: 'init-auth-users-schema',
       requestId,
       result: 'Auth users schema initialization completed',
     });
@@ -46,7 +46,7 @@ async function initUsersSchema(requestId) {
   } catch (error) {
     logger.error({
       module: 'users-service',
-      operate: 'init-users-schema',
+      operate: 'init-auth-users-schema',
       requestId,
       error: error.message,
       errorType: 'ServiceSchemaInitError',
@@ -61,7 +61,10 @@ async function registerUser({ phone, nickname, password }, requestId) {
       module: 'users-service',
       operate: 'register-user',
       requestId,
-      params: { phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'), nickname },
+      params: {
+        phone: maskSensitive({ phone }).phone,
+        nickname,
+      },
       result: 'Starting user registration',
     });
 
@@ -129,6 +132,6 @@ async function registerUser({ phone, nickname, password }, requestId) {
 }
 
 module.exports = {
-  initUsersSchema,
+  initAuthUsersSchema,
   registerUser,
 };
