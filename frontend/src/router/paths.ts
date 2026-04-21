@@ -9,7 +9,7 @@ export const ROUTES = {
     FIND_RIDE: '/find-ride/find-ride',
     OFFER_RIDE: '/offer-ride/offer-ride',
     TRIPS: '/trips/trips',
-    PROFILE_MAIN: '/profile',
+    PROFILE_MAIN: '/profile/profile/profile',
 
     // 认证模块
     AUTH: {
@@ -26,22 +26,22 @@ export const ROUTES = {
 
     // 个人中心模块
     PROFILE: {
-        FAVORITE_LOCATIONS: '/profile/favorite-locations',
-        ADD_LOCATION: '/profile/add-location',
-        EDIT_LOCATION: '/profile/edit-location',
-        MY_VEHICLES: '/profile/my-vehicles',
-        VEHICLE_VERIFICATION: '/profile/vehicle-verification-detail',
-        PAYMENT_METHODS: '/profile/payment-methods',
-        PAYMENT_HISTORY: '/profile/payment-history',
-        RECEIPT_DETAIL: '/profile/receipt-detail',
+        FAVORITE_LOCATIONS: '/profile/favorite-locations/favorite-locations',
+        ADD_LOCATION: '/profile/add-location/add-location',
+        EDIT_LOCATION: '/profile/edit-location/edit-location',
+        MY_VEHICLES: '/profile/my-vehicles/my-vehicles',
+        VEHICLE_VERIFICATION: '/profile/vehicle-verification-detail/vehicle-verification-detail',
+        PAYMENT_METHODS: '/profile/payment-methods/payment-methods',
+        PAYMENT_HISTORY: '/profile/payment-history/payment-history',
+        RECEIPT_DETAIL: '/profile/receipt-detail/receipt-detail',
     },
 
     // 行程/详情相关
     RIDE: {
-        DETAIL: '/ride-detail',
-        NAVIGATION: '/ride-navigation',
-        ARRIVAL_CONFIRM: '/ride-arrival-confirm',
-        DELAY_ALERT: '/ride-delay-alert',
+        DETAIL: '/ride/ride-detail',
+        NAVIGATION: '/ride/ride-navigation',
+        ARRIVAL_CONFIRM: '/ride/ride-arrival-confirm',
+        DELAY_ALERT: '/ride/ride-delay-alert',
     },
 
     // 测试
