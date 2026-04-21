@@ -86,6 +86,12 @@ cp .env.example .env
 校验：`phone`（或 `phoneNumber`）为字符串、11 位数字且以 `1` 开头；`nickname`（或 `userName`）为字符串长度 1～50；`password` 长度 6～128。  
 HTTP **201** 创建成功，响应 `code` 仍为 200 包装体；手机号已存在时 **409**，`data.reason` 为 `PHONE_ALREADY_EXISTS`。
 
+### Breaking change（调用方注意）
+
+- `POST /api/users/create` 现要求必填 `password`，且长度需为 6～128。
+- 参数兼容：`phone`/`phoneNumber` 二选一，`nickname`/`userName` 二选一。
+- 注册成功后账号直接写入 `auth_users`，可立即用于 `/api/auth/login/password`。
+
 ### 认证接口补充
 
 **`POST /api/auth/login/password`**  
@@ -205,7 +211,7 @@ backend/
 │   ├── router/          # sms-router.js, users-router.js, auth-router.js
 │   ├── controller/      # sms-controller.js, users-controller.js, auth-controller.js
 │   ├── service/         # aliyun-sms-service.js, users-service.js, auth-service.js
-│   ├── dao/             # users-dao.js, user-dao.js
+│   ├── dao/             # user-dao.js
 │   ├── utils/           # response.js, logger.js, jwt-utils.js, password-utils.js
 │   ├── middleware/      # 预留
 │   ├── constants/       # 预留

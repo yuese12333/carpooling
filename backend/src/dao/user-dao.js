@@ -4,7 +4,7 @@
  * 说明：使用 MySQL 持久化存储登录用户数据
  */
 const pool = require('../config/db');
-const { logger } = require('../utils/logger');
+const { logger, maskSensitive } = require('../utils/logger');
 
 let ensureAuthUsersTablePromise;
 
@@ -135,7 +135,7 @@ async function createAuthUser({ userId, phone, passwordHash, userName, avatarUrl
     module: 'user-dao',
     operate: 'create-auth-user',
     requestId,
-    params: { userId, phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') },
+    params: { userId, phone: maskSensitive({ phone }).phone },
     result: 'Auth user created',
   });
 

@@ -8,29 +8,31 @@ const {
   buildFailureResponse,
 } = require('../utils/response');
 const { logger, maskSensitive } = require('../utils/logger');
-const { initUsersSchema, registerUser } = require('../service/users-service');
+const { initAuthUsersSchema, registerUser } = require('../service/users-service');
 
-async function initUsersSchemaController(req, res) {
+async function initAuthUsersSchemaController(req, res) {
   const requestId = createRequestId();
 
   try {
-    const data = await initUsersSchema(requestId);
+    const data = await initAuthUsersSchema(requestId);
     logger.info({
       module: 'users-controller',
-      operate: 'init-users-schema',
+      operate: 'init-auth-users-schema',
       requestId,
-      result: 'Users schema initialized',
+      result: 'Auth users schema initialized',
     });
     return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
     logger.error({
       module: 'users-controller',
-      operate: 'init-users-schema',
+      operate: 'init-auth-users-schema',
       requestId,
       error: error.message,
       errorType: 'DatabaseSchemaInitError',
     });
-    return res.status(500).json(buildFailureResponse(500, '初始化用户表失败', null, requestId));
+    return res
+      .status(500)
+      .json(buildFailureResponse(500, '初始化认证用户表(auth_users)失败', null, requestId));
   }
 }
 
@@ -138,6 +140,6 @@ async function createUserController(req, res) {
 }
 
 module.exports = {
-  initUsersSchemaController,
+  initAuthUsersSchemaController,
   createUserController,
 };
