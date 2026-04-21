@@ -3,8 +3,10 @@ require('./config/load-env');
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const smsRouter = require('./router/sms-router');
+const uploadRouter = require('./router/upload-router');
 const authRouter = require('./router/auth-router');
 const usersRouter = require('./router/users-router');
 const pool = require('./config/db');
@@ -17,6 +19,9 @@ const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(cors({ origin: true }));
 app.use(express.json());
+
+// 静态文件服务：将 uploads 目录暴露为可公网访问的资源
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // 健康检查（包含数据库连通性）
 app.get('/health', async (req, res) => {
@@ -55,6 +60,7 @@ app.post('/api', (req, res) => {
 app.use('/api/sms', smsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/upload', uploadRouter);
 
 app.listen(Number(PORT), HOST, async () => {
   const requestId = `startup-${Date.now()}`;

@@ -94,7 +94,8 @@ function formatParams(params?: LoggerOptions['params']): string {
   if (!params) return '';
   if (typeof params === 'string') return params;
   try {
-    return Object.entries(params as Record<string, unknown>)
+    const masked = maskSensitive(params as Record<string, unknown>);
+    return Object.entries(masked as Record<string, unknown>)
       .map(([k, v]) => `${k}:${typeof v === 'object' ? JSON.stringify(v) : String(v)}`)
       .join(',');
   } catch {
