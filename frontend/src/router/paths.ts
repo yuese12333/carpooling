@@ -31,6 +31,7 @@ export const ROUTES = {
         EDIT_LOCATION: '/profile/edit-location/edit-location',
         MY_VEHICLES: '/profile/my-vehicles/my-vehicles',
         VEHICLE_VERIFICATION: '/profile/vehicle-verification-detail/vehicle-verification-detail',
+        EDIT_VEHICLE_INFORMATION: '/profile/edit-vehicle-information/edit-vehicle-information',
         PAYMENT_METHODS: '/profile/payment-methods/payment-methods',
         PAYMENT_HISTORY: '/profile/payment-history/payment-history',
         RECEIPT_DETAIL: '/profile/receipt-detail/receipt-detail',
