@@ -8,7 +8,6 @@ import { View, Text } from "react-native";
 import { Search, Navigation } from "lucide-react-native";
 import { Input } from "@/../components/input";
 import { Button } from "@/../components/button";
-// 修正样式文件引用，确保符合 kebab-case 命名规范且路径指向正确
 import styles, { COLORS } from "../favorite-locations.style";
 
 /**

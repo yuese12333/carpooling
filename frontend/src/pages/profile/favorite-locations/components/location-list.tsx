@@ -8,7 +8,6 @@ import { FlatList, View, Text, ListRenderItem } from "react-native";
 import { MapPin } from "lucide-react-native";
 import { LocationItem as LocationDataType } from "@/api/favorite-locations-api";
 import { LocationItem } from "./location-item";
-// 修正样式文件引用，确保符合 kebab-case 命名规范
 import styles, { COLORS } from "../favorite-locations.style";
 
 /**

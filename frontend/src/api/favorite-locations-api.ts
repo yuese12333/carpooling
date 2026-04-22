@@ -1,10 +1,11 @@
 /**
  * @file favorite-locations-api.ts
- * @description 常用地点模块接口封装，支持全链路追踪与标准化日志记录
+ * @description 常用地点模块接口封装。
  */
 
-import axios from 'axios';
+import request from '@/utils/request';
 import logger from '@/utils/logger';
+import { useEnvStore } from '@/store/env-store';
 
 // --- 类型定义 ---
 
@@ -20,12 +21,9 @@ export interface LocationItem {
 }
 
 /**
- * API 调用通用配置
- * @property requestId - 必须从业务起点显式传递的链路追踪 ID
+ * 模块常量定义
  */
-interface ApiConfig {
-    requestId: string;
-}
+const MODULE_NAME = 'favorite-locations-api';
 
 // --- 模拟数据 (Mock Data) ---
 const MOCK_LOCATIONS: LocationItem[] = [
@@ -34,62 +32,63 @@ const MOCK_LOCATIONS: LocationItem[] = [
     { id: '3', type: 'other', label: '健身房', address: '上海市长宁区延安西路威尔士健身' },
 ];
 
-// 生产环境应基于环境变量控制
-const IS_MOCK = true;
-
 /**
  * 获取地点列表
- * @param requestId - 业务流唯一请求 ID
+ * @param requestId - 由页面级使用 useMemo 生成并显式传递的链路 ID
  * @param query - 搜索关键字（可选）
- * @returns 过滤后的地点列表
+ * @returns {Promise<LocationItem[]>} 过滤后的地点列表
  */
 export const getLocationsApi = async (
     requestId: string,
     query?: string
 ): Promise<LocationItem[]> => {
-    const moduleName = 'favorite-locations-api';
     const operateName = 'getLocationsApi';
+    const isMockMode = useEnvStore.getState().isMockMode;
 
-    if (IS_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+    // --- Mock 模式逻辑 ---
+    if (isMockMode) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
         const filteredData = !query
             ? MOCK_LOCATIONS
-            : MOCK_LOCATIONS.filter(l => l.label.includes(query) || l.address.includes(query));
+            : MOCK_LOCATIONS.filter(
+                (l) => l.label.includes(query) || l.address.includes(query)
+            );
 
         logger.info({
-            module: moduleName,
+            module: MODULE_NAME,
             operate: operateName,
             params: { query },
             result: JSON.stringify(filteredData),
-            requestId: requestId
+            requestId: requestId,
         });
         return filteredData;
     }
 
+    // --- 生产请求逻辑 ---
     try {
-        const response = await axios.get('/api/v1/locations', {
+        const { data } = await request.get<LocationItem[]>('/api/v1/locations', {
             params: { query },
-            headers: { 'X-Request-Id': requestId } // 注入链路 ID
+            headers: { 'X-Request-Id': requestId },
         });
 
         logger.info({
-            module: moduleName,
+            module: MODULE_NAME,
             operate: operateName,
             params: { query },
-            result: response.data,
-            requestId: requestId
+            result: JSON.stringify(data),
+            requestId: requestId,
         });
 
-        return response.data;
+        return data;
     } catch (error: any) {
         logger.error({
-            module: moduleName,
+            module: MODULE_NAME,
             operate: operateName,
             params: { query },
             result: undefined,
             error: error.message,
             errorType: error.code || 'API_FETCH_ERROR',
-            requestId: requestId
+            requestId: requestId,
         });
         throw error;
     }
@@ -97,48 +96,49 @@ export const getLocationsApi = async (
 
 /**
  * 删除指定地点
- * @param requestId - 业务流唯一请求 ID
- * @param id - 地点 ID
+ * @param requestId - 由页面级使用 useMemo 生成并显式传递的链路 ID
+ * @param id - 地点唯一标识
+ * @returns {Promise<void>}
  */
 export const deleteLocationApi = async (
     requestId: string,
     id: string
 ): Promise<void> => {
-    const moduleName = 'favorite-locations-api';
     const operateName = 'deleteLocationApi';
+    const isMockMode = useEnvStore.getState().isMockMode;
 
-    if (IS_MOCK) {
+    if (isMockMode) {
         logger.info({
-            module: moduleName,
+            module: MODULE_NAME,
             operate: operateName,
             params: { id },
             result: 'Mock delete success',
-            requestId: requestId
+            requestId: requestId,
         });
         return;
     }
 
     try {
-        await axios.delete(`/api/v1/locations/${id}`, {
-            headers: { 'X-Request-Id': requestId }
+        await request.delete<void>(`/api/v1/locations/${id}`, {
+            headers: { 'X-Request-Id': requestId },
         });
 
         logger.info({
-            module: moduleName,
+            module: MODULE_NAME,
             operate: operateName,
             params: { id },
             result: 'Success',
-            requestId: requestId
+            requestId: requestId,
         });
     } catch (error: any) {
         logger.error({
-            module: moduleName,
+            module: MODULE_NAME,
             operate: operateName,
             params: { id },
             result: undefined,
             error: error.message,
             errorType: error.code || 'API_DELETE_ERROR',
-            requestId: requestId
+            requestId: requestId,
         });
         throw error;
     }
