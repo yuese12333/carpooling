@@ -1,10 +1,12 @@
 /**
  * @file profile-api.ts
- * @description 用户个人中心模块 API 封装。
+ * @description 用户个人中心模块 API 封装，集成环境切换与严谨链路追踪。
  */
 
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import request from '@/utils/request';
+import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
+import { AxiosError } from 'axios';
 
 /**
  * 统一 API 响应结构体
@@ -50,12 +52,6 @@ export interface BadgeItem {
     unlocked: boolean;
 }
 
-// 实例化 API 客户端
-const apiClient: AxiosInstance = axios.create({
-    baseURL: '/api',
-    timeout: 10000,
-});
-
 /**
  * 内部统一日志记录器
  * @param operate 操作描述
@@ -63,7 +59,12 @@ const apiClient: AxiosInstance = axios.create({
  * @param requestId 显式注入的链路追踪 ID
  * @param params 请求参数
  */
-const logApiError = (operate: string, error: unknown, requestId: string, params?: Record<string, any>) => {
+const logApiError = (
+    operate: string,
+    error: unknown,
+    requestId: string,
+    params?: Record<string, any>,
+) => {
     logger.error({
         module: 'profile-api',
         operate,
@@ -75,69 +76,88 @@ const logApiError = (operate: string, error: unknown, requestId: string, params?
     });
 };
 
+/**
+ * 获取当前是否处于 Mock 模式
+ * @returns boolean
+ */
+const getIsMock = (): boolean => useEnvStore.getState().isMockMode;
+
 export const profileApi = {
     /**
      * 8.1 获取用户中心基础信息
-     * @param requestId 显式链路追踪 ID
+     * @param requestId 页面级生命周期内唯一的链路追踪 ID
      * @param userId 用户唯一标识（可选）
      * @returns Promise<ApiResponse<UserInfo>>
      */
-    getInfo: async (requestId: string, userId?: string) => {
+    getInfo: async (requestId: string, userId?: string): Promise<ApiResponse<UserInfo>> => {
+        const isMock = getIsMock();
+        const url = isMock ? '/mock/profile/info' : '/profile/info';
         try {
-            const response = await apiClient.get<ApiResponse<UserInfo>>('/profile/info', {
-                params: { userId },
+            // 严格使用统一 request 实例，禁止自建 axios
+            const response = await request.get<ApiResponse<UserInfo>>(url, {
+                params: { userId: userId || undefined },
+                headers: { 'X-Request-Id': requestId },
             });
             return response.data;
         } catch (error) {
-            logApiError('get-info', error, requestId, { userId });
+            logApiError('get-info', error, requestId, { userId, isMock });
             throw error;
         }
     },
 
     /**
      * 8.3 获取车辆详情
-     * @param requestId 显式链路追踪 ID
+     * @param requestId 页面级生命周期内唯一的链路追踪 ID
      * @param userId 用户唯一标识（可选）
      * @returns Promise<ApiResponse<CarDetail>>
      */
-    getCar: async (requestId: string, userId?: string) => {
+    getCar: async (requestId: string, userId?: string): Promise<ApiResponse<CarDetail>> => {
+        const isMock = getIsMock();
+        const url = isMock ? '/mock/profile/car' : '/profile/car';
         try {
-            const response = await apiClient.get<ApiResponse<CarDetail>>('/profile/car', {
-                params: { userId },
+            const response = await request.get<ApiResponse<CarDetail>>(url, {
+                params: { userId: userId || undefined },
+                headers: { 'X-Request-Id': requestId },
             });
             return response.data;
         } catch (error) {
-            logApiError('get-car', error, requestId, { userId });
+            logApiError('get-car', error, requestId, { userId, isMock });
             throw error;
         }
     },
 
     /**
      * 8.5 获取成就勋章列表
-     * @param requestId 显式链路追踪 ID
+     * @param requestId 页面级生命周期内唯一的链路追踪 ID
      * @param userId 用户唯一标识（可选）
      * @returns Promise<ApiResponse<{ list: BadgeItem[] }>>
      */
-    getBadges: async (requestId: string, userId?: string) => {
+    getBadges: async (requestId: string, userId?: string): Promise<ApiResponse<{ list: BadgeItem[] }>> => {
+        const isMock = getIsMock();
+        const url = isMock ? '/mock/profile/badges' : '/profile/badges';
         try {
-            const response = await apiClient.get<ApiResponse<{ list: BadgeItem[] }>>('/profile/badges', {
-                params: { userId },
+            const response = await request.get<ApiResponse<{ list: BadgeItem[] }>>(url, {
+                params: { userId: userId || undefined },
+                headers: { 'X-Request-Id': requestId },
             });
             return response.data;
         } catch (error) {
-            logApiError('get-badges', error, requestId, { userId });
+            logApiError('get-badges', error, requestId, { userId, isMock });
             throw error;
         }
     },
 
     /**
      * 8.11 退出登录
-     * @param requestId 显式链路追踪 ID
+     * @param requestId 页面级生命周期内唯一的链路追踪 ID
      * @returns Promise<ApiResponse<{ success: boolean }>>
      */
-    logout: async (requestId: string) => {
+    logout: async (requestId: string): Promise<ApiResponse<{ success: boolean }>> => {
         try {
-            const response = await apiClient.post<ApiResponse<{ success: boolean }>>('/profile/logout');
+            // 退出登录通常不走 Mock
+            const response = await request.post<ApiResponse<{ success: boolean }>>('/profile/logout', {}, {
+                headers: { 'X-Request-Id': requestId },
+            });
             return response.data;
         } catch (error) {
             logApiError('logout', error, requestId);

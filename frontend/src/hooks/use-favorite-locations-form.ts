@@ -1,6 +1,6 @@
 /**
  * @file use-favorite-locations-form.ts
- * @description 常用地点管理业务逻辑 Hook，实现 CRUD 逻辑封装与全链路日志追踪
+ * @description 常用地点管理业务逻辑 Hook，实现 CRUD 逻辑封装与标准化链路追踪
  */
 
 import { useState, useEffect, useCallback } from "react";
@@ -11,7 +11,12 @@ import { ROUTES } from "@/router/paths";
 import logger from '@/utils/logger';
 
 /**
- * 常用地点 Hook 返回值定义
+ * 模块常量定义
+ */
+const MODULE_NAME = 'use-favorite-locations-form';
+
+/**
+ * 常用地点 Hook 返回值接口定义
  */
 interface UseFavoriteLocationsFormReturn {
     searchQuery: string;
@@ -31,49 +36,47 @@ interface UseFavoriteLocationsFormReturn {
 
 /**
  * 常用地点业务逻辑 Hook
- * @param requestId - 必须由外部 Page 层显式注入的业务流 ID
- * @returns 业务状态与操作方法
+ * @param requestId - 必须由外部 Page 层通过 useMemo 生成并显式注入的唯一链路 ID
+ * @returns {UseFavoriteLocationsFormReturn} 业务状态与操作方法
  */
 export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocationsFormReturn => {
     const router = useRouter();
-    const moduleName = 'use-favorite-locations-form';
 
+    // --- 状态管理 ---
     const [searchQuery, setSearchQuery] = useState("");
     const [locations, setLocations] = useState<LocationItem[]>([]);
     const [loading, setLoading] = useState(false);
-
-    // 状态初始化：严禁使用 null，统一采用 undefined
     const [activeLocation, setActiveLocation] = useState<LocationItem | undefined>(undefined);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
     /**
      * 获取地点列表
-     * @param query - 搜索关键字
+     * @param query - 搜索关键字（可选）
      */
     const fetchLocations = useCallback(async (query?: string) => {
-        setLoading(true);
         const operateName = 'fetchLocations';
+        setLoading(true);
 
         try {
-            // 显式注入 requestId 至 API 层
+            // 显式注入 requestId 至 API 层，保持全链路打通
             const data = await getLocationsApi(requestId, query);
             setLocations(data);
 
             logger.info({
-                module: moduleName,
+                module: MODULE_NAME,
                 operate: operateName,
-                params: { query },
+                params: { query: query ?? '' }, // 确保 params 为 Record 结构
                 result: 'Fetch locations success',
                 requestId
             });
         } catch (error: any) {
             logger.error({
-                module: moduleName,
+                module: MODULE_NAME,
                 operate: operateName,
-                params: { query },
+                params: { query: query ?? '' },
                 result: undefined,
                 error: error.message,
-                errorType: 'FETCH_ERROR',
+                errorType: error.code || 'FETCH_ERROR',
                 requestId
             });
             Alert.alert("错误", "获取地点列表失败，请稍后再试");
@@ -82,6 +85,7 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
         }
     }, [requestId]);
 
+    // 监听搜索词变化
     useEffect(() => {
         fetchLocations(searchQuery);
     }, [searchQuery, fetchLocations]);
@@ -110,25 +114,27 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
      */
     const prepareDelete = (item: LocationItem) => {
         setActiveLocation(item);
-        requestAnimationFrame(() => {
-            setIsDeleteDialogOpen(true);
-        });
+        // 移除不必要的 requestAnimationFrame，确保交互同步响应
+        setIsDeleteDialogOpen(true);
     };
 
     /**
      * 执行删除逻辑
+     * @returns {Promise<void>}
      */
-    const confirmDelete = async () => {
+    const confirmDelete = async (): Promise<void> => {
         if (!activeLocation) return;
         const operateName = 'confirmDelete';
 
         try {
             await deleteLocationApi(requestId, activeLocation.id);
+
+            // 更新本地状态避免全量刷新
             setLocations(prev => prev.filter(loc => loc.id !== activeLocation.id));
             setIsDeleteDialogOpen(false);
 
             logger.info({
-                module: moduleName,
+                module: MODULE_NAME,
                 operate: operateName,
                 params: { id: activeLocation.id },
                 result: 'Delete location success',
@@ -136,12 +142,12 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
             });
         } catch (error: any) {
             logger.error({
-                module: moduleName,
+                module: MODULE_NAME,
                 operate: operateName,
                 params: { id: activeLocation.id },
                 result: undefined,
                 error: error.message,
-                errorType: 'DELETE_ERROR',
+                errorType: error.code || 'DELETE_ERROR',
                 requestId
             });
             Alert.alert("删除失败", "服务器连接异常");
@@ -153,9 +159,9 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
      */
     const handleGetCurrentLocation = () => {
         logger.info({
-            module: moduleName,
+            module: MODULE_NAME,
             operate: 'handleGetCurrentLocation',
-            params: undefined,
+            params: { action: 'trigger' }, // 修复：必须为 Record 结构
             result: 'Get current location triggered',
             requestId
         });
@@ -163,6 +169,7 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
 
     /**
      * 处理返回逻辑
+     * @param path - 目标返回路径
      */
     const handleBack = (path: Href) => {
         router.push(path);

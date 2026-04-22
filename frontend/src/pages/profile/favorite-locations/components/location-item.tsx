@@ -10,7 +10,6 @@ import { LocationItem as LocationDataType } from "@/api/favorite-locations-api";
 import { Card } from "@/../components/card";
 import { Badge } from "@/../components/badge";
 import { Popover, PopoverTrigger, PopoverContent } from "@/../components/popover";
-// 修正样式文件引用为 kebab-case
 import styles, { COLORS, getCategoryColor } from "../favorite-locations.style";
 
 interface LocationItemProps {

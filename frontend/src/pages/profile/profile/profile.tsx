@@ -1,14 +1,13 @@
 /**
  * @file profile.tsx
- * @description 个人中心主页面。
+ * @description 个人中心主页面。修复了车辆数据状态的映射逻辑，并遵循严谨的全链路追踪规范。
  */
 
 import React, { useEffect, useMemo } from "react";
 import { ScrollView, StatusBar, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // UI 规范修复
-import { useProfilePage } from "@/hooks/use-profile-form"; // 修正 Hook 引用名
-import { useEnvStore } from "@/store/env-store";
-import logger from "@/utils/logger";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useProfilePage } from "@/hooks/use-profile-form"; // 确保引用重命名后的 Hook
+import logger, { generateRequestId } from "@/utils/logger";
 import styles from "./profile.style";
 import { menuData, badgeData } from "./profile-config";
 
@@ -25,17 +24,16 @@ const APP_VERSION = "v2.1.0";
  */
 export default function ProfilePage() {
   /**
-   * RequestId 生成与初始化规则：
-   * 模块级同步初始化：作为个人中心业务流起点，显式从 Store 或 Context 获取。
-   * 禁止隐式读取：此处获取后通过参数显式向下透传。
+   * RequestId 独立化原则：
+   * 页面级 requestId 必须使用 useMemo 配合 generateRequestId() 独立生成。
+   * 严禁复用全局 Store 或隐式读取。
    */
-  const requestId = useMemo(() => {
-    return useEnvStore.getState().currentRequestId || `REQ-${Date.now()}`;
-  }, []);
+  const requestId = useMemo(() => generateRequestId(), []);
 
-  // 显式透传 requestId 至 Hook 层
+  // 从 Hook 中解构出 profileData 与独立维护的 carData
   const {
     profileData,
+    carData,      // 对应 Hook 中的 carData 状态
     displaySavings,
     badges,
     loading,
@@ -46,57 +44,60 @@ export default function ProfilePage() {
 
   /**
    * 页面生命周期日志记录
-   * 职责分层：Page 层负责业务起点的 info 日志
    */
   useEffect(() => {
-    try {
-      logger.info({
-        module: 'profile-page',
-        operate: 'page-enter',
-        params: { version: APP_VERSION, loading },
-        result: 'success',
-        requestId: requestId // 显式注入
-      });
-    } catch (error) {
-      // 关键逻辑异常捕获
-      console.error("Tracing log failed", error);
-    }
+    logger.info({
+      module: 'profile-page',
+      operate: 'page-enter',
+      params: { version: APP_VERSION, loading: !!loading },
+      result: 'success',
+      requestId: requestId
+    });
   }, [requestId, loading]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="light-content" />
 
+      {/* 规范修复：ScrollView 必须添加 keyboardShouldPersistTaps="handled" */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* 1. 头部用户信息区 - 显式注入交互回调与数据 */}
-        <ProfileHeader
-          name={profileData.name}
-          avatar={profileData.avatar}
-          verified={profileData.verified}
-          trips={profileData.trips}
-          rating={profileData.rating}
-          savings={displaySavings}
-          onEditAvatar={handleEditAvatar}
-        />
+        {/* 1. 头部用户信息区 - 基于 profileData 渲染 */}
+        {profileData && (
+          <ProfileHeader
+            name={profileData.name}
+            avatar={profileData.avatar}
+            verified={profileData.verified}
+            trips={profileData.trips}
+            rating={profileData.rating}
+            savings={displaySavings}
+            onEditAvatar={handleEditAvatar}
+          />
+        )}
 
-        <ScrollView style={styles.mainContent}>
-          {/* 2. 成就勋章墙 - 纯展示组件不感知 requestId */}
+        <ScrollView
+          style={styles.mainContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* 2. 成就勋章墙 */}
           <AchievementWall
             badges={badges || badgeData}
           />
 
           {/* 3. 车辆信息卡片 */}
-          <VehicleCard
-            brand={profileData.car}
-            color={profileData.carColor}
-            plate={profileData.carPlate}
-            onEdit={handleEditCar}
-          />
+          {carData && (
+            <VehicleCard
+              brand={carData.brand || '--'}
+              color={carData.color || '--'}
+              plate={carData.carPlate || '未绑定'}
+              onEdit={handleEditCar}
+            />
+          )}
 
-          {/* 4. 功能菜单组 - 业务交互日志由 handleMenuClick 闭包内的 requestId 覆盖 */}
+          {/* 4. 功能菜单组 */}
           <MenuSection
             menuData={menuData}
             onItemClick={handleMenuClick}
