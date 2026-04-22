@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <uses-permission android:name="android.permission.INTERNET"/>
-  <!-- 高德 2D 地图：网络与定位相关（定位能力需在运行时向用户申请权限） -->
+  <!-- 高德 3D 地图 + 导航 + 定位相关权限 -->
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
   <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
   <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
@@ -10,8 +10,9 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-  <!-- 高德定位 SDK 常见依赖（与官方 2D Demo 一致） -->
   <uses-permission android:name="android.permission.WAKE_LOCK"/>
+  <!-- 导航语音播报（Msc.jar 依赖） -->
+  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -40,5 +41,11 @@
         <data android:scheme="carpooling"/>
       </intent-filter>
     </activity>
+    <!-- 高德导航 Activity -->
+    <activity
+      android:name=".AmapNaviActivity"
+      android:screenOrientation="portrait"
+      android:configChanges="orientation|keyboardHidden|screenSize"
+      android:exported="false"/>
   </application>
 </manifest>

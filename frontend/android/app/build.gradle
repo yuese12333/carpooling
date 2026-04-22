@@ -164,6 +164,8 @@ android {
         jniLibs {
             def enableLegacyPackaging = findProperty('expo.useLegacyPackaging') ?: 'false'
             useLegacyPackaging enableLegacyPackaging.toBoolean()
+            // 高德导航 .so 放在 libs/ 子目录，需声明为 jniLibs 来源
+            srcDirs += ['libs']
         }
     }
     androidResources {
@@ -219,6 +221,6 @@ dependencies {
         implementation jscFlavor
     }
 
-    // 高德：2D 地图 + 定位 + 搜索（JAR 放 libs/；搜索依赖 Volley，与官方 2D Demo 一致）
+    // 高德：3D 地图 + 导航 + 搜索 + 定位一体化 JAR，以及导航语音 Msc.jar
     implementation fileTree(dir: "libs", include: ["*.jar"])
 }
