@@ -15,6 +15,7 @@ import com.facebook.react.defaults.DefaultReactNativeHost
 
 import com.amap.api.location.AMapLocationClient
 import com.amap.api.services.core.ServiceSettings
+import com.amap.api.navi.AMapNavi
 
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
@@ -26,11 +27,10 @@ class MainApplication : Application(), ReactApplication {
       object : DefaultReactNativeHost(this) {
         override fun getPackages(): List<ReactPackage> =
             PackageList(this).packages.apply {
-              // 高德 2D 地图测试视图（见 frontend/components/amap-map-test-view.tsx）
               add(AmapMapPackage())
-              // 高德定位能力（供 /map-test 页面获取经纬度）
               add(AmapLocationPackage())
               add(AmapSearchPackage())
+              add(AmapNaviPackage())
             }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"
@@ -64,6 +64,13 @@ class MainApplication : Application(), ReactApplication {
      */
     ServiceSettings.updatePrivacyShow(this, true, true)
     ServiceSettings.updatePrivacyAgree(this, true)
+
+    /*
+     * 高德导航 SDK 隐私合规（需在首次使用导航能力前调用）
+     * 正式上线请在用户同意隐私政策后再设为 true。
+     */
+    AMapNavi.updatePrivacyShow(this, true, true)
+    AMapNavi.updatePrivacyAgree(this, true)
 
     DefaultNewArchitectureEntryPoint.releaseLevel = try {
       ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
