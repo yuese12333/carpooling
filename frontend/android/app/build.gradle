@@ -164,12 +164,17 @@ android {
         jniLibs {
             def enableLegacyPackaging = findProperty('expo.useLegacyPackaging') ?: 'false'
             useLegacyPackaging enableLegacyPackaging.toBoolean()
-            // 高德导航 .so 放在 libs/ 子目录，需声明为 jniLibs 来源
-            srcDirs += ['libs']
         }
     }
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+    }
+
+    // 高德导航 .so 放在 libs/ 子目录，通过 sourceSets 告知 Gradle
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/jniLibs', 'libs']
+        }
     }
 }
 
