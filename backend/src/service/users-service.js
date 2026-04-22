@@ -3,7 +3,8 @@
  * 关联业务：用户数据初始化与最小注册能力
  */
 const crypto = require('crypto');
-const { ensureAuthUsersTableOnce, createAuthUser, findByPhone } = require('../dao/user-dao');
+const prisma = require('../config/prisma');
+const { createAuthUser, findByPhone } = require('../dao/user-dao');
 const passwordUtils = require('../utils/password-utils');
 const { logger, maskSensitive } = require('../utils/logger');
 
@@ -30,18 +31,21 @@ async function initAuthUsersSchema(requestId) {
       module: 'users-service',
       operate: 'init-auth-users-schema',
       requestId,
-      result: 'Starting auth_users schema initialization',
+      result: 'Checking prisma migration managed schema',
     });
 
-    await ensureAuthUsersTableOnce(requestId);
+    await prisma.$queryRaw`SELECT 1`;
 
     logger.info({
       module: 'users-service',
       operate: 'init-auth-users-schema',
       requestId,
-      result: 'Auth users schema initialization completed',
+      result: 'Prisma schema connectivity check passed',
     });
-    return { initialized: true };
+    return {
+      initialized: true,
+      managedBy: 'prisma-migrate',
+    };
   } catch (error) {
     logger.error({
       module: 'users-service',
