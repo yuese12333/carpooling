@@ -222,9 +222,28 @@ export const useProfilePage = (requestId: string) => {
     }, [requestId]);
 
     const handleEditCar = useCallback(() => {
-        logger.info({ module: 'use-profile-page', operate: 'edit-car-trigger', requestId });
-        Alert.alert("提示", "功能开发中");
-    }, [requestId]);
+        // 记录触发编辑的日志
+        logger.info({
+            module: 'use-profile-page',
+            operate: 'edit-car-trigger',
+            requestId
+        });
+
+        try {
+            // 跳转到修改车辆信息页面
+            router.push(ROUTES.PROFILE.EDIT_VEHICLE_INFORMATION);
+        } catch (error) {
+            // 捕获可能的导航错误并记录
+            logger.error({
+                module: 'use-profile-page',
+                operate: 'handle-edit-car-error',
+                error: error instanceof Error ? error.message : String(error),
+                errorType: 'NAVIGATION_ERROR',
+                requestId
+            });
+            Alert.alert("操作失败", "无法跳转到车辆编辑页面");
+        }
+    }, [router, requestId]);
 
     return {
         profileData,
