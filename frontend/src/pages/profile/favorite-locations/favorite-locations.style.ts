@@ -1,36 +1,35 @@
 /**
  * @file favorite-locations-page.style.ts
- * @description 常用地点页面的样式定义，包含颜色常量、动态颜色计算逻辑及样式表
+ * @description 常用地点页面的样式定义，基于全局 Design Tokens 重构
  */
 
 import { StyleSheet } from "react-native";
+import { COLORS as GLOBAL_COLORS, SPACING, RADIUS, SHADOWS, LAYOUT_MIXINS, commonStyles } from "@/pages/style";
 
 /**
- * 颜色常量定义
- * 严格执行禁止硬编码要求，确保 UI 链路视觉一致性
+ * 局部颜色映射
+ * 映射全局 Token 到页面语义，确保 UI 链路一致性
  */
 export const COLORS = Object.freeze({
-    primary: "#10b981",
-    primaryLight: "#10b98115", // 用于图标背景
-    textPrimary: "#1f2937",
-    textSecondary: "#4b5563",
-    textMuted: "#9ca3af",
-    bgLight: "#f9fafb",
-    white: "#ffffff",
-    border: "#f3f4f6",
-    info: "#3b82f6",
-    infoLight: "#3b82f615",
-    warning: "#f59e0b",
-    warningLight: "#f59e0b15",
-    danger: "#ef4444",
-    successBg: "#f0fdf4",
-    transparent: "transparent",
+    primary: GLOBAL_COLORS.primary,
+    primaryLight: GLOBAL_COLORS.primaryGhost,
+    textPrimary: GLOBAL_COLORS.textMain,
+    textSecondary: GLOBAL_COLORS.textSecondary,
+    textMuted: GLOBAL_COLORS.textMuted,
+    bgLight: GLOBAL_COLORS.bgLight,
+    white: GLOBAL_COLORS.white,
+    border: GLOBAL_COLORS.borderLight,
+    info: GLOBAL_COLORS.info,
+    infoLight: GLOBAL_COLORS.infoLight,
+    warning: GLOBAL_COLORS.warning,
+    warningLight: GLOBAL_COLORS.warningBg,
+    danger: GLOBAL_COLORS.danger,
+    successBg: GLOBAL_COLORS.successBg,
+    transparent: GLOBAL_COLORS.transparent,
 });
 
 /**
  * 根据地点类型获取对应的语义化颜色对
- * @param type - 地点类别 ('home' | 'work' | 'other')
- * @returns 包含主色调与浅色背景色的对象
  */
 export const getCategoryColor = (type: string): { main: string; light: string } => {
     switch (type) {
@@ -43,21 +42,14 @@ export const getCategoryColor = (type: string): { main: string; light: string } 
     }
 };
 
-/**
- * 样式表定义
- */
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.bgLight,
     },
     navBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: COLORS.white,
+        paddingTop: 12,
+        ...LAYOUT_MIXINS.navBarBase,
     },
     navTitle: {
         fontSize: 18,
@@ -65,21 +57,21 @@ const styles = StyleSheet.create({
         color: COLORS.textPrimary,
     },
     backBtn: {
-        padding: 4
+        padding: SPACING.xs,
     },
     content: {
         flex: 1,
     },
     searchSection: {
-        padding: 16,
+        padding: SPACING.md,
         backgroundColor: COLORS.white,
     },
     quickActions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        marginTop: 8,
+        paddingHorizontal: SPACING.md,
+        marginTop: SPACING.sm,
     },
     sectionHeader: {
         fontSize: 13,
@@ -90,20 +82,22 @@ const styles = StyleSheet.create({
     currentLocText: {
         color: COLORS.primary,
         fontSize: 13,
-        marginLeft: 4,
+        marginLeft: SPACING.xs,
     },
     divider: {
         marginVertical: 12,
         backgroundColor: COLORS.border,
+        height: StyleSheet.hairlineWidth, // 保持视觉上的精细分割线
     },
     listPadding: {
-        paddingHorizontal: 16,
+        paddingHorizontal: SPACING.md,
         paddingBottom: 100,
     },
     locationCard: {
         marginBottom: 12,
         padding: 12,
-        borderRadius: 16,
+        borderRadius: RADIUS.lg,
+        backgroundColor: COLORS.white, // 确保卡片背景正确
     },
     cardContent: {
         flexDirection: 'row',
@@ -112,7 +106,7 @@ const styles = StyleSheet.create({
     iconBox: {
         width: 44,
         height: 44,
-        borderRadius: 12,
+        borderRadius: RADIUS.md,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -131,7 +125,7 @@ const styles = StyleSheet.create({
         color: COLORS.textPrimary,
     },
     defaultBadge: {
-        marginLeft: 8,
+        marginLeft: SPACING.sm,
         paddingHorizontal: 6,
         paddingVertical: 0,
         backgroundColor: COLORS.successBg,
@@ -146,7 +140,7 @@ const styles = StyleSheet.create({
         color: COLORS.textSecondary,
     },
     actionBtn: {
-        padding: 8,
+        padding: SPACING.sm,
     },
     emptyState: {
         alignItems: 'center',
@@ -165,17 +159,8 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.transparent,
     },
     mainAddBtn: {
-        backgroundColor: COLORS.primary,
-        borderRadius: 100,
-        height: 54,
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 5,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
+        ...commonStyles.primaryButton,
+        ...SHADOWS.primary,
     },
     mainAddBtnText: {
         color: COLORS.white,
@@ -185,13 +170,13 @@ const styles = StyleSheet.create({
     menuList: {
         marginVertical: 20,
         backgroundColor: COLORS.bgLight,
-        borderRadius: 16,
+        borderRadius: RADIUS.lg,
         overflow: 'hidden',
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+        padding: SPACING.md,
         backgroundColor: COLORS.white,
     },
     menuText: {
@@ -218,7 +203,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 10,
         paddingHorizontal: 12,
-        borderRadius: 8,
+        borderRadius: RADIUS.sm,
         gap: 12,
     },
 });

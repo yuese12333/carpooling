@@ -9,7 +9,8 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useTripsForm } from "@/hooks/use-trips-form";
-import styles, { COLORS } from './trips.style';
+import styles from "./trips.style";
+import { COLORS } from "@/pages/style"
 import { TripHeader } from "./components/trip-header";
 import { TripTabBar } from "./components/trip-tab-bar";
 import TripCard from "./components/trip-card";

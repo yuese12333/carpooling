@@ -1,61 +1,16 @@
 /**
  * @file home.style.ts
- * @description 首页组件专属样式表。
- * 包含全局调色盘定义及首页各功能模块（Header、SearchCard、QuickAction、StatsBanner、RideCard）的布局定义。
+ * @description 首页组件专属样式表。已对齐全局 Design Tokens。
  */
 
 import { StyleSheet, ViewStyle, TextStyle, ImageStyle } from "react-native";
+import { COLORS, SPACING, RADIUS, SHADOWS, LAYOUT_MIXINS } from "@/pages/style";
 
-/**
- * 首页业务专用颜色常量池
- * 严格禁止在 StyleSheet 中使用硬编码的十六进制颜色值
- */
-export const COLORS = Object.freeze({
-    // 品牌核心色
-    primary: "#10B981",
-    secondary: "#f97316",
-    background: "#f9fafb",
-    white: "#ffffff",
-    black: "#000000",
-
-    // 文本色阶
-    textGray: "#9ca3af",
-    textDark: "#1f2937",
-    textMuted: "#6b7280",
-    textLight: "#4b5563",
-    textEmphasis: "#374151", // 修复原硬编码 #374151
-
-    // 边框与分割
-    border: "#f3f4f6",
-    divider: "#e5e7eb",
-    separator: "#d1d5db", // 修复原硬编码 #d1d5db
-
-    // 状态反馈
-    statusError: "#f87171",
-    statusSuccess: "#16a34a",
-    statusInfo: "#2563eb",
-    statusWarning: "#ea580c",
-    rating: "#facc15",
-
-    // 辅助背景与蒙层
-    bgGreenLight: "#f0fdf4",
-    bgOrangeLight: "#fff7ed",
-    bgBlueLight: "#eff6ff",
-    bgPurpleLight: "#faf5ff",
-    bgDarkOverlay: "rgba(0,0,0,0.3)",
-    whiteOverlay: "rgba(255,255,255,0.2)",
-    whiteOverlayMuted: "rgba(255,255,255,0.4)",
-    whiteTextMuted: "rgba(255,255,255,0.7)",
-});
-
-/**
- * 首页样式表实现
- */
 export default StyleSheet.create({
     // --- 基础布局 ---
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: COLORS.bgLight,
     } as ViewStyle,
     scrollContent: {
         paddingBottom: 20,
@@ -69,25 +24,22 @@ export default StyleSheet.create({
         paddingBottom: 30,
     } as ViewStyle,
     headerTopRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
+        ...LAYOUT_MIXINS.rowBetween,
         marginBottom: 24,
     } as ViewStyle,
     userProfile: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
     } as ViewStyle,
     avatar: {
         width: 40,
         height: 40,
         borderRadius: 20,
         borderWidth: 2,
-        borderColor: COLORS.whiteOverlayMuted,
+        borderColor: COLORS.whiteTrans[40],
         marginRight: 12,
     } as ImageStyle,
     welcomeText: {
-        color: COLORS.whiteTextMuted,
+        color: COLORS.whiteTrans[70],
         fontSize: 12,
     } as TextStyle,
     userName: {
@@ -98,7 +50,7 @@ export default StyleSheet.create({
     notificationButton: {
         width: 40,
         height: 40,
-        backgroundColor: COLORS.whiteOverlay,
+        backgroundColor: COLORS.whiteTrans[20],
         borderRadius: 20,
         alignItems: "center",
         justifyContent: "center",
@@ -109,31 +61,26 @@ export default StyleSheet.create({
         right: 6,
         width: 8,
         height: 8,
-        backgroundColor: COLORS.statusError,
+        backgroundColor: COLORS.status.error,
         borderRadius: 4,
     } as ViewStyle,
 
     // --- 搜索卡片模块 ---
     searchCard: {
         backgroundColor: COLORS.white,
-        borderRadius: 16,
-        padding: 16,
-        shadowColor: COLORS.black,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.1,
-        shadowRadius: 15,
-        elevation: 5,
+        borderRadius: RADIUS.lg,
+        padding: SPACING.md,
+        ...SHADOWS.lg,
     } as ViewStyle,
     searchCardTitle: {
-        color: COLORS.textDark,
+        color: COLORS.textMain,
         fontWeight: "600",
         marginBottom: 12,
     } as TextStyle,
     inputGroup: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
+        borderBottomColor: COLORS.borderLight,
         paddingBottom: 8,
         marginBottom: 8,
     } as ViewStyle,
@@ -143,7 +90,7 @@ export default StyleSheet.create({
     iconWrapperGreen: {
         width: 32,
         height: 32,
-        backgroundColor: COLORS.bgGreenLight,
+        backgroundColor: COLORS.primaryLight,
         borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
@@ -152,7 +99,7 @@ export default StyleSheet.create({
     iconWrapperOrange: {
         width: 32,
         height: 32,
-        backgroundColor: COLORS.bgOrangeLight,
+        backgroundColor: COLORS.accentLight, // 橙色辅助背景
         borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
@@ -161,7 +108,7 @@ export default StyleSheet.create({
     textInput: {
         flex: 1,
         fontSize: 14,
-        color: COLORS.textDark,
+        color: COLORS.textMain,
         padding: 0,
     } as TextStyle,
     searchActionRow: {
@@ -170,22 +117,21 @@ export default StyleSheet.create({
     } as ViewStyle,
     dateSelector: {
         flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: COLORS.background,
-        borderRadius: 12,
+        ...LAYOUT_MIXINS.rowCenter,
+        backgroundColor: COLORS.bgLight,
+        borderRadius: RADIUS.md,
         paddingHorizontal: 12,
         paddingVertical: 8,
     } as ViewStyle,
     dateText: {
         fontSize: 14,
-        color: COLORS.textLight,
+        color: COLORS.textSecondary,
         marginLeft: 6,
     } as TextStyle,
     searchButton: {
         backgroundColor: COLORS.primary,
         paddingHorizontal: 20,
-        borderRadius: 12,
+        borderRadius: RADIUS.md,
         justifyContent: "center",
         height: 40,
     } as ViewStyle,
@@ -202,7 +148,7 @@ export default StyleSheet.create({
     } as ViewStyle,
     quickActionContainer: {
         flex: 1,
-        borderRadius: 16,
+        borderRadius: RADIUS.lg,
         padding: 12,
         alignItems: "center",
         marginHorizontal: 4,
@@ -214,18 +160,18 @@ export default StyleSheet.create({
     quickActionLabel: {
         fontSize: 12,
         fontWeight: "600",
-        color: COLORS.textEmphasis,
+        color: COLORS.textSub,
     } as TextStyle,
     quickActionSublabel: {
         fontSize: 10,
-        color: COLORS.textGray,
+        color: COLORS.textMuted,
     } as TextStyle,
 
     // --- 数据看板统计 ---
     statsBanner: {
         marginHorizontal: 20,
         backgroundColor: COLORS.primary,
-        borderRadius: 16,
+        borderRadius: RADIUS.lg,
         padding: 16,
         marginBottom: 16,
     } as ViewStyle,
@@ -243,14 +189,14 @@ export default StyleSheet.create({
         fontWeight: "bold",
     } as TextStyle,
     statLabel: {
-        color: COLORS.whiteTextMuted,
+        color: COLORS.whiteTrans[70],
         fontSize: 10,
         marginTop: 4,
     } as TextStyle,
     verticalDivider: {
         width: 1,
         height: 32,
-        backgroundColor: COLORS.whiteOverlay,
+        backgroundColor: COLORS.whiteTrans[20],
     } as ViewStyle,
 
     // --- 信任背书模块 ---
@@ -262,34 +208,31 @@ export default StyleSheet.create({
     } as ViewStyle,
     trustBadgeBlue: {
         flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
         justifyContent: "center",
-        backgroundColor: COLORS.bgGreenLight,
-        borderRadius: 12,
+        backgroundColor: COLORS.primaryLight,
+        borderRadius: RADIUS.md,
         paddingVertical: 8,
     } as ViewStyle,
     trustBadgeBlueVariant: {
         flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
         justifyContent: "center",
-        backgroundColor: COLORS.bgBlueLight,
-        borderRadius: 12,
+        backgroundColor: COLORS.infoLight,
+        borderRadius: RADIUS.md,
         paddingVertical: 8,
     } as ViewStyle,
     trustBadgeOrange: {
         flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
         justifyContent: "center",
-        backgroundColor: COLORS.bgOrangeLight,
-        borderRadius: 12,
+        backgroundColor: COLORS.accentLight,
+        borderRadius: RADIUS.md,
         paddingVertical: 8,
     } as ViewStyle,
-    trustTextGreen: { color: COLORS.statusSuccess, fontSize: 11, marginLeft: 4 } as TextStyle,
-    trustTextBlue: { color: COLORS.statusInfo, fontSize: 11, marginLeft: 4 } as TextStyle,
-    trustTextOrange: { color: COLORS.statusWarning, fontSize: 11, marginLeft: 4 } as TextStyle,
+    trustTextGreen: { color: COLORS.status.success, fontSize: 11, marginLeft: 4 } as TextStyle,
+    trustTextBlue: { color: COLORS.status.info, fontSize: 11, marginLeft: 4 } as TextStyle,
+    trustTextOrange: { color: COLORS.status.warning, fontSize: 11, marginLeft: 4 } as TextStyle,
 
     // --- 行程列表模块 ---
     ridesSection: {
@@ -297,19 +240,16 @@ export default StyleSheet.create({
         paddingBottom: 30,
     } as ViewStyle,
     sectionHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowBetween,
         marginBottom: 12,
     } as ViewStyle,
     sectionTitle: {
         fontSize: 16,
         fontWeight: "600",
-        color: COLORS.textDark,
+        color: COLORS.textMain,
     } as TextStyle,
     viewAllBtn: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
     } as ViewStyle,
     viewAllText: {
         color: COLORS.primary,
@@ -321,14 +261,13 @@ export default StyleSheet.create({
     } as ViewStyle,
     rideCard: {
         backgroundColor: COLORS.white,
-        borderRadius: 16,
+        borderRadius: RADIUS.lg,
         padding: 16,
         borderWidth: 1,
-        borderColor: COLORS.border,
+        borderColor: COLORS.borderLight,
     } as ViewStyle,
     rideDriverRow: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
         marginBottom: 12,
     } as ViewStyle,
     driverAvatar: {
@@ -343,10 +282,10 @@ export default StyleSheet.create({
     driverName: {
         fontSize: 14,
         fontWeight: "600",
-        color: COLORS.textDark,
+        color: COLORS.textMain,
     } as TextStyle,
     verifiedBadge: {
-        backgroundColor: COLORS.bgGreenLight,
+        backgroundColor: COLORS.primaryLight,
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 10,
@@ -354,20 +293,20 @@ export default StyleSheet.create({
     } as ViewStyle,
     verifiedText: {
         fontSize: 10,
-        color: COLORS.statusSuccess,
+        color: COLORS.status.success,
     } as TextStyle,
     ratingText: {
         fontSize: 11,
-        color: COLORS.textMuted,
+        color: COLORS.textSecondary,
         marginLeft: 4,
     } as TextStyle,
     dotSeparator: {
         marginHorizontal: 4,
-        color: COLORS.separator,
+        color: COLORS.textPlaceholder,
     } as TextStyle,
     tripCountText: {
         fontSize: 11,
-        color: COLORS.textMuted,
+        color: COLORS.textSecondary,
     } as TextStyle,
     priceContainer: {
         alignItems: "flex-end",
@@ -379,11 +318,10 @@ export default StyleSheet.create({
     } as TextStyle,
     priceUnit: {
         fontSize: 10,
-        color: COLORS.textGray,
+        color: COLORS.textMuted,
     } as TextStyle,
     routeContainer: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
     } as ViewStyle,
     routeVisual: {
         alignItems: "center",
@@ -398,7 +336,7 @@ export default StyleSheet.create({
     routeLine: {
         width: 2,
         height: 16,
-        backgroundColor: COLORS.divider,
+        backgroundColor: COLORS.borderDivider,
         marginVertical: 2,
     } as ViewStyle,
     dotOrange: {
@@ -409,23 +347,22 @@ export default StyleSheet.create({
     } as ViewStyle,
     routeDetails: {
         flex: 1,
-        gap: 4,
+        gap: 8,
     } as ViewStyle,
     routePointText: {
         fontSize: 12,
-        color: COLORS.textLight,
+        color: COLORS.textSecondary,
     } as TextStyle,
     seatsBadge: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: COLORS.background,
+        ...LAYOUT_MIXINS.rowCenter,
+        backgroundColor: COLORS.bgLight,
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 10,
     } as ViewStyle,
     seatsText: {
         fontSize: 11,
-        color: COLORS.textMuted,
+        color: COLORS.textSecondary,
         marginLeft: 4,
     } as TextStyle,
 
@@ -435,12 +372,11 @@ export default StyleSheet.create({
         top: 50,
         right: 20,
         zIndex: 999,
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: COLORS.bgDarkOverlay,
+        ...LAYOUT_MIXINS.rowCenter,
+        backgroundColor: COLORS.overlay,
         paddingHorizontal: 8,
         paddingVertical: 4,
-        borderRadius: 20,
+        borderRadius: RADIUS.full,
     } as ViewStyle,
     envLabel: {
         color: COLORS.white,
@@ -449,11 +385,9 @@ export default StyleSheet.create({
         marginRight: 4,
     } as TextStyle,
     flexRowBetween: {
-        flexDirection: "row",
-        justifyContent: "space-between",
+        ...LAYOUT_MIXINS.rowBetween,
     } as ViewStyle,
     flexRowCenter: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
     } as ViewStyle,
 });

@@ -1,79 +1,42 @@
 /**
  * @file my-vehicles.style.ts
- * @description 车辆管理列表页面样式定义，遵循品牌视觉规范与 RN 性能优化准则
+ * @description 车辆管理列表页面样式定义，深度集成全局 Design Tokens
  */
 
 import { StyleSheet, Platform } from "react-native";
-
-/**
- * 品牌颜色常量配置
- * 采用 Object.freeze 确保运行时不可篡改
- */
-export const COLORS = Object.freeze({
-    primary: "#10b981",       // 品牌主绿色 (Emerald 500)
-    secondary: "#3b82f6",     // 品牌辅助蓝
-    danger: "#ef4444",        // 危险/错误红
-    textPrimary: "#1f2937",   // 主要文字 (Gray 800)
-    textSecondary: "#4b5563", // 次要文字 (Gray 600)
-    textMuted: "#9ca3af",     // 禁用/提示文字 (Gray 400)
-    bgLight: "#f9fafb",       // 页面背景底色
-    white: "#ffffff",         // 纯白
-    border: "#f3f4f6",        // 边框/分割线
-    imagePlaceholder: "#e5e7eb", // 图片加载占位
-    tagBg: "#f3f4f6",         // 标签背景
-    iconCircleBg: "#eff6ff",  // 图标圆圈背景
-    dangerBg: "#fef2f2",      // 危险色背景 (浅红)
-    overlayWhite: "rgba(255,255,255,0.9)", // 白色半透明遮罩
-});
+import { COLORS, SPACING, RADIUS, SHADOWS, LAYOUT_MIXINS } from "@/pages/style";
 
 export default StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.bgLight,
     },
-    // 导航栏容器 - 实际开发中高度应由 SafeArea 动态累加
+    // 导航栏容器 - 继承全局 Mixin
     navbar: {
-        height: Platform.OS === 'ios' ? 44 : 56,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        backgroundColor: COLORS.white,
-        borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
+        ...LAYOUT_MIXINS.navbar,
     },
     navTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
     },
     navButton: {
-        padding: 4,
+        padding: SPACING.xs,
+        ...LAYOUT_MIXINS.hitSlop,
     },
     scrollContent: {
-        padding: 16,
+        padding: SPACING.md,
     },
     // 车辆卡片外层间距
     vehicleWrapper: {
-        marginBottom: 20,
+        marginBottom: SPACING.lg,
     },
     vehicleCard: {
         padding: 0,
         overflow: 'hidden',
-        borderRadius: 24,
+        borderRadius: RADIUS.card,
         backgroundColor: COLORS.white,
-        // 增加阴影以提升卡片质感
-        ...Platform.select({
-            ios: {
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 10,
-            },
-            android: {
-                elevation: 3,
-            },
-        }),
+        ...SHADOWS.xs, // 引用全局轻阴影
     },
     imageContainer: {
         position: 'relative',
@@ -87,12 +50,10 @@ export default StyleSheet.create({
     },
     defaultBadge: {
         position: 'absolute',
-        top: 12,
-        left: 12,
+        top: SPACING.md - 4, // 12px
+        left: SPACING.md - 4,
         backgroundColor: COLORS.primary,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 8,
+        ...LAYOUT_MIXINS.badgeBase,
         zIndex: 10,
     },
     defaultText: {
@@ -102,19 +63,18 @@ export default StyleSheet.create({
     },
     statusBadgeOverlay: {
         position: 'absolute',
-        bottom: 12,
-        right: 12,
+        bottom: SPACING.md - 4,
+        right: SPACING.md - 4,
         zIndex: 10,
     },
     statusBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.overlayWhite,
+        ...LAYOUT_MIXINS.rowCenter,
+        backgroundColor: COLORS.overlayLight,
         paddingHorizontal: 10,
         paddingVertical: 5,
-        borderRadius: 12,
+        borderRadius: RADIUS.md,
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: COLORS.border,
+        borderColor: COLORS.borderDivider,
     },
     statusText: {
         fontSize: 12,
@@ -122,18 +82,17 @@ export default StyleSheet.create({
         fontWeight: '600',
     },
     infoSection: {
-        padding: 20,
+        padding: SPACING.lg, // 20px 对应 lg
     },
     titleRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        ...LAYOUT_MIXINS.rowBetween,
         alignItems: 'flex-start',
-        marginBottom: 12,
+        marginBottom: SPACING.md - 4, // 12px
     },
     brandText: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
     },
     plateText: {
         fontSize: 14,
@@ -144,15 +103,15 @@ export default StyleSheet.create({
     tagGroup: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginBottom: 16,
+        marginBottom: SPACING.md,
     },
     tagItem: {
         backgroundColor: COLORS.tagBg,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 6,
-        marginRight: 8,
-        marginBottom: 4,
+        paddingHorizontal: SPACING.sm,
+        paddingVertical: SPACING.xs,
+        borderRadius: RADIUS.xs + 2, // 6px
+        marginRight: SPACING.sm,
+        marginBottom: SPACING.xs,
     },
     tagText: {
         fontSize: 11,
@@ -160,29 +119,27 @@ export default StyleSheet.create({
     },
     separator: {
         height: 1,
-        marginVertical: 4,
-        backgroundColor: COLORS.border,
+        marginVertical: SPACING.xs,
+        backgroundColor: COLORS.borderDivider,
     },
     detailGrid: {
         flexDirection: 'row',
-        paddingVertical: 16,
+        paddingVertical: SPACING.md,
     },
     detailItem: {
         flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.rowCenter,
     },
     iconCircle: {
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: COLORS.iconCircleBg,
-        alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: COLORS.bgBlueLight,
+        ...LAYOUT_MIXINS.center,
         marginRight: 10,
     },
     iconCircleDanger: {
-        backgroundColor: COLORS.dangerBg,
+        backgroundColor: COLORS.errorLight,
     },
     detailLabel: {
         fontSize: 11,
@@ -191,7 +148,7 @@ export default StyleSheet.create({
     detailValue: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
     },
     actionRow: {
         flexDirection: 'row',
@@ -199,12 +156,12 @@ export default StyleSheet.create({
     },
     tipSection: {
         marginTop: 10,
-        paddingHorizontal: 8,
+        paddingHorizontal: SPACING.sm,
     },
     tipTitle: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
         marginBottom: 6,
     },
     tipDesc: {
@@ -218,32 +175,20 @@ export default StyleSheet.create({
     baseBtn: {
         flex: 1,
         height: 54,
-        borderRadius: 15,
-        flexDirection: 'row',
+        borderRadius: RADIUS.lg,
+        ...LAYOUT_MIXINS.rowCenter,
         justifyContent: 'center',
-        alignItems: 'center',
-        // 统一按钮阴影处理
-        ...Platform.select({
-            ios: {
-                shadowColor: COLORS.primary,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 6,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
     },
     modifyBtn: {
         backgroundColor: COLORS.primary,
-        marginLeft: 8,
+        marginLeft: SPACING.sm,
+        ...SHADOWS.primary,
     },
     detailBtn: {
         backgroundColor: COLORS.white,
-        marginRight: 8,
+        marginRight: SPACING.sm,
         borderWidth: 1,
-        borderColor: COLORS.border,
+        borderColor: COLORS.borderDivider,
     },
     btnTextWhite: {
         color: COLORS.white,
@@ -251,7 +196,7 @@ export default StyleSheet.create({
         fontWeight: '600',
     },
     btnTextPrimary: {
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
         fontSize: 16,
         fontWeight: '600',
     }

@@ -8,7 +8,8 @@ import { View, Text } from "react-native";
 import { Award } from "lucide-react-native";
 import { Card } from "@/../components/card";
 import { BadgeItem } from "@/api/profile-api";
-import styles, { colors } from "../profile.style";
+import styles from "../profile.style";
+import { COLORS } from "@/pages/style";
 
 /**
  * 勋章墙组件属性接口
@@ -36,7 +37,7 @@ export const AchievementWall: React.FC<AchievementWallProps> = ({ badges }) => {
         <Card style={styles.sectionCard}>
             {/* 标题区域：组合展示勋章墙主题 */}
             <View style={styles.sectionTitleRow}>
-                <Award size={16} color={colors.yellowIcon} />
+                <Award size={16} color={COLORS.yellowIcon} />
                 <Text style={styles.sectionTitle}>成就徽章</Text>
             </View>
 

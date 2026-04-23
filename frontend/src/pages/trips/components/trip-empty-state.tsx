@@ -7,7 +7,8 @@ import React from "react";
 import { View, Text } from "react-native";
 import { Car } from "lucide-react-native";
 import { Button } from "@/components/button";
-import styles, { COLORS } from "../trips.style";
+import styles from "../trips.style";
+import { COLORS } from "@/pages/style"
 
 interface TripEmptyStateProps {
     /** * 点击“去找拼车”按钮的回调函数 
@@ -41,7 +42,7 @@ export const TripEmptyState: React.FC<TripEmptyStateProps> = ({
         <View style={styles.emptyContainer}>
             {/* 图标装饰区：采用统一品牌灰阶 */}
             <View style={styles.emptyIconBox}>
-                <Car size={32} color={COLORS.gray300} />
+                <Car size={32} color={COLORS.textPlaceholder} />
             </View>
 
             {/* 文案区：语义化文本展示 */}
@@ -49,7 +50,7 @@ export const TripEmptyState: React.FC<TripEmptyStateProps> = ({
                 <Text
                     style={{
                         textAlign: 'center',
-                        color: COLORS.gray400,
+                        color: COLORS.textMuted,
                         fontSize: 14,
                         lineHeight: 20
                     }}

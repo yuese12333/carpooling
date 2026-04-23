@@ -10,7 +10,8 @@ import { Card } from "@/components/card";
 import { Switch } from "@/components/switch";
 import { Calendar } from 'react-native-calendars';
 import { format } from "date-fns";
-import styles, { COLORS } from "../offer-ride.style";
+import styles from "../offer-ride.style";
+import { COLORS } from "@/pages/style"
 import logger from '@/utils/logger';
 
 /**
@@ -174,7 +175,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
                     >
                         <CalendarIcon size={16} color={COLORS.primary} style={styles.timeIcon} />
                         <Text style={styles.timeText}>{dateLabel || '请选择日期'}</Text>
-                        <ChevronDown size={16} color={COLORS.textTertiary} />
+                        <ChevronDown size={16} color={COLORS.textMuted} />
                     </TouchableOpacity>
                 </View>
 
@@ -188,7 +189,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
                     >
                         <Clock size={16} color={COLORS.secondary} style={styles.timeIcon} />
                         <Text style={styles.timeText}>{selectedTime}</Text>
-                        <ChevronDown size={16} color={COLORS.textTertiary} />
+                        <ChevronDown size={16} color={COLORS.textMuted} />
                     </TouchableOpacity>
                 </View>
             </View>

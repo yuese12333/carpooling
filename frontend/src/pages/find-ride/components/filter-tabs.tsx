@@ -21,7 +21,7 @@ interface FilterTag {
  */
 interface FilterTabsProps {
     /** 标签数据列表 */
-    tags: FilterTag[];
+    tags: readonly FilterTag[];
     /** 当前已选中的标签值数组 */
     activeFilters: string[];
     /** * 切换标签回调 

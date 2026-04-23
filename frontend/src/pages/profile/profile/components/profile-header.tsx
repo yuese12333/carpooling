@@ -6,7 +6,8 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { Edit2, Check, Star } from "lucide-react-native";
-import styles, { colors } from "../profile.style";
+import styles from "../profile.style";
+import { COLORS } from "@/pages/style";
 
 /**
  * 头部组件属性接口定义
@@ -62,7 +63,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                         activeOpacity={0.7}
                         accessibilityRole="button"
                     >
-                        <Edit2 size={12} color={colors.textSecondary} />
+                        <Edit2 size={12} color={COLORS.textSecondary} />
                     </TouchableOpacity>
                 </View>
 
@@ -71,7 +72,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                         <Text style={styles.userName}>{name}</Text>
                         {verified ? (
                             <View style={styles.verifiedTag}>
-                                <Check size={10} color={colors.white} />
+                                <Check size={10} color={COLORS.white} />
                                 <Text style={styles.verifiedText}>已认证</Text>
                             </View>
                         ) : undefined}
@@ -90,7 +91,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                 {/* 评分统计 - 包含视觉隔离边框 */}
                 <View style={[styles.statItem, styles.statBorder]}>
                     <View style={styles.ratingRow}>
-                        <Star size={14} color={colors.warning} fill={colors.warning} />
+                        <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
                         <Text style={styles.statValue}>{rating ?? '0.0'}</Text>
                     </View>
                     <Text style={styles.statLabel}>综合评分</Text>

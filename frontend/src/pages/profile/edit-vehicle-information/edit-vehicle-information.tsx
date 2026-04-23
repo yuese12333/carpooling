@@ -31,7 +31,8 @@ import { Switch } from "@/components/switch";
 import { Separator } from "@/components/separator";
 
 // 导入样式与业务逻辑 Hook
-import styles, { COLORS } from "./edit-vehicle-information.style";
+import styles from "./edit-vehicle-information.style";
+import { COLORS } from "@/pages/style";
 import { useEditVehicleForm } from "@/hooks/use-edit-vehicle-form";
 import logger, { generateRequestId } from '@/utils/logger';
 
@@ -78,7 +79,7 @@ export default function EditVehiclePage() {
                     style={styles.navButton}
                     activeOpacity={0.7}
                 >
-                    <ChevronLeft size={24} color={COLORS.textPrimary} />
+                    <ChevronLeft size={24} color={COLORS.primary} />
                 </TouchableOpacity>
 
                 <Text style={styles.navTitle}>修改车辆信息</Text>

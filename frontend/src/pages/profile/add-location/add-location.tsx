@@ -10,15 +10,17 @@ import {
     Text,
     KeyboardAvoidingView,
     Platform,
-    ScrollView
+    ScrollView,
+    TouchableOpacity
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { MapPin, Tag } from "lucide-react-native";
+import { MapPin, Tag, ChevronLeft } from "lucide-react-native";
 
 // 导入自定义 Hook
 import { useAddLocationForm } from "@/hooks/use-add-location-form";
 // 导入样式
-import styles, { COLORS } from './add-location.style';
+import styles from './add-location.style';
+import { COLORS } from "@/pages/style"
 // 导入日志工具
 import logger, { generateRequestId } from '@/utils/logger';
 
@@ -42,6 +44,7 @@ export default function AddLocationPage() {
         setAddress,
         handleSave,
         loading,
+        handleCancel,
     } = useAddLocationForm(requestId);
 
     // 2. 页面生命周期埋点：记录进入页面的初始状态
@@ -57,6 +60,13 @@ export default function AddLocationPage() {
 
     return (
         <SafeAreaView style={styles.container}>
+            <View style={styles.navBar}>
+                <TouchableOpacity onPress={handleCancel} style={styles.backBtn}>
+                    <ChevronLeft size={24} color={COLORS.textMain} />
+                </TouchableOpacity>
+                <Text style={styles.navTitle}>新增常用地点</Text>
+                <View style={styles.backBtn} pointerEvents="none" />
+            </View>
             {/* 修复：使用 ScrollView 包装以支持长表单，并注入 keyboardShouldPersistTaps */}
             <ScrollView
                 style={{ flex: 1 }}
@@ -68,7 +78,6 @@ export default function AddLocationPage() {
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={styles.content}
                 >
-                    <Text style={styles.title}>新增常用地点</Text>
 
                     <View style={styles.form}>
                         <Label style={styles.label}>地点名称</Label>

@@ -8,7 +8,8 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Users, Star, Clock, ChevronRight } from "lucide-react-native";
 import { Avatar, AvatarImage, AvatarFallback } from "@/../components/avatar";
 import { Badge } from "@/../components/badge";
-import styles, { COLORS } from "../find-ride.style";
+import styles from "../find-ride.style";
+import { COLORS } from '@/pages/style';
 import logger from '@/utils/logger';
 
 /**
@@ -122,7 +123,7 @@ export const RideCard: React.FC<RideCardProps> = ({
                             </Badge>
                         </View>
                         <View style={styles.ratingRow}>
-                            <Star size={12} color={COLORS.warning} fill={COLORS.warning} />
+                            <Star size={12} color={COLORS.status["medium"]} fill={COLORS.status["medium"]} />
                             <Text style={styles.ratingText}>{ride.driver.rating}</Text>
                             <View style={styles.verticalDivider} />
                             <Text style={styles.tripCount}>{ride.driver.trips}次行程</Text>

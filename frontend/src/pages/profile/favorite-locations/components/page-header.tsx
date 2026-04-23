@@ -32,7 +32,7 @@ export const PageHeader = ({ title, onBack }: PageHeaderProps) => {
         <View
             style={[
                 styles.navBar,
-                { paddingTop: Math.max(insets.top, 12) } // 动态适配状态栏高度
+                { paddingTop: Math.min(insets.top, 16) } // 动态适配状态栏高度
             ]}
         >
             <TouchableOpacity

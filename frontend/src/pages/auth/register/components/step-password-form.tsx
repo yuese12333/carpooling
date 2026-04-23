@@ -11,7 +11,8 @@ import { Input } from "@/components/input";
 import { Button } from "@/components/button";
 import { Progress } from "@/components/progress";
 import logger from '@/utils/logger';
-import styles, { COLORS } from "../register.style";
+import styles from "../register.style";
+import { COLORS } from '@/pages/style';
 import { RegistrationFormData } from '@/hooks/use-register-form';
 
 /**
@@ -106,7 +107,7 @@ export const StepPasswordForm: React.FC<StepPasswordFormProps> = ({ requestId, s
                 leftIcon={<Lock size={18} color={COLORS.textSecondary} />}
             />
             {state.fieldErrors.password && (
-                <Text style={styles.errorText}>{state.fieldErrors.password}</Text>
+                <Text style={styles.generalErrorText}>{state.fieldErrors.password}</Text>
             )}
 
             {state.formData.password.length > 0 && (
@@ -128,7 +129,7 @@ export const StepPasswordForm: React.FC<StepPasswordFormProps> = ({ requestId, s
                 leftIcon={<Lock size={18} color={COLORS.textSecondary} />}
             />
             {state.fieldErrors.confirmPassword && (
-                <Text style={styles.errorText}>{state.fieldErrors.confirmPassword}</Text>
+                <Text style={styles.generalErrorText}>{state.fieldErrors.confirmPassword}</Text>
             )}
 
             <TouchableOpacity
@@ -147,7 +148,7 @@ export const StepPasswordForm: React.FC<StepPasswordFormProps> = ({ requestId, s
                 </Text>
             </TouchableOpacity>
             {state.fieldErrors.isAgreed && (
-                <Text style={styles.errorText}>{state.fieldErrors.isAgreed}</Text>
+                <Text style={styles.generalErrorText}>{state.fieldErrors.isAgreed}</Text>
             )}
 
             {state.fieldErrors.general && (
@@ -161,7 +162,7 @@ export const StepPasswordForm: React.FC<StepPasswordFormProps> = ({ requestId, s
                 style={styles.submitButton}
                 onPress={onSubmitRegistration}
             >
-                <Text style={styles.buttonText}>
+                <Text style={styles.primaryButtonText}>
                     {state.isLoading ? "正在提交注册..." : "完成注册"}
                 </Text>
             </Button>

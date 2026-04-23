@@ -1,27 +1,12 @@
 /**
  * @file add-location.style.ts
  * @description AddLocationPage 页面专属样式配置文件。
+ * 已完成重构：接入全局 Design Tokens 与 Layout Mixins。
  */
 
 import { StyleSheet } from "react-native";
+import { COLORS, SPACING, RADIUS, SHADOWS, LAYOUT_MIXINS, commonStyles } from "@/pages/style";
 
-/**
- * 页面级色彩配置表 (只读)
- * 建议后续迁移至全局 Theme 管理系统
- */
-export const COLORS = Object.freeze({
-    primary: "#10b981",
-    textPrimary: "#1f2937",
-    textSecondary: "#4b5563",
-    bgLight: "#f9fafb",
-    white: "#ffffff",
-    iconDefault: "#9ca3af",
-    shadow: "#000000",
-});
-
-/**
- * AddLocation 页面样式表
- */
 export default StyleSheet.create({
     /**
      * 根容器样式
@@ -32,21 +17,28 @@ export default StyleSheet.create({
         backgroundColor: COLORS.bgLight,
     },
     /**
+     * 页面标题样式
+     */
+    navBar: {
+        paddingTop: 12,
+        ...LAYOUT_MIXINS.navBarBase,
+        paddingBottom: 12,
+    },
+    navTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: COLORS.textMain,
+    },
+    backBtn: {
+        padding: SPACING.xs,
+    },
+    /**
      * 主体内容区域
      */
     content: {
         flex: 1,
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-    },
-    /**
-     * 页面标题样式
-     */
-    title: {
-        fontSize: 24,
-        fontWeight: '700',
-        marginBottom: 30,
-        color: COLORS.textPrimary,
+        paddingHorizontal: 20, // 保持原页面特定间距
+        paddingVertical: SPACING.md,
     },
     /**
      * 表单卡片容器
@@ -54,38 +46,21 @@ export default StyleSheet.create({
     form: {
         backgroundColor: COLORS.white,
         padding: 20,
-        borderRadius: 20,
-        // 增强卡片层级感
-        shadowColor: COLORS.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 2,
+        borderRadius: RADIUS.xxl,
+        ...SHADOWS.xs, // 引用全局 XS 阴影实现卡片层级感
     },
     /**
      * 保存按钮主样式
      */
     saveBtn: {
         marginTop: 30,
-        backgroundColor: COLORS.primary,
-        borderRadius: 100,
-        height: 52, // 微调高度以符合 44/52 黄金交互高度
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 5,
-        justifyContent: 'center',
-        alignItems: 'center',
+        ...commonStyles.primaryButton,
     },
     /**
      * 按钮文本样式
      */
     saveBtnText: {
-        color: COLORS.white,
-        fontSize: 16,
-        fontWeight: '600',
-        letterSpacing: 0.5,
+        ...commonStyles.primaryButtonText,
     },
     /**
      * 输入框标签样式
@@ -93,7 +68,7 @@ export default StyleSheet.create({
     label: {
         fontSize: 13,
         color: COLORS.textSecondary,
-        marginBottom: 8,
+        marginBottom: SPACING.sm,
         fontWeight: '500',
     },
     /**

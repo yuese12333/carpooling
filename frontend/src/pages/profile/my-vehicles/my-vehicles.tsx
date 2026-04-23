@@ -30,7 +30,8 @@ import { Badge } from "@/components/badge";
 import { Button } from "@/components/button";
 import { Separator } from "@/components/separator";
 
-import styles, { COLORS } from "./my-vehicles.style";
+import styles from "./my-vehicles.style";
+import { COLORS } from "@/pages/style"
 import { useMyVehiclesForm } from "@/hooks/use-my-vehicles-form";
 import { generateRequestId } from '@/utils/logger';
 
@@ -52,7 +53,7 @@ export default function MyVehiclesPage() {
             {/* 导航栏 */}
             <View style={styles.navbar}>
                 <TouchableOpacity onPress={handleBack} style={styles.navButton}>
-                    <ChevronLeft size={24} color={COLORS.textPrimary} />
+                    <ChevronLeft size={24} color={COLORS.textMain} />
                 </TouchableOpacity>
                 <Text style={styles.navTitle}>我的车辆</Text>
                 <TouchableOpacity onPress={handleAddVehicle} style={styles.navButton}>
@@ -133,7 +134,7 @@ export default function MyVehiclesPage() {
                                         style={[styles.baseBtn, styles.detailBtn]}
                                         onPress={handleViewVerification}
                                     >
-                                        <Info size={16} style={{ marginRight: 8 }} color={COLORS.textPrimary} />
+                                        <Info size={16} style={{ marginRight: 8 }} color={COLORS.textMain} />
                                         <Text style={styles.btnTextPrimary}>认证详情</Text>
                                     </Button>
 
