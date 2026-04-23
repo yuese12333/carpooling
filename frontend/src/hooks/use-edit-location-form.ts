@@ -3,12 +3,12 @@
  * @description 编辑地点页面的业务逻辑 Hook，集成链路追踪与标准化日志记录
  */
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ROUTES } from '@/router/paths';
 import { updateLocationApi } from '@/api/edit-location-api';
-import logger, { generateRequestId } from '@/utils/logger';
+import logger from '@/utils/logger';
 
 const MODULE_NAME = 'UseEditLocationForm';
 
