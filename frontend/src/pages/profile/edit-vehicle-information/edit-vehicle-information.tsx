@@ -9,7 +9,6 @@ import {
     Text,
     ScrollView,
     TouchableOpacity,
-    SafeAreaView,
     StatusBar,
     KeyboardAvoidingView,
     Platform,
@@ -21,6 +20,7 @@ import {
     Info,
     AlertTriangle
 } from "lucide-react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // 导入自定义 UI 组件
 import { Card } from "@/components/card";
