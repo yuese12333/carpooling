@@ -6,7 +6,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ChevronLeft } from "lucide-react-native";
-import styles, { COLORS } from "../trips.style";
+import styles from "../trips.style";
+import { COLORS } from "@/pages/style"
 
 interface RoleOption {
     key: "all" | "passenger" | "driver";
@@ -58,7 +59,7 @@ export const TripHeader: React.FC<TripHeaderProps> = ({
                     activeOpacity={0.7}
                 // 提示：交互日志由父层 TripsPage 消费 requestId 并记录
                 >
-                    <ChevronLeft size={24} color={COLORS.gray800} />
+                    <ChevronLeft size={24} color={COLORS.textSub} />
                 </TouchableOpacity>
 
                 <Text style={styles.navTitle}>
@@ -86,14 +87,14 @@ export const TripHeader: React.FC<TripHeaderProps> = ({
                                 },
                                 isActive
                                     ? { backgroundColor: COLORS.primary }
-                                    : { backgroundColor: COLORS.gray100 }
+                                    : { backgroundColor: COLORS.borderLight }
                             ]}
                             activeOpacity={0.8}
                         >
                             <Text
                                 style={[
                                     { fontSize: 12, fontWeight: "500" },
-                                    isActive ? { color: COLORS.white } : { color: COLORS.gray500 }
+                                    isActive ? { color: COLORS.white } : { color: COLORS.textSecondary }
                                 ]}
                             >
                                 {roleOption.label}

@@ -1,58 +1,28 @@
 /**
  * @file edit-vehicle-information.style.ts
- * @description 车辆信息编辑页面的专用样式表，包含严谨的跨平台适配逻辑与色彩系统
+ * @description 车辆信息编辑页面的专用样式表
  */
 
 import { StyleSheet, Platform } from "react-native";
-
-/**
- * 语义化颜色系统
- * 严格执行禁止硬编码要求
- */
-export const COLORS = Object.freeze({
-    primary: "#10b981",
-    primaryLight: "#ecfdf5",
-    textPrimary: "#1f2937",
-    textSecondary: "#4b5563",
-    textMuted: "#9ca3af",
-    bgLight: "#f9fafb",
-    white: "#ffffff",
-    border: "#f3f4f6",
-    error: "#ef4444",
-    warningBg: "#fffbeb",
-    warningText: "#92400e",
-    warningIcon: "#f59e0b",
-    disabled: "#d1d5db", // 新增：标准禁用色
-    transparentWhite: "rgba(255, 255, 255, 0.5)",
-});
+import { COLORS, SPACING, RADIUS, SHADOWS, LAYOUT_MIXINS, commonStyles } from '@/pages/style';
 
 export default StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.bgLight,
     },
-    // 导航栏容器 - 适配不同平台高度感官
+    // 导航栏容器 - 复用全局 Navbar 布局
     navbar: {
-        height: Platform.OS === 'ios' ? 44 : 56,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        backgroundColor: COLORS.white,
-        borderBottomWidth: StyleSheet.hairlineWidth, // 使用 hairlineWidth 提升边缘精致感
-        borderBottomColor: COLORS.border,
+        ...LAYOUT_MIXINS.navbar,
     },
     navTitle: {
         fontSize: 17,
         fontWeight: '700',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
         textAlign: 'center',
     },
     navButton: {
-        minWidth: 44, // 保证热区符合人类工效学
-        minHeight: 44,
-        justifyContent: 'center',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.hitSlop,
     },
     saveText: {
         fontSize: 15,
@@ -64,84 +34,62 @@ export default StyleSheet.create({
         opacity: 0.6,
     },
     scrollContent: {
-        padding: 20,
-        // 配合 keyboardShouldPersistTaps="handled" 确保底部不被遮挡
+        padding: SPACING.md + 4, // 对应原 20px
         paddingBottom: Platform.OS === 'ios' ? 40 : 20,
     },
     photoSection: {
         alignItems: 'center',
-        marginBottom: 24,
+        marginBottom: SPACING.lg,
     },
     photoUploadBox: {
-        width: '100%',
-        height: 140,
-        backgroundColor: COLORS.white,
-        borderRadius: 16,
-        borderWidth: 2,
-        borderColor: COLORS.border,
-        borderStyle: 'dashed',
-        alignItems: 'center',
-        justifyContent: 'center',
+        ...LAYOUT_MIXINS.dashedUpload,
     },
     cameraCircle: {
         width: 56,
         height: 56,
         borderRadius: 28,
         backgroundColor: COLORS.primaryLight,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 8,
+        ...LAYOUT_MIXINS.center,
+        marginBottom: SPACING.sm,
     },
     uploadText: {
         fontSize: 14,
         fontWeight: '600',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
     },
     uploadSubText: {
         fontSize: 11,
         color: COLORS.textMuted,
-        marginTop: 4,
+        marginTop: SPACING.xs,
     },
     sectionHeader: {
-        marginBottom: 12,
-        marginTop: 4,
+        marginBottom: SPACING.md - 4,
+        marginTop: SPACING.xs,
     },
     sectionTitle: {
         fontSize: 15,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
         paddingLeft: 4,
     },
     formCard: {
-        padding: 16,
-        borderRadius: 16,
-        backgroundColor: COLORS.white,
-        marginBottom: 20,
-        // 卡片微阴影
-        ...Platform.select({
-            ios: {
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 4,
-            },
-            android: {
-                elevation: 2,
-            },
-        }),
+        ...LAYOUT_MIXINS.mainCard,
+        padding: SPACING.md,
+        marginBottom: SPACING.lg,
+        // 覆盖特定圆角以匹配 UI 原型
+        borderRadius: RADIUS.lg,
     },
     inputGroup: {
-        marginBottom: 16,
+        marginBottom: SPACING.md,
     },
     label: {
         fontSize: 13,
         color: COLORS.textSecondary,
-        marginBottom: 8,
+        marginBottom: SPACING.sm,
         fontWeight: '500',
     },
     inputHint: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.rowCenter,
         marginTop: 6,
         paddingLeft: 4,
     },
@@ -152,18 +100,16 @@ export default StyleSheet.create({
     },
     rowInputs: {
         flexDirection: 'row',
-        gap: 12, // React Native 0.71+ 支持 gap 属性
+        gap: 12,
     },
     switchItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        ...LAYOUT_MIXINS.rowBetween,
         paddingVertical: 14,
     },
     switchLabel: {
         fontSize: 15,
         fontWeight: '600',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
     },
     switchSub: {
         fontSize: 12,
@@ -172,26 +118,25 @@ export default StyleSheet.create({
     },
     innerSeparator: {
         height: StyleSheet.hairlineWidth,
-        backgroundColor: COLORS.border,
-        marginVertical: 4,
+        backgroundColor: COLORS.borderDivider,
+        marginVertical: SPACING.xs,
     },
     warningBox: {
         flexDirection: 'row',
         backgroundColor: COLORS.warningBg,
         padding: 12,
-        borderRadius: 12,
-        alignItems: 'flex-start', // 文本多行时对齐基准
+        borderRadius: RADIUS.md,
+        alignItems: 'flex-start',
     },
-    warningMsgText: { // 重命名避免与 COLORS 冲突
+    warningMsgText: {
         flex: 1,
         fontSize: 12,
         color: COLORS.warningText,
-        marginLeft: 8,
+        marginLeft: SPACING.sm,
         lineHeight: 18,
     },
     btnContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.rowCenter,
     },
     btnText: {
         color: COLORS.white,
@@ -202,28 +147,11 @@ export default StyleSheet.create({
         flex: 1,
     },
     updateBtn: {
-        backgroundColor: COLORS.primary,
-        borderRadius: 27, // 精确为高度的一半
-        height: 54,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        // 按钮增强视觉深度
-        ...Platform.select({
-            ios: {
-                shadowColor: COLORS.primary,
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.35,
-                shadowRadius: 10,
-            },
-            android: {
-                elevation: 6,
-            },
-        }),
+        ...commonStyles.primaryButton,
     },
     updateBtnDisabled: {
         backgroundColor: COLORS.disabled,
-        elevation: 0, // 禁用时去除投影
+        elevation: 0,
         shadowOpacity: 0,
     }
 });

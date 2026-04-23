@@ -9,7 +9,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from 'expo-router';
 import { ROUTES } from '@/router/paths';
 import logger, { generateRequestId } from '@/utils/logger';
-import forgetPasswordStyles, { COLORS } from './forget-password.style';
+import forgetPasswordStyles from './forget-password.style';
+import { COLORS } from '@/pages/style'
 import { useForgetPasswordForm } from "@/hooks/use-forget-password-form";
 
 import { PasswordHeader } from './components/password-header';
@@ -36,10 +37,10 @@ export default function ForgetPasswordPage() {
 
   const strengthInfo = useMemo(() => {
     const s = form.pwdStrength;
-    if (s <= 25) return { text: "弱", color: COLORS.strengthWeak, textColor: COLORS.error };
-    if (s <= 50) return { text: "中", color: COLORS.strengthMedium, textColor: COLORS.strengthMedium };
-    if (s <= 75) return { text: "强", color: COLORS.strengthStrong, textColor: COLORS.strengthStrong };
-    return { text: "极强", color: COLORS.strengthVeryStrong, textColor: COLORS.primaryDark };
+    if (s <= 25) return { text: "弱", color: COLORS.status["weak"], textColor: COLORS.error };
+    if (s <= 50) return { text: "中", color: COLORS.status["medium"], textColor: COLORS.status["medium"] };
+    if (s <= 75) return { text: "强", color: COLORS.status["strong"], textColor: COLORS.status["strong"] };
+    return { text: "极强", color: COLORS.status["veryStrong"], textColor: COLORS.primaryDark };
   }, [form.pwdStrength]);
 
   const headerConfig = useMemo(() => ({

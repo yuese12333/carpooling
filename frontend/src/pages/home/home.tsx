@@ -10,7 +10,8 @@ import { ChevronRight, Shield, Star, Zap } from "lucide-react-native";
 
 import { useHomeForm } from '@/hooks/use-home-form';
 import logger, { generateRequestId } from '@/utils/logger';
-import styles, { COLORS } from "./home.style";
+import styles from "./home.style";
+import { COLORS } from "@/pages/style";
 import { ROUTES } from '@/router/paths';
 
 import { HomeHeader } from "./components/home-header";
@@ -100,8 +101,8 @@ export default function HomePage() {
           <Switch
             value={!isMockMode}
             onValueChange={handleToggleMode}
-            trackColor={{ false: COLORS.textGray, true: COLORS.white }}
-            thumbColor={isMockMode ? "#f4f3f4" : COLORS.primary}
+            trackColor={{ false: COLORS.textMuted, true: COLORS.white }}
+            thumbColor={isMockMode ? COLORS.borderLight : COLORS.primary}
             style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
           />
         </View>
@@ -138,15 +139,15 @@ export default function HomePage() {
         {/* 4. 信任标识 */}
         <View style={styles.trustSection}>
           <View style={styles.trustBadgeBlue}>
-            <Shield size={14} color={COLORS.statusSuccess} />
+            <Shield size={14} color={COLORS.status.success} />
             <Text style={styles.trustTextGreen}>实名认证</Text>
           </View>
           <View style={styles.trustBadgeBlueVariant}>
-            <Star size={14} color={COLORS.statusInfo} />
+            <Star size={14} color={COLORS.status.info} />
             <Text style={styles.trustTextBlue}>信用评分</Text>
           </View>
           <View style={styles.trustBadgeOrange}>
-            <Zap size={14} color={COLORS.statusWarning} />
+            <Zap size={14} color={COLORS.status.warning} />
             <Text style={styles.trustTextOrange}>快速匹配</Text>
           </View>
         </View>

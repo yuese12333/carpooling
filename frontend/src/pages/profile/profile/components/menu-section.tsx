@@ -7,7 +7,8 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { ChevronRight, Check } from "lucide-react-native";
 import { IMenuGroup, IMenuItem } from "../profile-config";
-import styles, { colors } from "../profile.style";
+import styles from "../profile.style";
+import { COLORS } from "@/pages/style";
 
 /**
  * 菜单组件属性接口定义
@@ -69,7 +70,7 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ menuData, onItemClick 
                                         <Text
                                             style={[
                                                 styles.menuLabel,
-                                                item.danger ? { color: colors.danger } : undefined
+                                                item.danger ? { color: COLORS.danger } : undefined
                                             ]}
                                         >
                                             {item.label}
@@ -82,11 +83,11 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ menuData, onItemClick 
                                     {/* 状态反馈区域：展示“已完成”状态或“跳转”箭头 */}
                                     {item.done ? (
                                         <View style={styles.doneWrapper}>
-                                            <Check size={12} color={colors.success} />
+                                            <Check size={12} color={COLORS.primaryDark} />
                                             <Text style={styles.doneText}>已完成</Text>
                                         </View>
                                     ) : (
-                                        <ChevronRight size={16} color={colors.divider} />
+                                        <ChevronRight size={16} color={COLORS.textPlaceholder} />
                                     )}
                                 </TouchableOpacity>
                             );

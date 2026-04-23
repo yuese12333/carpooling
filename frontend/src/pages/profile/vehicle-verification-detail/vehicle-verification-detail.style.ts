@@ -1,48 +1,10 @@
 /**
  * @file vehicle-verification-detail.style.ts
- * @description 车辆认证详情页样式表，包含标准颜色体系、跨平台阴影处理及响应式布局配置
+ * @description 车辆认证详情页样式表 - 已重构：基于全局 Design Tokens
  */
 
-import { StyleSheet, Platform } from "react-native";
-
-/**
- * 颜色常量定义 - 严格遵循原子化色彩规范
- */
-export const COLORS = Object.freeze({
-    primary: "#10b981",
-    primaryLight: "#ecfdf5",
-    primaryBorder: "#d1fae5",
-
-    warning: "#f59e0b",
-    warningLight: "#fff7ed",
-
-    info: "#3b82f6",
-    infoLight: "#eff6ff",
-
-    textPrimary: "#1f2937",
-    textSecondary: "#4b5563",
-    textMuted: "#9ca3af",
-
-    bgLight: "#f9fafb",
-    white: "#ffffff",
-    border: "#f3f4f6",
-    placeholder: "#f3f4f6",
-
-    overlayDark: "rgba(0,0,0,0.2)",
-    noticeBg: "#f8fafc",
-});
-
-/**
- * 布局常量
- */
-const SPACING = {
-    xs: 4,
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 20,
-    xxl: 32,
-};
+import { StyleSheet } from "react-native";
+import { COLORS, SPACING, RADIUS, LAYOUT_MIXINS } from "@/pages/style";
 
 export default StyleSheet.create({
     container: {
@@ -51,54 +13,32 @@ export default StyleSheet.create({
     },
     // --- 导航栏 ---
     navbar: {
-        height: 56,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: SPACING.lg,
-        backgroundColor: COLORS.white,
+        ...LAYOUT_MIXINS.navbar, // 复用全局导航栏混入
     },
     navTitle: {
         fontSize: 17,
         fontWeight: '600',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
     },
     navButton: {
         padding: SPACING.sm,
     },
     // --- 头部状态卡片 ---
     headerCard: {
-        backgroundColor: COLORS.white,
-        alignItems: 'center',
-        paddingVertical: SPACING.xxl,
-        borderBottomLeftRadius: 32,
-        borderBottomRightRadius: 32,
-        // 跨平台阴影适配
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.05,
-                shadowRadius: 10,
-            },
-            android: {
-                elevation: 4,
-            },
-        }),
+        ...LAYOUT_MIXINS.headerCard,
     },
     statusIconWrapper: {
         width: 80,
         height: 80,
-        borderRadius: 40,
+        borderRadius: RADIUS.full,
         backgroundColor: COLORS.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: SPACING.lg,
+        ...LAYOUT_MIXINS.center,
+        marginBottom: SPACING.md,
     },
     statusTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
         marginBottom: SPACING.sm,
     },
     statusDate: {
@@ -110,9 +50,9 @@ export default StyleSheet.create({
         backgroundColor: COLORS.primaryLight,
         paddingHorizontal: SPACING.sm,
         paddingVertical: SPACING.xs,
-        borderRadius: 6,
+        borderRadius: RADIUS.sm,
         borderWidth: 1,
-        borderColor: COLORS.primaryBorder,
+        borderColor: COLORS.primaryDark, // 对应原 primaryBorder 的语义
     },
     validText: {
         color: COLORS.primary,
@@ -121,32 +61,29 @@ export default StyleSheet.create({
     },
     // --- 内容区 ---
     contentPadding: {
-        padding: SPACING.xl,
+        padding: SPACING.md, // 对应原 SPACING.xl (20px) 在新规范中映射
     },
     sectionHeader: {
-        marginTop: SPACING.xxl,
+        marginTop: SPACING.xl,
         marginBottom: SPACING.md,
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
     },
     infoCard: {
-        padding: SPACING.xl,
-        borderRadius: 20,
-        backgroundColor: COLORS.white,
+        ...LAYOUT_MIXINS.mainCard, // 复用主卡片布局（含阴影、圆角、内边距）
     },
     stepsList: {
-        marginTop: SPACING.lg,
+        marginTop: SPACING.md,
     },
     stepItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.rowCenter,
         paddingVertical: SPACING.md,
     },
     stepIcon: {
-        marginRight: SPACING.lg,
+        marginRight: SPACING.md,
     },
     stepText: {
         flex: 1,
@@ -154,7 +91,7 @@ export default StyleSheet.create({
     stepLabel: {
         fontSize: 15,
         fontWeight: '600',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
     },
     stepDesc: {
         fontSize: 12,
@@ -163,31 +100,26 @@ export default StyleSheet.create({
     },
     stepLine: {
         marginLeft: 36,
-        height: 1, // 修复原代码缺失高度的问题
-        backgroundColor: COLORS.border,
+        ...LAYOUT_MIXINS.separator,
     },
     // --- 档案网格 ---
     archiveGrid: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        ...LAYOUT_MIXINS.rowBetween,
     },
     archiveItem: {
         width: '48%',
-        backgroundColor: COLORS.white,
-        borderRadius: 16,
-        padding: SPACING.lg,
+        ...LAYOUT_MIXINS.cardBase,
+        borderRadius: RADIUS.lg,
+        padding: SPACING.md,
         alignItems: 'center',
         position: 'relative',
-        borderWidth: 1,
-        borderColor: COLORS.border,
     },
     imagePlaceholder: {
         width: '100%',
         height: 80,
-        backgroundColor: COLORS.placeholder,
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: COLORS.imagePlaceholder,
+        borderRadius: RADIUS.md,
+        ...LAYOUT_MIXINS.center,
         marginBottom: SPACING.sm,
     },
     archiveLabel: {
@@ -199,26 +131,23 @@ export default StyleSheet.create({
         position: 'absolute',
         top: 8,
         right: 8,
-        backgroundColor: COLORS.overlayDark,
-        borderRadius: 10,
+        backgroundColor: COLORS.overlay,
+        borderRadius: RADIUS.md,
         padding: 4,
     },
     // --- 权益板块 ---
     benefitCard: {
-        marginTop: SPACING.xxl,
-        padding: SPACING.xl,
-        borderRadius: 20,
-        backgroundColor: COLORS.white,
+        marginTop: SPACING.xl,
+        ...LAYOUT_MIXINS.mainCard,
     },
     benefitHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: SPACING.xl,
+        ...LAYOUT_MIXINS.rowCenter,
+        marginBottom: SPACING.md,
     },
     benefitTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
         marginLeft: SPACING.sm,
     },
     benefitRow: {
@@ -231,9 +160,8 @@ export default StyleSheet.create({
     benefitIconBox: {
         width: 48,
         height: 48,
-        borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
+        borderRadius: RADIUS.lg,
+        ...LAYOUT_MIXINS.center,
         marginBottom: SPACING.sm,
     },
     benefitText: {
@@ -244,10 +172,10 @@ export default StyleSheet.create({
     // --- 底部提示 ---
     noticeBox: {
         flexDirection: 'row',
-        marginTop: SPACING.xxl,
-        backgroundColor: COLORS.noticeBg,
+        marginTop: SPACING.xl,
+        backgroundColor: COLORS.bgLight,
         padding: SPACING.md,
-        borderRadius: 12,
+        borderRadius: RADIUS.md,
         alignItems: 'flex-start',
     },
     noticeText: {

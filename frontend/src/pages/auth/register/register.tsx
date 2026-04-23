@@ -16,7 +16,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Check } from "lucide-react-native";
 
-import styles, { COLORS } from "./register.style";
+import styles from "./register.style";
+import { COLORS } from '@/pages/style';
 
 // 导入标准化日志工具与状态管理
 import logger, { generateRequestId } from "@/utils/logger";
@@ -53,10 +54,10 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ active, isCompleted, labe
       {isCompleted ? (
         <Check size={16} color={COLORS.primary} strokeWidth={3} />
       ) : (
-        <View style={[styles.stepDot, { backgroundColor: active ? 'white' : COLORS.whiteTransparent30 }]} />
+        <View style={[styles.stepDot, { backgroundColor: active ? 'white' : COLORS.whiteTrans[30] }]} />
       )}
     </View>
-    <Text style={[styles.stepLabel, { color: active ? 'white' : COLORS.whiteTransparent50 }]}>
+    <Text style={[styles.stepLabel, { color: active ? 'white' : COLORS.whiteTrans[50] }]}>
       {label}
     </Text>
   </View>
@@ -184,7 +185,7 @@ export default function RegisterPage() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>已有账号？</Text>
+            <Text style={styles.agreementText}>已有账号？</Text>
             <TouchableOpacity onPress={navigateToLogin}>
               <Text style={styles.footerLink}>去登录</Text>
             </TouchableOpacity>

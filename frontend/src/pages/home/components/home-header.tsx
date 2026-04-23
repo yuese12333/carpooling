@@ -10,7 +10,8 @@ import { Card } from "@/../components/card";
 import { Button } from "@/../components/button";
 import { UserInfo } from "@/api/home-api";
 import logger from '@/utils/logger';
-import styles, { COLORS } from "../home.style";
+import styles from "../home.style";
+import { COLORS } from "@/pages/style";
 
 /**
  * 首页头部组件属性接口
@@ -148,7 +149,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                         value={fromLocation}
                         onChangeText={onSetFrom}
                         style={styles.textInput}
-                        placeholderTextColor={COLORS.textGray}
+                        placeholderTextColor={COLORS.textMuted}
                     />
                 </View>
 
@@ -162,14 +163,14 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                         value={toLocation}
                         onChangeText={onSetTo}
                         style={styles.textInput}
-                        placeholderTextColor={COLORS.textGray}
+                        placeholderTextColor={COLORS.textMuted}
                     />
                 </View>
 
                 {/* 搜索操作区 */}
                 <View style={styles.searchActionRow}>
                     <TouchableOpacity activeOpacity={0.7} style={styles.dateSelector}>
-                        <Calendar size={14} color={COLORS.textGray} />
+                        <Calendar size={14} color={COLORS.textMuted} />
                         <Text style={styles.dateText}>{selectedDate}</Text>
                     </TouchableOpacity>
                     <Button onPress={handleSearchPress} style={styles.searchButton}>

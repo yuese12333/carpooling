@@ -1,84 +1,31 @@
 /**
  * @file profile.style.ts
- * @description 个人中心模块视觉样式表，包含品牌色彩体系、组件布局及适配方案。
+ * @description 个人中心模块视觉样式表，已重构为引用全局 Design Tokens。
  */
 
-import { StyleSheet, Platform, StatusBar } from "react-native";
-
-/**
- * 个人中心模块专属色彩体系 (基于设计系统规范)
- */
-export const colors = Object.freeze({
-    // 核心品牌色
-    primary: "#10b981",
-    danger: "#ef4444",
-    success: "#22c55e",
-    warning: "#fde047",
-
-    // 内容文字色
-    textPrimary: "#1f2937",
-    textSecondary: "#4b5563",
-    textMuted: "#9ca3af",
-    textLight: "rgba(255,255,255,0.8)",
-    textLighter: "rgba(255,255,255,0.6)",
-
-    // 基础表面色
-    white: "#ffffff",
-    bgLight: "#f9fafb",
-    borderLight: "#f3f4f6",
-    divider: "#d1d5db",
-
-    // 功能性装饰色
-    blueLight: "#eff6ff",
-    bluePrimary: "#3b82f6",
-    purpleLight: "#faf5ff",
-    purplePrimary: "#a855f7",
-    orangeLight: "#fff7ed",
-    orangePrimary: "#f97316",
-    yellowBadge: "#fefce8",
-    yellowIcon: "#eab308",
-    redLight: "#fef2f2",
-
-    // 透明辅助层
-    whiteTransparent: "rgba(255,255,255,0.3)",
-    whiteOverlay: "rgba(255,255,255,0.15)",
-    whiteBorder: "rgba(255,255,255,0.2)",
-    shadow: "#000",
-});
-
-/**
- * 统一样式抽象：阴影卡片容器
- */
-const cardBase = {
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    elevation: 2,
-    shadowColor: colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-};
+import { StyleSheet, Platform } from "react-native";
+import { COLORS, SPACING, RADIUS, SHADOWS, LAYOUT_MIXINS, SIZES } from '@/pages/style';
 
 export default StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.bgLight,
+        backgroundColor: COLORS.bgLight,
     },
     scrollContent: {
         flexGrow: 1,
     },
     header: {
-        backgroundColor: colors.primary,
-        paddingHorizontal: 20,
-        // 修正硬编码：根据平台动态处理安全距离
-        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) + 20 : 60,
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: SPACING.lg,
+        // 动态处理安全距离：iOS 常用 60 (含状态栏)，Android 动态获取
+        paddingTop: Platform.OS === 'ios' ? 60 : SIZES.statusBarHeight + 20,
         paddingBottom: 30,
-        borderBottomLeftRadius: 30,
-        borderBottomRightRadius: 30,
+        borderBottomLeftRadius: RADIUS.xxl,
+        borderBottomRightRadius: RADIUS.xxl,
     },
     userInfo: {
-        flexDirection: "row",
-        alignItems: "flex-start",
+        ...LAYOUT_MIXINS.rowCenter,
+        alignItems: "flex-start", // 覆盖 mixin 的 center 保持原样
     },
     avatarContainer: {
         position: "relative",
@@ -88,101 +35,90 @@ export default StyleSheet.create({
         height: 80,
         borderRadius: 20,
         borderWidth: 4,
-        borderColor: colors.whiteTransparent,
+        borderColor: COLORS.whiteTrans[30],
     },
     editBadge: {
         position: "absolute",
         bottom: -4,
         right: -4,
-        backgroundColor: colors.white,
+        backgroundColor: COLORS.white,
         width: 28,
         height: 28,
         borderRadius: 14,
-        alignItems: "center",
-        justifyContent: "center",
-        elevation: 3,
-        shadowColor: colors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 3,
+        ...LAYOUT_MIXINS.center,
+        ...SHADOWS.xs, // 复用全局阴影
+        elevation: 3,  // 增强层级
     },
     userTextContent: {
         flex: 1,
-        marginLeft: 16,
+        marginLeft: SPACING.md,
         paddingTop: 4,
     },
     nameRow: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
     },
     userName: {
         fontSize: 20,
         fontWeight: "bold",
-        color: colors.white,
+        color: COLORS.white,
     },
     verifiedTag: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: colors.whiteBorder,
+        ...LAYOUT_MIXINS.rowCenter,
+        backgroundColor: COLORS.whiteBorder,
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 10,
-        marginLeft: 8,
+        marginLeft: SPACING.sm,
     },
     verifiedText: {
-        color: colors.white,
+        color: COLORS.white,
         fontSize: 10,
         marginLeft: 2,
     },
     statsGrid: {
-        flexDirection: "row",
-        backgroundColor: colors.whiteOverlay,
-        borderRadius: 20,
-        marginTop: 24,
-        paddingVertical: 16,
+        ...LAYOUT_MIXINS.statsContainer,
+        marginTop: SPACING.lg,
     },
     statItem: {
         flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
+        ...LAYOUT_MIXINS.center,
     },
     statBorder: {
         borderLeftWidth: 1,
         borderRightWidth: 1,
-        borderColor: colors.whiteBorder,
+        borderColor: COLORS.whiteBorder,
     },
     statValue: {
         fontSize: 20,
         fontWeight: "bold",
-        color: colors.white,
+        color: COLORS.white,
     },
     statLabel: {
         fontSize: 11,
-        color: colors.textLight,
+        color: COLORS.textLight,
         marginTop: 4,
     },
     ratingRow: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
     },
     mainContent: {
-        padding: 16,
+        padding: SPACING.md,
     },
     sectionCard: {
-        ...cardBase,
-        padding: 16,
-        marginBottom: 16,
+        ...LAYOUT_MIXINS.cardShadow,
+        borderRadius: 20, // 覆盖为特定的 20
+        padding: SPACING.md,
+        marginBottom: SPACING.md,
     },
     sectionTitleRow: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
         marginBottom: 12,
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: "600",
-        color: colors.textPrimary,
-        marginLeft: 8,
+        color: COLORS.textMain,
+        marginLeft: SPACING.sm,
     },
     badgeGrid: {
         flexDirection: "row",
@@ -195,15 +131,15 @@ export default StyleSheet.create({
         marginHorizontal: "1.66%",
         alignItems: "center",
         padding: 12,
-        borderRadius: 16,
+        borderRadius: RADIUS.lg,
         marginBottom: 10,
     },
     badgeUnlocked: {
-        backgroundColor: colors.yellowBadge,
+        backgroundColor: COLORS.yellowBadge,
         opacity: 1,
     },
     badgeLocked: {
-        backgroundColor: colors.bgLight,
+        backgroundColor: COLORS.bgLight,
         opacity: 0.4,
     },
     badgeEmoji: {
@@ -211,21 +147,19 @@ export default StyleSheet.create({
     },
     badgeLabel: {
         fontSize: 10,
-        color: colors.textSecondary,
+        color: COLORS.textSub,
         marginTop: 6,
         textAlign: "center",
     },
     carInfoRow: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
     },
     carIconWrapper: {
         width: 44,
         height: 44,
-        backgroundColor: colors.blueLight,
+        backgroundColor: COLORS.infoLight,
         borderRadius: 14,
-        alignItems: "center",
-        justifyContent: "center",
+        ...LAYOUT_MIXINS.center,
     },
     carTextContent: {
         flex: 1,
@@ -234,20 +168,20 @@ export default StyleSheet.create({
     carName: {
         fontSize: 15,
         fontWeight: "500",
-        color: colors.textPrimary,
+        color: COLORS.textMain,
     },
     carDetail: {
         fontSize: 12,
-        color: colors.textMuted,
+        color: COLORS.textMuted,
         marginTop: 2,
     },
     editText: {
         fontSize: 12,
-        color: colors.primary,
+        color: COLORS.primary,
         fontWeight: "600",
     },
     menuGroup: {
-        marginBottom: 16,
+        marginBottom: SPACING.md,
     },
     groupHeader: {
         paddingHorizontal: 12,
@@ -255,31 +189,29 @@ export default StyleSheet.create({
     },
     groupTitle: {
         fontSize: 12,
-        color: colors.textMuted,
+        color: COLORS.textMuted,
         fontWeight: "600",
         textTransform: "uppercase",
     },
     menuCard: {
-        ...cardBase,
-        borderRadius: 20, // 覆盖卡片圆角
+        ...LAYOUT_MIXINS.cardShadow,
+        borderRadius: 20,
         overflow: "hidden",
     },
     menuItem: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 16,
+        ...LAYOUT_MIXINS.rowCenter,
+        paddingHorizontal: SPACING.md,
         paddingVertical: 14,
     },
     menuItemBorder: {
         borderBottomWidth: 1,
-        borderBottomColor: colors.borderLight,
+        borderBottomColor: COLORS.borderLight,
     },
     menuIconBox: {
         width: 36,
         height: 36,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
+        borderRadius: RADIUS.md,
+        ...LAYOUT_MIXINS.center,
     },
     menuTextContent: {
         flex: 1,
@@ -288,28 +220,27 @@ export default StyleSheet.create({
     menuLabel: {
         fontSize: 14,
         fontWeight: "500",
-        color: colors.textPrimary,
+        color: COLORS.textMain,
     },
     menuSubText: {
         fontSize: 11,
-        color: colors.textMuted,
+        color: COLORS.textMuted,
         marginTop: 2,
     },
     doneWrapper: {
-        flexDirection: "row",
-        alignItems: "center",
+        ...LAYOUT_MIXINS.rowCenter,
     },
     doneText: {
         fontSize: 12,
-        color: colors.success,
+        color: COLORS.primary, // 原 success 为 #22c55e，与 primary #10b981 极近，建议归口
         marginLeft: 4,
     },
     versionText: {
         textAlign: "center",
         fontSize: 11,
-        color: colors.divider,
-        marginTop: 16,
-        marginBottom: 8,
+        color: COLORS.dividerLight,
+        marginTop: SPACING.md,
+        marginBottom: SPACING.sm,
     },
     bottomSpacer: {
         height: 40,

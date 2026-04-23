@@ -15,7 +15,7 @@ import {
     LucideIcon
 } from "lucide-react-native";
 import { Href } from 'expo-router';
-import { colors } from "./profile.style";
+import { COLORS } from "@/pages/style";
 import { ROUTES } from '@/router/paths';
 import { BadgeItem } from "@/api/profile-api";
 
@@ -45,24 +45,24 @@ export const menuData: IMenuGroup[] = [
     {
         group: "出行",
         items: [
-            { icon: Car, label: "我的车辆", sub: "大众帕萨特 白色", color: colors.bluePrimary, bgColor: colors.blueLight, path: ROUTES.PROFILE.MY_VEHICLES as Href },
-            { icon: Map, label: "常用地点", sub: "管理常用出发地/目的地", color: colors.success, bgColor: colors.bgLight, path: ROUTES.PROFILE.FAVORITE_LOCATIONS as Href },
-            { icon: CreditCard, label: "支付方式", sub: "微信支付 已绑定", color: colors.purplePrimary, bgColor: colors.purpleLight, path: ROUTES.PROFILE.PAYMENT_METHODS as Href },
+            { icon: Car, label: "我的车辆", sub: "大众帕萨特 白色", color: COLORS.info, bgColor: COLORS.bgBlueLight, path: ROUTES.PROFILE.MY_VEHICLES as Href },
+            { icon: Map, label: "常用地点", sub: "管理常用出发地/目的地", color: COLORS.primaryDark, bgColor: COLORS.bgLight, path: ROUTES.PROFILE.FAVORITE_LOCATIONS as Href },
+            { icon: CreditCard, label: "支付方式", sub: "微信支付 已绑定", color: COLORS.accent, bgColor: COLORS.bgPurpleLight, path: ROUTES.PROFILE.PAYMENT_METHODS as Href },
         ],
     },
     {
         group: "账户",
         items: [
-            { icon: Shield, label: "实名认证", sub: "已认证", color: colors.success, bgColor: colors.bgLight, done: true },
-            { icon: Users, label: "邀请好友", sub: "邀请得奖励", color: colors.orangePrimary, bgColor: colors.orangeLight },
-            { icon: Bell, label: "消息通知", sub: "管理通知设置", color: colors.bluePrimary, bgColor: colors.blueLight },
+            { icon: Shield, label: "实名认证", sub: "已认证", color: COLORS.primaryDark, bgColor: COLORS.bgLight, done: true },
+            { icon: Users, label: "邀请好友", sub: "邀请得奖励", color: COLORS.secondary, bgColor: COLORS.bgOrangeLight },
+            { icon: Bell, label: "消息通知", sub: "管理通知设置", color: COLORS.info, bgColor: COLORS.bgBlueLight },
         ],
     },
     {
         group: "其他",
         items: [
-            { icon: HelpCircle, label: "帮助中心", sub: "常见问题解答", color: colors.textSecondary, bgColor: colors.borderLight },
-            { icon: LogOut, label: "退出登录", sub: "", color: colors.danger, bgColor: colors.redLight, danger: true },
+            { icon: HelpCircle, label: "帮助中心", sub: "常见问题解答", color: COLORS.textSecondary, bgColor: COLORS.borderLight },
+            { icon: LogOut, label: "退出登录", sub: "", color: COLORS.danger, bgColor: COLORS.errorLight, danger: true },
         ],
     },
 ];

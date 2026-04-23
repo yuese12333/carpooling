@@ -10,15 +10,16 @@ import { Badge } from "@/components/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/avatar";
 import { Separator } from "@/components/separator";
 import { TransformedTrip } from '@/hooks/use-trips-form';
-import styles, { COLORS } from "../trips.style";
+import styles from "../trips.style";
+import { COLORS } from "@/pages/style"
 
 /**
  * 状态映射常量
  */
 const STATUS_CONFIG: Record<string, { label: string; bgColor: string; textColor: string }> = {
-    upcoming: { label: "即将出发", bgColor: COLORS.backgroundv1, textColor: COLORS.primary },
-    completed: { label: "已完成", bgColor: COLORS.gray100, textColor: COLORS.gray500 },
-    cancelled: { label: "已取消", bgColor: COLORS.backgroundv2, textColor: COLORS.danger },
+    upcoming: { label: "即将出发", bgColor: COLORS.borderTip, textColor: COLORS.primary },
+    completed: { label: "已完成", bgColor: COLORS.borderLight, textColor: COLORS.textSecondary },
+    cancelled: { label: "已取消", bgColor: COLORS.errorLight, textColor: COLORS.danger },
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -70,7 +71,7 @@ const TripCard: React.FC<TripCardProps> = ({
             {/* 卡片头部：状态与时间 */}
             <View style={styles.cardHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Badge style={{ backgroundColor: currentStatus.bgColor, marginRight: 8 }}>
+                    <Badge style={[styles.roleBadge, { backgroundColor: currentStatus.bgColor, marginRight: 8 }]}>
                         <Text style={{ fontSize: 10, fontWeight: "bold", color: currentStatus.textColor }}>
                             {currentStatus.label}
                         </Text>
@@ -79,7 +80,7 @@ const TripCard: React.FC<TripCardProps> = ({
                         <Text style={styles.roleBadgeText}>{ROLE_LABELS[role] ?? "未知"}</Text>
                     </View>
                 </View>
-                <Text style={{ fontSize: 11, color: COLORS.gray400 }}>
+                <Text style={{ fontSize: 11, color: COLORS.textMuted }}>
                     {ride?.date ?? ""} {ride?.time ?? ""}
                 </Text>
             </View>
@@ -94,17 +95,17 @@ const TripCard: React.FC<TripCardProps> = ({
                         </AvatarFallback>
                     </Avatar>
                     <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 14, fontWeight: 'bold', color: COLORS.gray800 }}>
+                        <Text style={{ fontSize: 14, fontWeight: 'bold', color: COLORS.textMain }}>
                             {role === "driver" ? "我是司机" : (ride?.driver?.name ?? "匿名用户")}
                         </Text>
-                        <Text style={{ fontSize: 12, color: COLORS.gray400 }}>
+                        <Text style={{ fontSize: 12, color: COLORS.textMuted }}>
                             {ride?.driver?.car ?? "未知车型"} · {ride?.driver?.carPlate ?? "未备案"}
                         </Text>
                     </View>
                     {status === "completed" && (
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Star size={14} color={COLORS.warning} fill={COLORS.warning} />
-                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: COLORS.gray700, marginLeft: 4 }}>
+                            <Text style={{ fontSize: 14, fontWeight: 'bold', color: COLORS.textSub, marginLeft: 4 }}>
                                 {ride?.driver?.rating ?? "5.0"}
                             </Text>
                         </View>
@@ -116,13 +117,13 @@ const TripCard: React.FC<TripCardProps> = ({
                     <View style={styles.routeLineContainer}>
                         <Navigation size={12} color={COLORS.primary} />
                         <View style={styles.routeLine} />
-                        <MapPin size={12} color={COLORS.orange} />
+                        <MapPin size={12} color={COLORS.secondary} />
                     </View>
                     <View style={{ flex: 1, marginLeft: 12 }}>
-                        <Text style={{ fontSize: 14, color: COLORS.gray700, fontWeight: '500', marginBottom: 24 }} numberOfLines={1}>
+                        <Text style={{ fontSize: 14, color: COLORS.textSub, fontWeight: '500', marginBottom: 24 }} numberOfLines={1}>
                             {ride?.from ?? "未知起点"}
                         </Text>
-                        <Text style={{ fontSize: 14, color: COLORS.gray700, fontWeight: '500' }} numberOfLines={1}>
+                        <Text style={{ fontSize: 14, color: COLORS.textSub, fontWeight: '500' }} numberOfLines={1}>
                             {ride?.to ?? "未知终点"}
                         </Text>
                     </View>
@@ -133,15 +134,15 @@ const TripCard: React.FC<TripCardProps> = ({
                 {/* 统计信息与价格 */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 8 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
-                        <Clock size={12} color={COLORS.gray400} />
-                        <Text style={{ fontSize: 12, color: COLORS.gray400, marginLeft: 4 }}>
+                        <Clock size={12} color={COLORS.textMuted} />
+                        <Text style={{ fontSize: 12, color: COLORS.textMuted, marginLeft: 4 }}>
                             {ride?.duration ?? "--"}
                         </Text>
                     </View>
                     {role === "passenger" && (
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Users size={12} color={COLORS.gray400} />
-                            <Text style={{ fontSize: 12, color: COLORS.gray400, marginLeft: 4 }}>
+                            <Users size={12} color={COLORS.textMuted} />
+                            <Text style={{ fontSize: 12, color: COLORS.textMuted, marginLeft: 4 }}>
                                 {bookedSeats}座
                             </Text>
                         </View>
@@ -149,7 +150,7 @@ const TripCard: React.FC<TripCardProps> = ({
                     <View style={{ flex: 1, alignItems: 'flex-end' }}>
                         <Text style={styles.priceText}>¥{finalPrice}</Text>
                     </View>
-                    <ChevronRight size={16} color={COLORS.gray300} style={{ marginLeft: 4 }} />
+                    <ChevronRight size={16} color={COLORS.textPlaceholder} style={{ marginLeft: 4 }} />
                 </View>
             </View>
 
@@ -160,7 +161,7 @@ const TripCard: React.FC<TripCardProps> = ({
                         style={[styles.footerBtn, styles.footerBtnBorder]}
                         onPress={() => onContact(id, role)}
                     >
-                        <Text style={{ fontSize: 14, color: COLORS.gray700 }}>
+                        <Text style={{ fontSize: 14, color: COLORS.textSub }}>
                             联系{role === "driver" ? "乘客" : "司机"}
                         </Text>
                     </TouchableOpacity>

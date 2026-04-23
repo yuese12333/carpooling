@@ -31,7 +31,8 @@ import { generateRequestId } from '@/utils/logger';
 import { Card } from "@/components/card";
 import { Badge } from "@/components/badge";
 import { Separator } from "@/components/separator";
-import styles, { COLORS } from "./vehicle-verification-detail.style";
+import styles from "./vehicle-verification-detail.style";
+import { COLORS } from "@/pages/style"
 
 /**
  * 车辆认证详情页面组件
@@ -51,7 +52,7 @@ export default function VehicleVerificationPage() {
             case 'order':
                 return { bgColor: COLORS.infoLight, icon: <Zap size={20} color={COLORS.info} /> };
             case 'safety':
-                return { bgColor: COLORS.warningLight, icon: <ShieldCheck size={20} color={COLORS.warning} /> };
+                return { bgColor: COLORS.bgOrangeLight, icon: <ShieldCheck size={20} color={COLORS.warning} /> };
             default:
                 return { bgColor: COLORS.bgLight, icon: undefined };
         }
@@ -76,7 +77,7 @@ export default function VehicleVerificationPage() {
             {/* 导航栏 */}
             <View style={styles.navbar}>
                 <TouchableOpacity onPress={handleBack} style={styles.navButton}>
-                    <ChevronLeft size={24} color={COLORS.textPrimary} />
+                    <ChevronLeft size={24} color={COLORS.textMain} />
                 </TouchableOpacity>
                 <Text style={styles.navTitle}>认证详情</Text>
                 <View style={{ width: 32 }} />

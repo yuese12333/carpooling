@@ -25,7 +25,8 @@ import { NotesSection } from "./components/notes-section";
 import { Button } from "../../../components/button";
 
 // 样式与工具
-import styles, { COLORS } from "./offer-ride.style";
+import styles from "./offer-ride.style";
+import { COLORS } from "@/pages/style"
 import { useOfferRideForm } from "@/hooks/use-offer-ride-form";
 import logger, { generateRequestId } from '@/utils/logger';
 
@@ -146,9 +147,10 @@ export default function OfferRidePage() {
           style={styles.backButton}
           activeOpacity={0.7}
         >
-          <ArrowLeft size={20} color={COLORS.textPrimary} />
+          <ArrowLeft size={20} color={COLORS.textMain} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>发布行程</Text>
+        <View style={styles.headerRightPlaceholder} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -236,7 +238,7 @@ export default function OfferRidePage() {
               {
                 backgroundColor: (state.departureLocation && state.destinationLocation)
                   ? COLORS.primary
-                  : COLORS.textButtonGrey
+                  : COLORS.textPlaceholder
               }
             ]}
           >

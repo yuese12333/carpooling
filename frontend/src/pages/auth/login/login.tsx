@@ -22,7 +22,8 @@ import Feather from '@expo/vector-icons/Feather';
 import { useRouter } from 'expo-router';
 
 // 样式与常量
-import styles, { COLORS } from './login.style';
+import styles from './login.style';
+import { COLORS } from '@/pages/style';
 
 // 工具类
 import logger from '../../../utils/logger';
@@ -223,7 +224,7 @@ export default function LoginPage(): JSX.Element {
                   keyboardType="phone-pad"
                   maxLength={11}
                   style={styles.flexInputField}
-                  placeholderTextColor={COLORS.placeholder}
+                  placeholderTextColor={COLORS.textPlaceholder}
                 />
               </View>
               {!!state.errors.phone && (
@@ -242,7 +243,7 @@ export default function LoginPage(): JSX.Element {
                   secureTextEntry={!isPasswordVisible}
                   onChangeText={actions.setPassword}
                   style={styles.flexInputField}
-                  placeholderTextColor={COLORS.placeholder}
+                  placeholderTextColor={COLORS.textPlaceholder}
                 />
                 <Button
                   variant="ghost"

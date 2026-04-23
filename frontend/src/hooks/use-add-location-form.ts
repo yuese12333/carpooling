@@ -101,6 +101,20 @@ export const useAddLocationForm = (requestId: string) => {
         }
     };
 
+    /**
+     * 处理取消操作
+     */
+    const handleCancel = () => {
+        logger.info({
+            module: MODULE_NAME,
+            operate: 'handleCancel',
+            params: undefined,
+            result: 'User cancelled creating',
+            requestId
+        });
+        router.back();
+    };
+
     // 返回页面所需的 state 和 actions
     return {
         label,
@@ -109,6 +123,7 @@ export const useAddLocationForm = (requestId: string) => {
         setAddress,
         loading,
         handleSave,
+        handleCancel,
         requestId, // 导出以便 UI 组件通过 props 传递给子组件
     };
 };

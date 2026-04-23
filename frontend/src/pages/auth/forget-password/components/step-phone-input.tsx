@@ -5,9 +5,10 @@
 import React from 'react';
 import { View, Text, TextInput, ActivityIndicator, } from 'react-native';
 import { Phone } from "lucide-react-native";
-import forgetPasswordStyles, { COLORS } from '../forget-password.style';
+import forgetPasswordStyles from '../forget-password.style';
 import { Button } from "@/../components/button";
 import { Label } from "@/../components/label";
+import { COLORS } from '@/pages/style'
 
 interface StepPhoneInputProps {
     /** 手机号 */

@@ -7,7 +7,8 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Car } from "lucide-react-native";
 import { Card } from "@/../components/card";
-import styles, { colors } from "../profile.style";
+import styles from "../profile.style";
+import { COLORS } from "@/pages/style";
 
 /**
  * 车辆卡片组件属性接口
@@ -44,7 +45,7 @@ export const VehicleCard: React.FC<VehicleCardProps> = ({
             <View style={styles.carInfoRow}>
                 {/* 车辆图标视觉展示区域 */}
                 <View style={styles.carIconWrapper}>
-                    <Car size={20} color={colors.bluePrimary} />
+                    <Car size={20} color={COLORS.info} />
                 </View>
 
                 {/* 车辆详情文本展示区域 */}

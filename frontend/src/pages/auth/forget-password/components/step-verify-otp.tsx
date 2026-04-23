@@ -5,7 +5,8 @@
 
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import forgetPasswordStyles, { COLORS } from '../forget-password.style';
+import forgetPasswordStyles from '../forget-password.style';
+import { COLORS } from '@/pages/style'
 import { Button } from "@/../components/button";
 import logger from '@/utils/logger';
 
