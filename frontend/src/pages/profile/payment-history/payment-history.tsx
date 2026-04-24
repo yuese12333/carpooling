@@ -3,7 +3,7 @@
  * @description 支付历史记录页面。集成高级筛选、月度统计展示及全链路追踪功能。
  */
 
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo } from "react";
 import {
     View,
     Text,
@@ -74,84 +74,67 @@ export default function PaymentHistoryPage() {
     } = usePaymentHistory(requestId);
 
     /**
-     * 处理详情跳转日志记录
-     * @param itemId 支付记录ID
-     */
-    const handleNavigateDetail = useCallback((itemId: string) => {
-        logger.info({
-            module: 'PaymentHistory',
-            operate: 'navigate_to_detail',
-            params: { itemId },
-            requestId,
-            result: 'navigating'
-        });
-        // 实际业务逻辑处理
-    }, [requestId]);
-
-    /**
      * 渲染单条历史记录
      * @param item 支付记录对象
      */
     const renderHistoryItem = (item: PaymentRecord) => (
         <Card key={item.id} style={styles.historyCard}>
-            <TouchableOpacity onPress={() => handleNavigateDetail(item.id)}>
-                <View style={styles.cardHeader}>
-                    <View style={styles.iconContainer}>
-                        {item.type === 'payment' ? (
-                            <View style={[styles.typeIcon, { backgroundColor: COLORS.borderTip }]}>
-                                <ArrowUpRight size={20} color={COLORS.primary} />
-                            </View>
-                        ) : (
-                            <View style={[styles.typeIcon, { backgroundColor: COLORS.errorLight }]}>
-                                <ArrowDownLeft size={20} color={COLORS.danger} />
-                            </View>
-                        )}
-                        <View style={styles.titleWrapper}>
-                            <Text style={styles.historyTitle} numberOfLines={1}>{item.title}</Text>
-                            <Text style={styles.historyDate}>{item.date}</Text>
+            <View style={styles.cardHeader}>
+                <View style={styles.iconContainer}>
+                    {item.type === 'payment' ? (
+                        <View style={[styles.typeIcon, { backgroundColor: COLORS.borderTip }]}>
+                            <ArrowUpRight size={20} color={COLORS.primary} />
                         </View>
-                    </View>
-                    <View style={styles.amountWrapper}>
-                        <Text style={[
-                            styles.amountText,
-                            { color: item.type === 'refund' ? COLORS.primary : COLORS.textMain }
-                        ]}>
-                            {item.type === 'refund' ? '+' : '-'}{item.amount.toFixed(2)}
-                        </Text>
-                        <Badge
-                            variant={item.status === 'completed' ? 'success' : item.status === 'refunded' ? 'outline' : 'warning'}
-                            className="mt-1"
-                        >
-                            {statusMap[item.status as keyof typeof statusMap]?.label || '未知'}
-                        </Badge>
+                    ) : (
+                        <View style={[styles.typeIcon, { backgroundColor: COLORS.errorLight }]}>
+                            <ArrowDownLeft size={20} color={COLORS.danger} />
+                        </View>
+                    )}
+                    <View style={styles.titleWrapper}>
+                        <Text style={styles.historyTitle} numberOfLines={1}>{item.title}</Text>
+                        <Text style={styles.historyDate}>{item.date}</Text>
                     </View>
                 </View>
-
-                <Separator style={styles.cardSeparator} />
-
-                <View style={styles.cardFooter}>
-                    <View style={styles.methodInfo}>
-                        <CreditCard size={14} color={COLORS.textMuted} />
-                        <Text style={styles.methodText}>{item.method}</Text>
-                    </View>
-                    <TouchableOpacity
-                        style={styles.receiptBtn}
-                        onPress={() => {
-                            logger.info({
-                                module: 'PaymentHistory',
-                                operate: 'view_receipt',
-                                params: { id: item.id },
-                                requestId
-                            });
-                            router.push({ pathname: ROUTES.PROFILE.RECEIPT_DETAIL, params: { id: item.id } });
-                        }}
+                <View style={styles.amountWrapper}>
+                    <Text style={[
+                        styles.amountText,
+                        { color: item.type === 'refund' ? COLORS.primary : COLORS.textMain }
+                    ]}>
+                        {item.type === 'refund' ? '+' : '-'}{item.amount.toFixed(2)}
+                    </Text>
+                    <Badge
+                        variant={item.status === 'completed' ? 'success' : item.status === 'refunded' ? 'outline' : 'warning'}
+                        className="mt-1"
                     >
-                        <ReceiptText size={14} color={COLORS.info} />
-                        <Text style={styles.receiptText}>查看凭证</Text>
-                        <ChevronRight size={14} color={COLORS.info} />
-                    </TouchableOpacity>
+                        {statusMap[item.status as keyof typeof statusMap]?.label || '未知'}
+                    </Badge>
                 </View>
-            </TouchableOpacity >
+            </View>
+
+            <Separator style={styles.cardSeparator} />
+
+            <View style={styles.cardFooter}>
+                <View style={styles.methodInfo}>
+                    <CreditCard size={14} color={COLORS.textMuted} />
+                    <Text style={styles.methodText}>{item.method}</Text>
+                </View>
+                <TouchableOpacity
+                    style={styles.receiptBtn}
+                    onPress={() => {
+                        logger.info({
+                            module: 'PaymentHistory',
+                            operate: 'view_receipt',
+                            params: { id: item.id },
+                            requestId
+                        });
+                        router.push({ pathname: ROUTES.PROFILE.RECEIPT_DETAIL, params: { id: item.id } });
+                    }}
+                >
+                    <ReceiptText size={14} color={COLORS.info} />
+                    <Text style={styles.receiptText}>查看凭证</Text>
+                    <ChevronRight size={14} color={COLORS.info} />
+                </TouchableOpacity>
+            </View>
         </Card >
     );
 
