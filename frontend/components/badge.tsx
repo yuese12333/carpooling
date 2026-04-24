@@ -13,7 +13,7 @@ import { cn } from "../src/utils";
  * 徽章容器样式变体定义
  */
 const badgeVariants = cva(
-  "inline-flex flex-row items-center justify-center rounded-md border px-2 py-0.5",
+  "inline-flex flex-row items-center justify-center rounded-md px-2 py-0.5",
   {
     variants: {
       variant: {
