@@ -8,7 +8,7 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 const dist = path.join(root, 'dist');
 
-const toCopy = ['src', 'package.json', 'package-lock.json'];
+const toCopy = ['src', 'package.json', 'package-lock.json', 'prisma'];
 
 function copyRecursive(src, dest) {
   const stat = fs.statSync(src);

@@ -92,7 +92,7 @@ async function registerUser({ phone, nickname, password }, requestId) {
         avatarUrl: '',
       }, requestId);
     } catch (error) {
-      if (error && error.code === 'ER_DUP_ENTRY') {
+      if (error && (error.code === 'P2002' || error.code === 'ER_DUP_ENTRY')) {
         const duplicatedUser = await findByPhone(phone, requestId);
         return {
           created: false,

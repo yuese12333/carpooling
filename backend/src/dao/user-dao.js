@@ -16,7 +16,24 @@ async function findByPhone(phone, requestId) {
     where: { phone },
   });
 
-  if (!user) return null;
+  if (!user) {
+    logger.debug({
+      module: 'user-dao',
+      operate: 'find-by-phone',
+      requestId,
+      params: { phone: maskSensitive({ phone }).phone },
+      result: 'User not found',
+    });
+    return null;
+  }
+
+  logger.debug({
+    module: 'user-dao',
+    operate: 'find-by-phone',
+    requestId,
+    params: { phone: maskSensitive({ phone }).phone },
+    result: 'User found',
+  });
 
   return {
     userId: user.user_id,
@@ -61,7 +78,7 @@ async function createAuthUser({ userId, phone, passwordHash, userName, avatarUrl
 /**
  * 函数功能：更新用户最近登录时间与设备信息
  * 入参：userId、lastLoginAt、deviceInfo
- * 出参：更新后的用户对象或 null
+ * 出参：void
  */
 async function updateLastLoginInfo(userId, { lastLoginAt, deviceInfo }, requestId) {
   await prisma.authUser.update({

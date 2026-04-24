@@ -43,7 +43,7 @@ cp .env.example .env
 2. 启动：`npm start` 或 `npm run dev`（默认监听 `0.0.0.0:3000`；可通过 `PORT` 覆盖，本项目公网示例常用 `3005`）。  
 3. 探活：`curl http://localhost:3000/health` — 成功时返回 `status: ok` 与 `db_connected: true`；数据库不可用时 HTTP 500，正文为固定文案「数据库暂不可用」（不返回数据库内部错误信息）。  
 4. 初始化 Prisma Client：`npm run prisma:generate`  
-5. 若本地是首次接入已存在库，请按迁移文档执行 baseline（见 `backend-prisma-migration.md`）。
+5. 若本地是首次接入已存在库，请按迁移文档执行 baseline（见 [`后端Prisma开发规范`](../docs/后端Prisma开发规范.md)）。
 6. 短信联调说明见 [`docx/短信验证接口联调文档.md`](../docx/短信验证接口联调文档.md)。
 
 ---
@@ -144,7 +144,7 @@ npm run prisma:migrate:deploy
 npm run prisma:migrate:status
 ```
 
-首次接入已存在的 `auth_users` 表，请执行 baseline 流程（见 `backend-prisma-migration.md`）。
+首次接入已存在的 `auth_users` 表，请执行 baseline 流程（见 [`后端Prisma开发规范`](../docs/后端Prisma开发规范.md)）。
 
 ### `auth_users` 表字段（注册/登录统一）
 

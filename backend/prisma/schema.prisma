@@ -15,8 +15,8 @@ model AuthUser {
   avatar_url             String?   @default("") @db.VarChar(255)
   last_login_at          DateTime?
   last_login_device_info String?   @db.Text
-  created_at             DateTime  @default(now())
-  updated_at             DateTime  @updatedAt
+  created_at             DateTime  @default(now()) @db.Timestamp(0)
+  updated_at             DateTime  @updatedAt      @db.Timestamp(0)
 
   @@map("auth_users")
 }

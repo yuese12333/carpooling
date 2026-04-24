@@ -89,5 +89,6 @@ app.listen(Number(PORT), HOST, async () => {
       error: error.message,
       errorType: 'DatabaseConnectionError',
     });
+    process.exit(1);
   }
 });
