@@ -59,7 +59,7 @@ export default function PaymentMethodsPage() {
         handleSetDefault,
         handleAddMethod,
         goBack
-    } = usePaymentMethods();
+    } = usePaymentMethods(requestId);
 
     /**
      * 处理跳转记录日志
