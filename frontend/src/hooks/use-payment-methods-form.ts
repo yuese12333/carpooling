@@ -7,7 +7,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { Alert } from "react-native";
 import { useRouter } from 'expo-router';
 import { useEnvStore } from '@/store/env-store';
-import logger, { generateRequestId } from '@/utils/logger';
+import logger from '@/utils/logger';
 import {
     getAccountBalance,
     getPaymentMethods,
@@ -19,12 +19,9 @@ import {
  * 支付方式业务 Hook
  * @returns 页面所需的状态与交互函数
  */
-export const usePaymentMethods = () => {
+export const usePaymentMethods = (requestId: string) => {
     const router = useRouter();
     const isMockMode = useEnvStore(state => state.isMockMode);
-
-    // 1. 链路追踪：页面级 requestId 独立化，确保生命周期内唯一且稳定
-    const requestId = useMemo(() => generateRequestId(), []);
 
     // 2. 状态管理
     const [methods, setMethods] = useState<PaymentMethod[]>([]);
@@ -154,8 +151,6 @@ export const usePaymentMethods = () => {
         balance,
         methods,
         isLoading,
-        requestId, // 暴露给子组件以供显式传递日志
-        // 方法
         handleSetDefault,
         handleAddMethod,
         goBack,
