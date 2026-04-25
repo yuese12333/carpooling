@@ -3,7 +3,8 @@
  * 关联业务：用户数据初始化与最小注册能力
  */
 const crypto = require('crypto');
-const { ensureAuthUsersTableOnce, createAuthUser, findByPhone } = require('../dao/user-dao');
+const { createAuthUser, findByPhone } = require('../dao/user-dao');
+const { ensureCoreSchema } = require('../dao/schema-dao');
 const passwordUtils = require('../utils/password-utils');
 const { logger, maskSensitive } = require('../utils/logger');
 
@@ -24,28 +25,29 @@ function buildRegisterUserView(authUser) {
   };
 }
 
-async function initAuthUsersSchema(requestId) {
+async function initCoreSchema(requestId) {
   try {
     logger.info({
       module: 'users-service',
-      operate: 'init-auth-users-schema',
+      operate: 'init-core-schema',
       requestId,
-      result: 'Starting auth_users schema initialization',
+      result: 'Starting core schema initialization',
     });
 
-    await ensureAuthUsersTableOnce(requestId);
+    const initResult = await ensureCoreSchema(requestId);
 
     logger.info({
       module: 'users-service',
-      operate: 'init-auth-users-schema',
+      operate: 'init-core-schema',
       requestId,
-      result: 'Auth users schema initialization completed',
+      params: { tableCount: initResult.tableCount },
+      result: 'Core schema initialization completed',
     });
-    return { initialized: true };
+    return initResult;
   } catch (error) {
     logger.error({
       module: 'users-service',
-      operate: 'init-auth-users-schema',
+      operate: 'init-core-schema',
       requestId,
       error: error.message,
       errorType: 'ServiceSchemaInitError',
@@ -124,6 +126,6 @@ async function registerUser({ phone, nickname, password }, requestId) {
 }
 
 module.exports = {
-  initAuthUsersSchema,
+  initCoreSchema,
   registerUser,
 };

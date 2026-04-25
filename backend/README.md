@@ -53,20 +53,20 @@ cp .env.example .env
 |---|------|------|------|
 | 1 | POST | `/api/sms/send-verify-code` | 发送短信验证码 |
 | 2 | POST | `/api/sms/check-verify-code` | 校验短信验证码 |
-| 3 | POST | `/api/users/init-schema` | 初始化 `auth_users` 表（`CREATE TABLE IF NOT EXISTS`） |
+| 3 | POST | `/api/users/init-schema` | 初始化核心业务表（账号/订单/安全/合规/评价/积分） |
 | 4 | POST | `/api/users/create` | 创建登录用户（写入 `auth_users`） |
 | 5 | POST | `/api/auth/login/password` | 用户密码登录（返回 access/refresh token） |
 
 ### 用户接口补充
 
 **`POST /api/users/init-schema`**  
-无请求体。成功示例：
+无请求体。用于初始化核心数据库结构（幂等执行，`CREATE TABLE IF NOT EXISTS`）。成功示例：
 
 ```json
 {
   "code": 200,
   "message": "操作成功",
-  "data": { "initialized": true },
+  "data": { "initialized": true, "tableCount": 16 },
   "requestId": "RN-xxx"
 }
 ```
@@ -134,6 +134,28 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 ### 3. 初始化表结构
 
 服务启动后调用 **`POST /api/users/init-schema`**（或用 Postman/Apifox）。生产环境建议由迁移脚本或受控运维执行，勿长期依赖公网任意访问该接口。
+
+### 核心业务表（按需求规格说明书扩展）
+
+以下为当前已落地的核心表（覆盖必做主链路，选做采用可扩展字段/表支持）：
+
+| 表名 | 作用 |
+|------|------|
+| `auth_users` | 登录账号主表（手机号、密码哈希、昵称、最近登录信息） |
+| `user_profiles` | 用户基础属性（角色、性别、国籍、无障碍需求、信用分） |
+| `emergency_contacts` | 紧急联系人 |
+| `driver_credentials` | 车主驾驶证/行驶证资质审核 |
+| `vehicles` | 车辆档案 |
+| `ride_requests` | 乘客发布拼车需求 |
+| `ride_orders` | 司乘匹配后的订单主表 |
+| `trip_locations` | 行程轨迹点（偏航监控） |
+| `safety_alerts` | 安全警报记录（偏航/紧急） |
+| `order_payments` | 费用与支付状态（含高速费分摊） |
+| `user_violations` | 违约/违规记录 |
+| `order_ratings` | 司乘评价与标签 |
+| `user_preference_tags` | 用户偏好标签（社交/效率等） |
+| `compliance_region_rules` | 地域合规规则（接单上限等） |
+| `carbon_accounts`、`carbon_transactions` | 碳积分与减碳流水（选做支撑） |
 
 ### `auth_users` 表字段（注册/登录统一）
 
@@ -207,11 +229,11 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 ```
 backend/
 ├── src/
-│   ├── config/          # db.js 等
+│   ├── config/          # db.js / load-env.js
 │   ├── router/          # sms-router.js, users-router.js, auth-router.js
 │   ├── controller/      # sms-controller.js, users-controller.js, auth-controller.js
 │   ├── service/         # aliyun-sms-service.js, users-service.js, auth-service.js
-│   ├── dao/             # user-dao.js
+│   ├── dao/             # user-dao.js, schema-dao.js
 │   ├── utils/           # response.js, logger.js, jwt-utils.js, password-utils.js
 │   ├── middleware/      # 预留
 │   ├── constants/       # 预留

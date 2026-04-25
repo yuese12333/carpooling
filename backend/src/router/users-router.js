@@ -4,13 +4,13 @@
  */
 const express = require('express');
 const {
-  initAuthUsersSchemaController,
+  initCoreSchemaController,
   createUserController,
 } = require('../controller/users-controller');
 
 const router = express.Router();
 
-router.post('/init-schema', initAuthUsersSchemaController);
+router.post('/init-schema', initCoreSchemaController);
 router.post('/create', createUserController);
 
 module.exports = router;

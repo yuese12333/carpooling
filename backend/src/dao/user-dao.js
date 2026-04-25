@@ -4,9 +4,8 @@
  * 说明：使用 MySQL 持久化存储登录用户数据
  */
 const pool = require('../config/db');
+const { ensureCoreSchemaOnce } = require('./schema-dao');
 const { logger, maskSensitive } = require('../utils/logger');
-
-let ensureAuthUsersTablePromise;
 
 function formatDateTimeForMySql(input) {
   if (!input) return null;
@@ -18,66 +17,13 @@ function formatDateTimeForMySql(input) {
   )}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-async function ensureAuthUsersTable(requestId) {
-  logger.debug({
-    module: 'user-dao',
-    operate: 'ensure-auth-users-table',
-    requestId,
-    params: { action: 'CREATE TABLE IF NOT EXISTS' },
-    result: 'Executing auth_users table creation',
-  });
-
-  const createSql = `
-    CREATE TABLE IF NOT EXISTS auth_users (
-      user_id VARCHAR(64) NOT NULL,
-      phone VARCHAR(20) NOT NULL,
-      password_hash VARCHAR(255) NOT NULL,
-      user_name VARCHAR(50) NOT NULL,
-      avatar_url VARCHAR(255) DEFAULT '',
-      last_login_at DATETIME NULL,
-      last_login_device_info TEXT NULL,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (user_id),
-      UNIQUE KEY uk_auth_users_phone (phone)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `;
-
-  await pool.query(createSql);
-
-  logger.info({
-    module: 'user-dao',
-    operate: 'ensure-auth-users-table',
-    requestId,
-    result: 'Auth users table ensured',
-  });
-}
-
-async function ensureAuthUsersTableOnce(requestId) {
-  if (!ensureAuthUsersTablePromise) {
-    ensureAuthUsersTablePromise = ensureAuthUsersTable(requestId).catch((error) => {
-      logger.error({
-        module: 'user-dao',
-        operate: 'ensure-auth-users-table',
-        requestId,
-        error: error.message,
-        errorType: 'DatabaseTableCreationError',
-      });
-      // 首次初始化失败时允许后续请求重试，避免进程生命周期内永久失败
-      ensureAuthUsersTablePromise = null;
-      throw error;
-    });
-  }
-  return ensureAuthUsersTablePromise;
-}
-
 /**
  * 函数功能：按手机号查询用户
  * 入参：phone（手机号）
  * 出参：用户对象或 null
  */
 async function findByPhone(phone, requestId) {
-  await ensureAuthUsersTableOnce(requestId);
+  await ensureCoreSchemaOnce(requestId);
 
   const sql = `
     SELECT
@@ -105,7 +51,7 @@ async function findByPhone(phone, requestId) {
  * 出参：boolean（是否创建成功）
  */
 async function createAuthUser({ userId, phone, passwordHash, userName, avatarUrl = '' }, requestId) {
-  await ensureAuthUsersTableOnce(requestId);
+  await ensureCoreSchemaOnce(requestId);
 
   const sql = `
     INSERT INTO auth_users (
@@ -148,7 +94,7 @@ async function createAuthUser({ userId, phone, passwordHash, userName, avatarUrl
  * 出参：更新后的用户对象或 null
  */
 async function updateLastLoginInfo(userId, { lastLoginAt, deviceInfo }, requestId) {
-  await ensureAuthUsersTableOnce(requestId);
+  await ensureCoreSchemaOnce(requestId);
 
   const sql = `
     UPDATE auth_users
@@ -175,7 +121,6 @@ async function updateLastLoginInfo(userId, { lastLoginAt, deviceInfo }, requestI
 }
 
 module.exports = {
-  ensureAuthUsersTableOnce,
   findByPhone,
   createAuthUser,
   updateLastLoginInfo,
