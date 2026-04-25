@@ -41,7 +41,7 @@ export interface IMenuGroup {
 
 /** * 静态菜单数据：定义个人中心功能入口 
  */
-export const menuData: IMenuGroup[] = [
+export const getMenuData = (verified: boolean): IMenuGroup[] => [
     {
         group: "出行",
         items: [
@@ -53,7 +53,7 @@ export const menuData: IMenuGroup[] = [
     {
         group: "账户",
         items: [
-            { icon: Shield, label: "实名认证", sub: "已认证", color: COLORS.primaryDark, bgColor: COLORS.bgLight, done: true, path: ROUTES.PROFILE.REAL_NAME_AUTH as Href },
+            { icon: Shield, label: "实名认证", sub: verified ? "已认证" : "未认证，请前往认证", color: COLORS.primaryDark, bgColor: COLORS.bgLight, done: verified, path: ROUTES.PROFILE.REAL_NAME_AUTH as Href },
             { icon: Users, label: "邀请好友", sub: "邀请得奖励", color: COLORS.secondary, bgColor: COLORS.bgOrangeLight, path: ROUTES.PROFILE.INVITE_FRIENDS as Href },
             { icon: Bell, label: "消息通知", sub: "管理通知设置", color: COLORS.info, bgColor: COLORS.bgBlueLight, path: ROUTES.PROFILE.NOTIFICATION as Href },
         ],

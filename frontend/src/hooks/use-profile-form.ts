@@ -12,6 +12,7 @@ import { useEnvStore } from "@/store/env-store";
 import { currentUser } from "../store/mock-data";
 import { ROUTES } from '../router/paths';
 import logger from '@/utils/logger';
+import { getMenuData } from "@/pages/profile/profile/profile-config";
 
 /**
  * 菜单项接口定义
@@ -101,6 +102,25 @@ export const useProfilePage = (requestId: string) => {
     const [badges, setBadges] = useState<IBadgeItem[] | undefined>(undefined);
     const [loading, setLoading] = useState<boolean>(false);
     const [realSavings, setRealSavings] = useState<number | undefined>(undefined);
+
+
+    /**
+     * 动态计算菜单配置
+     */
+    const menuData = useMemo(() => {
+        const isVerified = !!profileData?.verified;
+
+        // 记录状态映射日志
+        logger.info({
+            module: 'use-profile-page',
+            operate: 'compute-dynamic-menu',
+            params: { isVerified },
+            result: 'success',
+            requestId
+        });
+
+        return getMenuData(isVerified);
+    }, [profileData?.verified, requestId]);
 
     /**
      * 执行聚合数据加载
@@ -251,6 +271,7 @@ export const useProfilePage = (requestId: string) => {
         badges,
         displaySavings,
         loading,
+        menuData,
         handleMenuClick,
         handleEditAvatar,
         handleEditCar

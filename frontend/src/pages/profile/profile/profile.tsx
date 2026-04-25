@@ -9,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useProfilePage } from "@/hooks/use-profile-form"; // 确保引用重命名后的 Hook
 import logger, { generateRequestId } from "@/utils/logger";
 import styles from "./profile.style";
-import { menuData, badgeData } from "./profile-config";
+import { badgeData } from "./profile-config";
 
 import { ProfileHeader } from "./components/profile-header";
 import { AchievementWall } from "./components/achievement-wall";
@@ -37,6 +37,7 @@ export default function ProfilePage() {
     displaySavings,
     badges,
     loading,
+    menuData,
     handleMenuClick,
     handleEditAvatar,
     handleEditCar
