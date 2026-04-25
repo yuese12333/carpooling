@@ -53,15 +53,15 @@ export const menuData: IMenuGroup[] = [
     {
         group: "账户",
         items: [
-            { icon: Shield, label: "实名认证", sub: "已认证", color: COLORS.primaryDark, bgColor: COLORS.bgLight, done: true },
-            { icon: Users, label: "邀请好友", sub: "邀请得奖励", color: COLORS.secondary, bgColor: COLORS.bgOrangeLight },
-            { icon: Bell, label: "消息通知", sub: "管理通知设置", color: COLORS.info, bgColor: COLORS.bgBlueLight },
+            { icon: Shield, label: "实名认证", sub: "已认证", color: COLORS.primaryDark, bgColor: COLORS.bgLight, done: true, path: ROUTES.PROFILE.REAL_NAME_AUTH as Href },
+            { icon: Users, label: "邀请好友", sub: "邀请得奖励", color: COLORS.secondary, bgColor: COLORS.bgOrangeLight, path: ROUTES.PROFILE.INVITE_FRIENDS as Href },
+            { icon: Bell, label: "消息通知", sub: "管理通知设置", color: COLORS.info, bgColor: COLORS.bgBlueLight, path: ROUTES.PROFILE.NOTIFICATION as Href },
         ],
     },
     {
         group: "其他",
         items: [
-            { icon: HelpCircle, label: "帮助中心", sub: "常见问题解答", color: COLORS.textSecondary, bgColor: COLORS.borderLight },
+            { icon: HelpCircle, label: "帮助中心", sub: "常见问题解答", color: COLORS.textSecondary, bgColor: COLORS.borderLight, path: ROUTES.PROFILE.HELP_CENTER as Href },
             { icon: LogOut, label: "退出登录", sub: "", color: COLORS.danger, bgColor: COLORS.errorLight, danger: true },
         ],
     },
