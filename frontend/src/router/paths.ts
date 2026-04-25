@@ -35,6 +35,10 @@ export const ROUTES = {
         PAYMENT_METHODS: '/profile/payment-methods/payment-methods',
         PAYMENT_HISTORY: '/profile/payment-history/payment-history',
         RECEIPT_DETAIL: '/profile/receipt-detail/receipt-detail',
+        NOTIFICATION: '/profile/notification/notification',
+        INVITE_FRIENDS: '/profile/invite-friends/invite-friends',
+        REAL_NAME_AUTH: '/profile/real-name-auth/real-name-auth',
+        HELP_CENTER: '/profile/help-center/help-center',
     },
 
     // 行程/详情相关
