@@ -5,7 +5,6 @@
  */
 const prisma = require('../config/prisma');
 const { logger, maskSensitive } = require('../utils/logger');
-
 /**
  * 函数功能：按手机号查询用户
  * 入参：phone（手机号）

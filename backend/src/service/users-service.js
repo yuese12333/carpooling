@@ -25,11 +25,11 @@ function buildRegisterUserView(authUser) {
   };
 }
 
-async function initAuthUsersSchema(requestId) {
+async function checkCoreSchema(requestId) {
   try {
     logger.info({
       module: 'users-service',
-      operate: 'init-auth-users-schema',
+      operate: 'check-core-schema',
       requestId,
       result: 'Checking prisma migration managed schema',
     });
@@ -38,7 +38,7 @@ async function initAuthUsersSchema(requestId) {
 
     logger.info({
       module: 'users-service',
-      operate: 'init-auth-users-schema',
+      operate: 'check-core-schema',
       requestId,
       result: 'Prisma schema connectivity check passed',
     });
@@ -49,7 +49,37 @@ async function initAuthUsersSchema(requestId) {
   } catch (error) {
     logger.error({
       module: 'users-service',
-      operate: 'init-auth-users-schema',
+      operate: 'check-core-schema',
+      requestId,
+      error: error.message,
+      errorType: 'ServiceSchemaCheckError',
+    });
+    throw error;
+  }
+}
+
+async function initCoreSchema(requestId) {
+  try {
+    logger.info({
+      module: 'users-service',
+      operate: 'init-core-schema',
+      requestId,
+      result: 'Init schema requested in prisma migration mode',
+    });
+
+    const initResult = await checkCoreSchema(requestId);
+
+    logger.info({
+      module: 'users-service',
+      operate: 'init-core-schema',
+      requestId,
+      result: 'Schema check completed (no runtime DDL)',
+    });
+    return initResult;
+  } catch (error) {
+    logger.error({
+      module: 'users-service',
+      operate: 'init-core-schema',
       requestId,
       error: error.message,
       errorType: 'ServiceSchemaInitError',
@@ -128,6 +158,7 @@ async function registerUser({ phone, nickname, password }, requestId) {
 }
 
 module.exports = {
-  initAuthUsersSchema,
+  checkCoreSchema,
+  initCoreSchema,
   registerUser,
 };
