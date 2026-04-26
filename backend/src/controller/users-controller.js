@@ -8,21 +8,33 @@ const {
   buildFailureResponse,
 } = require('../utils/response');
 const { logger, maskSensitive } = require('../utils/logger');
-const { initCoreSchema, registerUser } = require('../service/users-service');
+const { checkCoreSchema, initCoreSchema, registerUser } = require('../service/users-service');
 
 async function initCoreSchemaController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
 
   try {
-    const data = await initCoreSchema(requestId);
+    const action = req.schemaInitContext?.action || 'check';
+    const data = action === 'apply'
+      ? await initCoreSchema(requestId)
+      : await checkCoreSchema(requestId);
+
+    if (action === 'apply' && req.schemaInitContext?.markApplied) {
+      req.schemaInitContext.markApplied();
+    }
+
     logger.info({
       module: 'users-controller',
       operate: 'init-core-schema',
       requestId,
-      params: { tableCount: data.tableCount },
-      result: 'Core schema initialized',
+      params: {
+        action,
+        tableCount: data.tableCount,
+        missingCount: data.missingCount,
+      },
+      result: action === 'apply' ? 'Core schema initialized' : 'Core schema checked',
     });
-    return res.json(buildSuccessResponse(data, requestId));
+    return res.json(buildSuccessResponse({ action, ...data }, requestId));
   } catch (error) {
     logger.error({
       module: 'users-controller',

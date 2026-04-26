@@ -42,7 +42,7 @@ cp .env.example .env
 1. 编辑 **`.env`**：至少配置 [环境变量](#环境变量) 中的阿里云 AK/SK 与 `DB_*`（并先在 MySQL 中 [创建数据库](#数据库)）。  
 2. 启动：`npm start` 或 `npm run dev`（默认监听 `0.0.0.0:3000`；可通过 `PORT` 覆盖，本项目公网示例常用 `3005`）。  
 3. 探活：`curl http://localhost:3000/health` — 成功时返回 `status: ok` 与 `db_connected: true`；数据库不可用时 HTTP 500，正文为固定文案「数据库暂不可用」（不返回数据库内部错误信息）。  
-4. 建表（联调/首次）：`curl -X POST http://localhost:3000/api/users/init-schema`  
+4. 初始化检查（联调/首次）：`curl -X POST http://localhost:3000/api/users/init-schema`  
 5. 短信联调说明见 [`docx/短信验证接口联调文档.md`](../docx/短信验证接口联调文档.md)。
 
 ---
@@ -53,22 +53,48 @@ cp .env.example .env
 |---|------|------|------|
 | 1 | POST | `/api/sms/send-verify-code` | 发送短信验证码 |
 | 2 | POST | `/api/sms/check-verify-code` | 校验短信验证码 |
-| 3 | POST | `/api/users/init-schema` | 初始化核心业务表（账号/订单/安全/合规/评价/积分） |
+| 3 | POST | `/api/users/init-schema` | 检查核心业务表状态；管理员可显式执行初始化 |
 | 4 | POST | `/api/users/create` | 创建登录用户（写入 `auth_users`） |
 | 5 | POST | `/api/auth/login/password` | 用户密码登录（返回 access/refresh token） |
 
 ### 用户接口补充
 
 **`POST /api/users/init-schema`**  
-无请求体。用于初始化核心数据库结构（幂等执行，`CREATE TABLE IF NOT EXISTS`）。成功示例：
+默认无请求体，执行“核心表状态检查”（只读，不执行 DDL）。
+
+访问限制：
+
+- `check`（默认）：仅内网或管理员 token 可调用。
+- `apply`（执行建表）：仅管理员 token 可调用，且有冷却时间（默认 5 分钟）。
+
+管理员调用头：`x-schema-init-token: <SCHEMA_INIT_TOKEN>`。
+
+`check` 成功示例：
 
 ```json
 {
   "code": 200,
   "message": "操作成功",
-  "data": { "initialized": true, "tableCount": 16 },
+  "data": {
+    "action": "check",
+    "initialized": true,
+    "database": "carpooling",
+    "tableCount": 16,
+    "existingCount": 16,
+    "missingCount": 0,
+    "missingTables": []
+  },
   "requestId": "RN-xxx"
 }
+```
+
+`apply` 示例（管理员执行 DDL）：
+
+```bash
+curl -X POST http://localhost:3000/api/users/init-schema \
+  -H "Content-Type: application/json" \
+  -H "x-schema-init-token: your_admin_token" \
+  -d '{"action":"apply"}'
 ```
 
 **`POST /api/users/create`**  
@@ -133,7 +159,7 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 
 ### 3. 初始化表结构
 
-服务启动后调用 **`POST /api/users/init-schema`**（或用 Postman/Apifox）。生产环境建议由迁移脚本或受控运维执行，勿长期依赖公网任意访问该接口。
+服务启动后可调用 **`POST /api/users/init-schema`** 做状态检查。生产环境建议由迁移脚本或受控运维执行建表（`action=apply`），勿挂在业务高频请求链路。
 
 ### 核心业务表（按需求规格说明书扩展）
 
@@ -193,6 +219,8 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 | `DB_CONNECTION_LIMIT` | 连接池上限，默认 `10` |
 | `NODE_ENV` | 如 `production`；影响日志级别等 |
 | `ALLOW_RETURN_VERIFY_CODE` | 仅 `NODE_ENV=production` 时读取；`true` 时在发送验证码成功响应中带回 `verifyCode`（**仅联调，生产勿开**） |
+| `SCHEMA_INIT_TOKEN` | 管理员执行 `init-schema` 的凭证（`action=apply` 必填） |
+| `SCHEMA_INIT_APPLY_COOLDOWN_MS` | `action=apply` 冷却时间（毫秒），默认 `300000` |
 
 敏感配置可向内网负责人索取；完整字段表以 **`.env.example`** 为准。
 

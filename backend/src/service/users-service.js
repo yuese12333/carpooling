@@ -4,7 +4,7 @@
  */
 const crypto = require('crypto');
 const { createAuthUser, findByPhone } = require('../dao/user-dao');
-const { ensureCoreSchema } = require('../dao/schema-dao');
+const { ensureCoreSchema, getCoreSchemaStatus } = require('../dao/schema-dao');
 const passwordUtils = require('../utils/password-utils');
 const { logger, maskSensitive } = require('../utils/logger');
 
@@ -23,6 +23,40 @@ function buildRegisterUserView(authUser) {
     createdAt: authUser.createdAt || null,
     updatedAt: authUser.updatedAt || null,
   };
+}
+
+async function checkCoreSchema(requestId) {
+  try {
+    logger.info({
+      module: 'users-service',
+      operate: 'check-core-schema',
+      requestId,
+      result: 'Starting core schema status check',
+    });
+
+    const checkResult = await getCoreSchemaStatus(requestId);
+
+    logger.info({
+      module: 'users-service',
+      operate: 'check-core-schema',
+      requestId,
+      params: {
+        tableCount: checkResult.tableCount,
+        missingCount: checkResult.missingCount,
+      },
+      result: 'Core schema status check completed',
+    });
+    return checkResult;
+  } catch (error) {
+    logger.error({
+      module: 'users-service',
+      operate: 'check-core-schema',
+      requestId,
+      error: error.message,
+      errorType: 'ServiceSchemaCheckError',
+    });
+    throw error;
+  }
 }
 
 async function initCoreSchema(requestId) {
@@ -126,6 +160,7 @@ async function registerUser({ phone, nickname, password }, requestId) {
 }
 
 module.exports = {
+  checkCoreSchema,
   initCoreSchema,
   registerUser,
 };

@@ -4,7 +4,6 @@
  * 说明：使用 MySQL 持久化存储登录用户数据
  */
 const pool = require('../config/db');
-const { ensureCoreSchemaOnce } = require('./schema-dao');
 const { logger, maskSensitive } = require('../utils/logger');
 
 function formatDateTimeForMySql(input) {
@@ -23,8 +22,6 @@ function formatDateTimeForMySql(input) {
  * 出参：用户对象或 null
  */
 async function findByPhone(phone, requestId) {
-  await ensureCoreSchemaOnce(requestId);
-
   const sql = `
     SELECT
       user_id AS userId,
@@ -51,8 +48,6 @@ async function findByPhone(phone, requestId) {
  * 出参：boolean（是否创建成功）
  */
 async function createAuthUser({ userId, phone, passwordHash, userName, avatarUrl = '' }, requestId) {
-  await ensureCoreSchemaOnce(requestId);
-
   const sql = `
     INSERT INTO auth_users (
       user_id,
@@ -94,8 +89,6 @@ async function createAuthUser({ userId, phone, passwordHash, userName, avatarUrl
  * 出参：更新后的用户对象或 null
  */
 async function updateLastLoginInfo(userId, { lastLoginAt, deviceInfo }, requestId) {
-  await ensureCoreSchemaOnce(requestId);
-
   const sql = `
     UPDATE auth_users
     SET

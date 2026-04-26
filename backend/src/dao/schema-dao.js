@@ -380,6 +380,46 @@ const CORE_SCHEMA_SQLS = [
   },
 ];
 
+const CORE_TABLE_NAMES = CORE_SCHEMA_SQLS.map(({ name }) => name);
+
+async function getCoreSchemaStatus(requestId) {
+  const placeholders = CORE_TABLE_NAMES.map(() => '?').join(', ');
+  const sql = `
+    SELECT table_name AS tableName
+    FROM information_schema.tables
+    WHERE table_schema = ?
+      AND table_name IN (${placeholders})
+  `;
+
+  const params = [process.env.DB_NAME, ...CORE_TABLE_NAMES];
+  const [rows] = await pool.query(sql, params);
+  const existingTableSet = new Set((rows || []).map((row) => row.tableName));
+  const missingTables = CORE_TABLE_NAMES.filter((name) => !existingTableSet.has(name));
+
+  const result = {
+    initialized: missingTables.length === 0,
+    database: process.env.DB_NAME,
+    tableCount: CORE_TABLE_NAMES.length,
+    existingCount: CORE_TABLE_NAMES.length - missingTables.length,
+    missingCount: missingTables.length,
+    missingTables,
+  };
+
+  logger.info({
+    module: 'schema-dao',
+    operate: 'get-core-schema-status',
+    requestId,
+    params: {
+      database: result.database,
+      tableCount: result.tableCount,
+      missingCount: result.missingCount,
+    },
+    result: 'Core schema status checked',
+  });
+
+  return result;
+}
+
 async function ensureCoreSchema(requestId) {
   logger.info({
     module: 'schema-dao',
@@ -434,4 +474,6 @@ async function ensureCoreSchemaOnce(requestId) {
 module.exports = {
   ensureCoreSchemaOnce,
   ensureCoreSchema,
+  getCoreSchemaStatus,
+  CORE_TABLE_NAMES,
 };

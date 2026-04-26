@@ -7,10 +7,11 @@ const {
   initCoreSchemaController,
   createUserController,
 } = require('../controller/users-controller');
+const { schemaInitGuard } = require('../middleware/schema-init-guard');
 
 const router = express.Router();
 
-router.post('/init-schema', initCoreSchemaController);
+router.post('/init-schema', schemaInitGuard, initCoreSchemaController);
 router.post('/create', createUserController);
 
 module.exports = router;
