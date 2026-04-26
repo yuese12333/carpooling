@@ -1,13 +1,13 @@
 /**
  * @file help-center-api.ts
  * @description 帮助中心相关业务接口定义，包含分类获取与问题检索功能。
- * @version 1.1.0
  */
 
 import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
 import { COLORS } from "@/pages/style";
 import logger from '@/utils/logger';
+import type { ApiResponse } from '@/api/api.d';
 
 // --- 类型定义 ---
 
@@ -24,13 +24,6 @@ export interface HotQuestion {
     id: string;
     q: string;
     a: string;
-}
-
-/** 统一 API 返回包装格式 */
-interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data: T;
 }
 
 // --- Mock 数据 (仅用于内部开发调试) ---
@@ -52,20 +45,29 @@ const MOCK_QUESTIONS: HotQuestion[] = [
 /**
  * 获取帮助分类列表
  * @param requestId 外部透传的链路追踪 ID
- * @returns {Promise<HelpCategory[]>} 帮助分类数组
+ * @returns {Promise<ApiResponse<HelpCategory[]>>} 包装后的 API 响应
  */
-export const getHelpCategories = async (requestId: string): Promise<HelpCategory[]> => {
+export const getHelpCategories = async (requestId: string): Promise<ApiResponse<HelpCategory[]>> => {
     const isMock = useEnvStore.getState().isMockMode;
     const MODULE_NAME = 'HelpCenter';
     const OPERATE_NAME = 'getHelpCategories';
 
+    // --- Mock 模式逻辑 ---
     if (isMock) {
-        return Promise.resolve(MOCK_CATEGORIES);
+        return {
+            success: true,
+            code: 200,
+            message: 'Mock Success',
+            data: MOCK_CATEGORIES
+        };
     }
 
-    try {
-        const response = await request.get<ApiResponse<HelpCategory[]>>('/api/help/categories');
+    // --- 线性请求逻辑 ---
+    // 底层 request 始终返回 ApiResponse，不再需要 try-catch
+    const result = await request.get<any, ApiResponse<HelpCategory[]>>('/help/categories');
 
+    // 条件化日志记录：仅在业务成功时记录
+    if (result.success) {
         logger.info({
             module: MODULE_NAME,
             operate: OPERATE_NAME,
@@ -73,66 +75,54 @@ export const getHelpCategories = async (requestId: string): Promise<HelpCategory
             result: 'Success fetch categories',
             requestId
         });
-
-        return response.data.data;
-    } catch (error: unknown) {
-        logger.error({
-            module: MODULE_NAME,
-            operate: OPERATE_NAME,
-            params: undefined,
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'API_FETCH_ERROR',
-            requestId
-        });
-        throw error;
     }
+
+    return result;
 };
 
 /**
  * 获取热门问题或根据关键词搜索问题
  * @param requestId 外部透传的链路追踪 ID
  * @param keyword 搜索关键字，默认为空字符串
- * @returns {Promise<HotQuestion[]>} 问题列表数组
+ * @returns {Promise<ApiResponse<HotQuestion[]>>} 包装后的 API 响应
  */
 export const getHotQuestions = async (
     requestId: string,
     keyword: string = ""
-): Promise<HotQuestion[]> => {
+): Promise<ApiResponse<HotQuestion[]>> => {
     const isMock = useEnvStore.getState().isMockMode;
     const MODULE_NAME = 'HelpCenter';
     const OPERATE_NAME = 'getHotQuestions';
 
+    // --- Mock 模式逻辑 ---
     if (isMock) {
-        return Promise.resolve(
-            keyword
-                ? MOCK_QUESTIONS.filter(i => i.q.includes(keyword))
-                : MOCK_QUESTIONS
-        );
+        const filteredData = keyword
+            ? MOCK_QUESTIONS.filter(i => i.q.includes(keyword))
+            : MOCK_QUESTIONS;
+
+        return {
+            success: true,
+            code: 200,
+            message: 'Mock Success',
+            data: filteredData
+        };
     }
 
-    try {
-        const response = await request.get<ApiResponse<HotQuestion[]>>('/api/help/questions', {
-            params: { search: keyword }
-        });
+    // --- 线性请求逻辑 ---
+    const result = await request.get<any, ApiResponse<HotQuestion[]>>('/help/questions', {
+        params: { search: keyword }
+    });
 
+    // 条件化日志记录：仅在业务成功时记录
+    if (result.success) {
         logger.info({
             module: MODULE_NAME,
             operate: OPERATE_NAME,
             params: { keyword },
-            result: `Success fetch questions, count: ${response.data.data.length}`,
+            result: `Success fetch questions, count: ${result.data?.length ?? 0}`,
             requestId
         });
-
-        return response.data.data;
-    } catch (error: unknown) {
-        logger.error({
-            module: MODULE_NAME,
-            operate: OPERATE_NAME,
-            params: { keyword },
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'API_SEARCH_ERROR',
-            requestId
-        });
-        throw error;
     }
+
+    return result;
 };

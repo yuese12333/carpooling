@@ -9,7 +9,6 @@ import {
     getMonthlyStats,
     PaymentRecord,
     MonthlyStats,
-    ApiResponse
 } from '@/api/payment-history-api';
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
@@ -44,17 +43,19 @@ export const usePaymentHistory = (requestId: string) => {
         const operateName = 'fetchData';
 
         try {
-            // 规范：参数化消费 requestId 并标注请求泛型
+            // 1. 修正参数传递
             const [historyRes, statsRes] = await Promise.all([
-                getPaymentHistory({ type: activeTab, status: selectedStatus }, requestId),
+                getPaymentHistory({ page: 1, type: activeTab }, requestId),
                 getMonthlyStats(requestId)
             ]);
 
-            if (historyRes.data.success) {
-                setHistoryList(historyRes.data.data);
+            // 2. 修正解析逻辑：API 返回值本身就是 ApiResponse，直接读取其属性
+            if (historyRes.success && historyRes.data) {
+                setHistoryList(historyRes.data);
             }
-            if (statsRes.data.success) {
-                setStats(statsRes.data.data);
+
+            if (statsRes.success && statsRes.data) {
+                setStats(statsRes.data);
             }
 
             logger.info({

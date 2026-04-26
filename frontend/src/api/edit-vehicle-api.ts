@@ -6,6 +6,7 @@
 import request from "@/utils/request";
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
+import type { ApiResponse } from '@/api/api.d';
 
 // --- 类型定义 ---
 
@@ -24,15 +25,6 @@ export interface VehicleInfo {
     vehicleImageUrl?: string;
 }
 
-/**
- * 统一 API 响应包装格式
- */
-interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data: T;
-}
-
 // --- Mock 数据配置 ---
 
 const MOCK_VEHICLE_DATA: VehicleInfo = {
@@ -47,6 +39,11 @@ const MOCK_VEHICLE_DATA: VehicleInfo = {
 };
 
 const MODULE_NAME = 'edit-vehicle-api';
+
+export const MOCK_ASSETS = {
+    VEHICLE_DEFAULT: "https://via.placeholder.com/600x400.png?text=No+Image",
+    USER_AVATAR: "https://via.placeholder.com/150",
+};
 
 // --- 接口函数 ---
 
@@ -72,20 +69,21 @@ export const getVehicleDetail = async (
         return { success: true, message: "Mock 成功", data: MOCK_VEHICLE_DATA };
     }
 
-    try {
-        const response = await request.get<ApiResponse<VehicleInfo>>(`/v1/vehicles/${vehicleId}`);
-        return response.data;
-    } catch (error) {
-        logger.error({
+    // 发起请求，底层 request 会自动处理 HTTP 错误并 Resolve 结果
+    const result = await request.get<any, ApiResponse<VehicleInfo>>(`/v1/vehicles/${vehicleId}`);
+
+    // 仅在业务成功时记录成功日志
+    if (result.success) {
+        logger.info({
             module: MODULE_NAME,
-            operate: 'getVehicleDetail',
+            operate: 'getVehicleDetail_Success',
             params: { vehicleId },
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'API_ERROR',
+            result: '数据获取成功',
             requestId
         });
-        throw error;
     }
+
+    return result;
 };
 
 /**
@@ -111,20 +109,19 @@ export const updateVehicleInfo = async (
         return { success: true, message: "Mock 修改成功", data: undefined };
     }
 
-    try {
-        const response = await request.put<ApiResponse<undefined>>('/v1/vehicles/update', data);
-        return response.data;
-    } catch (error) {
-        logger.error({
+    const result = await request.put<any, ApiResponse<undefined>>('/v1/vehicles/update', data);
+
+    if (result.success) {
+        logger.info({
             module: MODULE_NAME,
-            operate: 'updateVehicleInfo',
+            operate: 'updateVehicleInfo_Success',
             params: { ...data },
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'API_ERROR',
+            result: '修改成功',
             requestId
         });
-        throw error;
     }
+
+    return result;
 };
 
 /**
@@ -149,24 +146,23 @@ export const uploadVehiclePhoto = async (
         return {
             success: true,
             message: "Mock 上传成功",
-            data: { url: "https://example.com/car.jpg" }
+            data: { url: MOCK_ASSETS.VEHICLE_DEFAULT }
         };
     }
 
-    try {
-        const response = await request.post<ApiResponse<{ url: string }>>('/v1/common/upload', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        return response.data;
-    } catch (error) {
-        logger.error({
+    const result = await request.post<any, ApiResponse<{ url: string }>>('/v1/common/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    if (result.success) {
+        logger.info({
             module: MODULE_NAME,
-            operate: 'uploadVehiclePhoto',
+            operate: 'uploadVehiclePhoto_Success',
             params: { info: 'FormData Upload' },
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'UPLOAD_ERROR',
+            result: '上传成功',
             requestId
         });
-        throw error;
     }
+
+    return result;
 };

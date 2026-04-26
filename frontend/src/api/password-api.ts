@@ -4,18 +4,14 @@
  */
 
 import request from '@/utils/request';
-import logger, { maskSensitive } from '@/utils/logger';
+import logger from '@/utils/logger';
 import { useEnvStore } from '@/store/env-store';
+import type { ApiResponse } from '@/api/api.d';
 
 /** ----------------配置项---------------- */
 const IS_MOCK = true;
 
 /** ----------------类型定义---------------- */
-export interface BaseResponse<T = any> {
-    code: number;
-    message: string;
-    data: T;
-}
 
 export interface PhoneStatusData {
     isRegistered: boolean;
@@ -38,112 +34,120 @@ export const passwordApi = {
      * @param phone 待校验的手机号码
      * @returns 手机号是否注册及用户当前状态
      */
-    checkPhoneStatus: async (phone: string): Promise<BaseResponse<PhoneStatusData>> => {
+    checkPhoneStatus: async (phone: string): Promise<ApiResponse<PhoneStatusData>> => {
         const requestId = useEnvStore.getState().currentRequestId;
-        try {
-            if (IS_MOCK) {
-                await new Promise(resolve => setTimeout(resolve, 800));
-                return { code: 200, message: "success", data: { isRegistered: true, userStatus: "active" } };
-            }
-            const res = await request.get<BaseResponse<PhoneStatusData>>('/auth/password/check-phone', { params: { phone } });
-            return res.data;
-        } catch (error) {
-            logger.error({
+
+        // --- Mock 逻辑 ---
+        if (IS_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 800));
+            return { success: true, code: 200, message: "success", data: { isRegistered: true, userStatus: "active" } };
+        }
+
+        // --- 线性请求逻辑 ---
+        const result = await request.post<any, ApiResponse<PhoneStatusData>>('/auth/check-phone', { phone });
+
+        // 条件化日志记录：仅在业务成功时记录
+        if (result.success) {
+            logger.info({
                 module: 'PasswordApi',
                 operate: 'checkPhoneStatus',
-                params: { phone },
+                params: { phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') }, // 隐私脱敏
                 result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_RUNTIME_ERROR',
                 requestId
             });
-            throw error;
         }
+
+        return result;
     },
 
     /**
-     * 发送验证码
-     * @param phone 目标手机号码
-     * @returns 发送结果成功状态
+     * 3.2 发送重置密码验证码
+     * @param phone 手机号
+     * @returns 是否发送成功
      */
-    sendSmsCode: async (phone: string): Promise<BaseResponse<SmsSendData>> => {
+    sendSmsCode: async (phone: string): Promise<ApiResponse<SmsSendData>> => {
         const requestId = useEnvStore.getState().currentRequestId;
-        try {
-            if (IS_MOCK) {
-                await new Promise(resolve => setTimeout(resolve, 800));
-                return { code: 200, message: "success", data: { success: true } };
-            }
-            const res = await request.post<BaseResponse<SmsSendData>>('/sms/send-verify-code', { phoneNumber: phone });
-            return res.data;
-        } catch (error) {
-            logger.error({
+
+        // --- Mock 逻辑 ---
+        if (IS_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return { success: true, code: 200, message: "success", data: { success: true } };
+        }
+
+        // --- 线性请求逻辑 ---
+        const result = await request.post<any, ApiResponse<SmsSendData>>('/auth/password/sms', { phone });
+
+        if (result.success) {
+            logger.info({
                 module: 'PasswordApi',
-                operate: 'sendSmsCode',
-                params: maskSensitive({ phone }),
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_RUNTIME_ERROR',
+                operate: 'sendResetSms',
+                params: { phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') },
+                result: 'SMS Sent Successfully',
                 requestId
             });
-            throw error;
         }
+
+        return result;
     },
 
     /**
-     * 2.2 校验验证码
-     * @param phone 手机号码
+     * 3.3 校验验证码
+     * @param phone 手机号
      * @param code 验证码
-     * @returns 校验结果及用于重置密码的临时 Token
+     * @returns 校验结果及临时 token
      */
-    verifyCode: async (phone: string, code: string): Promise<BaseResponse<VerifyCodeData>> => {
+    verifyCode: async (phone: string, code: string): Promise<ApiResponse<VerifyCodeData>> => {
         const requestId = useEnvStore.getState().currentRequestId;
-        try {
-            if (IS_MOCK) {
-                await new Promise(resolve => setTimeout(resolve, 800));
-                return { code: 200, message: "success", data: { isValid: true, tempToken: "mock_temp_token_123456" } };
-            }
-            const res = await request.post<BaseResponse<VerifyCodeData>>('/auth/register/verify-code', { phoneNumber: phone, verifyCode: code });
-            return res.data;
-        } catch (error) {
-            logger.error({
+
+        // --- Mock 逻辑 ---
+        if (IS_MOCK) {
+            return { success: true, code: 200, message: "success", data: { isValid: true, tempToken: "mock_token_xyz123" } };
+        }
+
+        // --- 线性请求逻辑 ---
+        const result = await request.post<any, ApiResponse<VerifyCodeData>>('/auth/password/verify-code', { phone, code });
+
+        if (result.success) {
+            logger.info({
                 module: 'PasswordApi',
-                operate: 'verifyCode',
-                params: maskSensitive({ phone, code: '****' }),
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_RUNTIME_ERROR',
+                operate: 'verifyResetCode',
+                params: { phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'), code: '****' }, // 隐私脱敏
+                result: 'Code Verified Successfully',
                 requestId
             });
-            throw error;
         }
+
+        return result;
     },
 
     /**
-     * 3.2 重置密码
+     * 3.4 重置密码
      * @param token 校验验证码后返回的 tempToken
      * @param password 新密码
      * @returns 操作结果
      */
-    resetPassword: async (token: string, password: string): Promise<BaseResponse<Record<string, never>>> => {
+    resetPassword: async (token: string, password: string): Promise<ApiResponse<Record<string, never>>> => {
         const requestId = useEnvStore.getState().currentRequestId;
-        try {
-            if (IS_MOCK) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                return { code: 200, message: "success", data: {} };
-            }
-            const res = await request.post<BaseResponse<Record<string, never>>>('/auth/password/reset', { verifyToken: token, newPassword: password });
-            return res.data;
-        } catch (error) {
-            logger.error({
+
+        // --- Mock 逻辑 ---
+        if (IS_MOCK) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return { success: true, code: 200, message: "success", data: {} };
+        }
+
+        // --- 线性请求逻辑 ---
+        const result = await request.post<any, ApiResponse<Record<string, never>>>('/auth/password/reset', { verifyToken: token, newPassword: password });
+
+        if (result.success) {
+            logger.info({
                 module: 'PasswordApi',
                 operate: 'resetPassword',
                 params: { token: '***', password: '***' }, // 禁止记录密码明文
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_RUNTIME_ERROR',
+                result: 'Password Reset Successfully',
                 requestId
             });
-            throw error;
         }
+
+        return result;
     }
 };

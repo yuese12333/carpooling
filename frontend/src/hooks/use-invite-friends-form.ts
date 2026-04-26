@@ -27,11 +27,14 @@ export const useInviteFriendsForm = (requestId: string) => {
     const fetchInviteData = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await getInviteInfo(requestId);
+            // 获取完整的 ApiResponse 对象
+            const response = await getInviteInfo(requestId);
 
-            if (data) {
-                setInviteCode(data.inviteCode);
-                setStats(data.stats);
+            // 规范：判断业务请求是否成功
+            if (response.success && response.data) {
+                // 从响应体的 data 字段中提取业务数据
+                setInviteCode(response.data.inviteCode);
+                setStats(response.data.stats);
 
                 logger.info({
                     module: 'InviteFriendsHook',

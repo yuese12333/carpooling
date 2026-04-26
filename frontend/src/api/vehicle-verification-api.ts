@@ -1,23 +1,15 @@
 /**
  * @file vehicle-verification-api.ts
  * @description 车辆认证模块接口封装，支持链路追踪与结构化日志记录
+ * @version 1.2.0 (Refactored: Linear logic without Try-Catch)
  */
 
 import request from "@/utils/request";
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
+import type { ApiResponse } from '@/api/api.d';
 
 // --- 类型定义 ---
-
-/**
- * 基础 API 响应结构
- * @template T 业务数据类型
- */
-interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data: T;
-}
 
 export interface VerificationStep {
     id: number;
@@ -67,6 +59,10 @@ const MOCK_VEHICLE_DETAIL: VehicleVerificationDetail = {
     ]
 };
 
+const syncRequestId = (id: string) => {
+    useEnvStore.getState().setCurrentRequestId(id);
+};
+
 // --- 请求函数 ---
 
 /**
@@ -77,77 +73,48 @@ const MOCK_VEHICLE_DETAIL: VehicleVerificationDetail = {
 export const getVehicleVerificationDetail = async (
     requestId: string
 ): Promise<ApiResponse<VehicleVerificationDetail>> => {
+    syncRequestId(requestId);
     const isMockMode = useEnvStore.getState().isMockMode;
     const moduleName = 'VehicleVerification';
     const operationName = 'getVehicleVerificationDetail';
 
-    // 开始请求日志
-    logger.info({
-        module: moduleName,
-        operate: operationName,
-        params: { isMockMode },
-        requestId,
-        result: 'Request initiated'
-    });
+    // 1. Mock 逻辑分支
+    if (isMockMode) {
+        // 保持模拟延迟
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-    try {
-        // 1. Mock 逻辑分支
-        if (isMockMode) {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    logger.info({
-                        module: moduleName,
-                        operate: operationName,
-                        params: { isMockMode },
-                        requestId,
-                        result: 'Mock data returned successfully'
-                    });
-                    resolve({
-                        success: true,
-                        message: "获取模拟数据成功",
-                        data: MOCK_VEHICLE_DETAIL
-                    });
-                }, 500);
-            });
-        }
+        logger.info({
+            module: moduleName,
+            operate: operationName,
+            params: { isMockMode },
+            requestId,
+            result: 'Mock data returned successfully'
+        });
 
-        // 2. 真实请求分支
-        const response = await request.get<ApiResponse<VehicleVerificationDetail>>(
-            '/api/v1/vehicle/verification/detail',
-            {
-                headers: { 'X-Request-Id': requestId } // 将 ID 注入请求头发送至后端
-            }
-        );
+        return {
+            success: true,
+            message: "获取模拟数据成功",
+            data: MOCK_VEHICLE_DETAIL
+        };
+    }
 
-        // 成功日志记录
+    // 2. 真实请求分支 (线性 await，彻底剔除 try-catch)
+    // 此时底层 request 会 Resolve 标准对象，若遇到 HTTP 错误或逻辑错误，底层已处理日志
+    const result = await request.get<any, ApiResponse<VehicleVerificationDetail>>(
+        '/v1/vehicle/verification/detail',
+    );
+
+    // 3. 条件化日志记录
+    // 仅在业务成功时记录上层成功日志
+    if (result.success) {
         logger.info({
             module: moduleName,
             operate: operationName,
             params: { requestId },
-            result: response.data.success ? 'Success' : 'API Logic Error',
+            result: 'Success',
             requestId
         });
-
-        return response.data;
-
-    } catch (error: unknown) {
-        // 异常日志记录（严禁打印全量 Error 对象，提取关键信息）
-        const errorMsg = error instanceof Error ? error.message : 'Unknown network error';
-
-        logger.error({
-            module: moduleName,
-            operate: operationName,
-            params: { requestId },
-            error: errorMsg,
-            errorType: 'API_FETCH_FAILED',
-            requestId
-        });
-
-        // 向上层抛出格式化的失败响应，确保 UI 层逻辑一致性
-        return {
-            success: false,
-            message: `服务暂不可用: ${errorMsg}`,
-            data: {} as VehicleVerificationDetail
-        };
     }
+
+    return result;
 };

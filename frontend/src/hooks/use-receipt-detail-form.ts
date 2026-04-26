@@ -36,12 +36,13 @@ export const useReceiptDetail = (
 
     // 获取数据逻辑
     const handleFetchDetail = useCallback(async () => {
-        try {
-            setLoading(true);
+        setLoading(true);
 
-            // 显式下传 requestId 至 API 层
-            const data = await getReceiptDetail(detailId, requestId);
-            setReceiptData(data);
+        // 此时 result 类型为 ApiResponse<ReceiptDetail>
+        const result = await getReceiptDetail(detailId, requestId);
+
+        if (result.success && result.data) {
+            setReceiptData(result.data);
 
             logger.info({
                 module: moduleName,
@@ -50,21 +51,10 @@ export const useReceiptDetail = (
                 result: 'Data state updated',
                 requestId
             });
-        } catch (error: unknown) {
-            const errorMsg = error instanceof Error ? error.message : "获取详情未知异常";
-
-            logger.error({
-                module: moduleName,
-                operate: 'FETCH_DETAIL_ERROR',
-                params: { detailId },
-                error: errorMsg,
-                errorType: 'API_FETCH_FAILURE',
-                requestId
-            });
-            // 此处可根据规范集成全局 Toast
-        } finally {
-            setLoading(false);
         }
+        // 注意：失败情况已在 request.ts 处理日志，此处可根据业务需求扩展全局 Toast 逻辑
+
+        setLoading(false);
     }, [detailId, requestId]);
 
     // 初始化加载

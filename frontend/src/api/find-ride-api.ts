@@ -2,11 +2,11 @@
  * @file find-ride-api.ts
  * @description 拼车行程相关接口对接。
  */
-import { AxiosError } from 'axios';
 import { mockRides } from '../store/mock-data';
 import logger from '@/utils/logger';
 import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
+import type { ApiResponse } from '@/api/api.d';
 
 // --- 类型定义 (Type Definitions) ---
 
@@ -16,12 +16,6 @@ export interface RideSearchQuery {
     date?: string;
     page: number;
     pageSize: number;
-}
-
-export interface ApiResponse<T> {
-    code: number;
-    message: string;
-    data: T;
 }
 
 /**
@@ -60,7 +54,8 @@ export const RIDE_FILTER_TAGS = [
 
 /**
  * 5.1 搜索行程列表
- * @param {TracedRequest<RideSearchQuery>} req - 包含搜索参数与追踪 ID
+ * @param {RideSearchQuery} params - 搜索参数
+ * @param {string | undefined} requestId - 链路追踪 ID
  * @returns 格式化的 API 响应对象
  */
 export const fetchRides = async (
@@ -70,83 +65,83 @@ export const fetchRides = async (
     const moduleName = 'api.ride';
     const operation = 'fetchRides';
 
-    try {
-        if (useEnvStore.getState().isMockMode) {
-            return {
-                code: 200,
-                message: 'success',
-                data: {
-                    list: mockRides.filter((r) => r.status !== 'cancelled'),
-                    total: mockRides.length,
-                    hasNextPage: false,
-                },
-            };
-        }
+    // --- Mock 模式逻辑 ---
+    if (useEnvStore.getState().isMockMode) {
+        return {
+            code: 200,
+            success: true,
+            message: 'success',
+            data: {
+                list: mockRides.filter((r) => r.status !== 'cancelled'),
+                total: mockRides.length,
+                hasNextPage: false,
+            },
+        };
+    }
 
-        const response = await request.get<ApiResponse<RideListResponse>>('/rides/search', {
-            params,
-        });
-        return response.data;
-    } catch (error) {
-        const axiosError = error as AxiosError;
+    // --- 线性请求逻辑 ---
+    // 底层 request 已自动 Resolve 标准 ApiResponse 结构，无需捕获错误
+    const result = await request.get<any, ApiResponse<RideListResponse>>('/rides/search', {
+        params,
+    });
 
-        // 严格遵循统一日志结构规范
-        logger.error({
+    // 条件化日志记录：仅在业务成功时记录
+    if (result.success) {
+        logger.info({
             module: moduleName,
             operate: operation,
             params: { ...params },
-            result: undefined,
-            error: axiosError.message,
-            errorType: axiosError.code || 'API_FETCH_ERROR',
-            requestId: requestId, // 显式消费传入的 ID
+            result: 'Search success',
+            requestId: requestId,
         });
-        throw error;
     }
+
+    return result;
 };
 
 /**
  * 5.3 获取搜索筛选元数据
- * @param {string} requestId - 必须由调用方（如 Hook 或 Page）显式传入
+ * @param {string} requestId - 链路追踪 ID
  * @returns 包含排序与标签的元数据
  */
 export const fetchSearchMetadata = async (requestId: string): Promise<ApiResponse<SearchMetadataResponse>> => {
     const moduleName = 'api.ride';
     const operation = 'fetchSearchMetadata';
 
-    try {
-        if (useEnvStore.getState().isMockMode) {
-            return {
-                code: 200,
-                message: 'success',
-                data: {
-                    sortOptions: [
-                        { label: '最快出发', value: 'departure_time' },
-                        { label: '价格最低', value: 'price_asc' },
-                        { label: '评分最高', value: 'rating' },
-                    ],
-                    filterTags: [
-                        { label: '今天', value: 'today' },
-                        { label: '女司机', value: 'female' },
-                        { label: '准时出发', value: 'on_time' },
-                    ],
-                },
-            };
-        }
+    // --- Mock 模式逻辑 ---
+    if (useEnvStore.getState().isMockMode) {
+        return {
+            code: 200,
+            success: true,
+            message: 'success',
+            data: {
+                sortOptions: [
+                    { label: '最快出发', value: 'departure_time' },
+                    { label: '价格最低', value: 'price_asc' },
+                    { label: '评分最高', value: 'rating' },
+                ],
+                filterTags: [
+                    { label: '今天', value: 'today' },
+                    { label: '女司机', value: 'female' },
+                    { label: '准时出发', value: 'on_time' },
+                ],
+            },
+        };
+    }
 
-        const response = await request.get<ApiResponse<SearchMetadataResponse>>('/rides/search-metadata');
-        return response.data;
-    } catch (error) {
-        const axiosError = error as AxiosError;
+    // --- 线性请求逻辑 ---
+    const result = await request.get<any, ApiResponse<SearchMetadataResponse>>('/rides/search-metadata');
 
-        logger.error({
+    // 条件化日志记录
+    if (result.success) {
+        logger.info({
             module: moduleName,
             operate: operation,
             params: undefined,
-            result: undefined,
-            error: axiosError.message,
-            errorType: axiosError.code || 'API_METADATA_ERROR',
+            result: 'Metadata fetched successfully',
             requestId: requestId,
         });
-        throw error;
     }
+
+    return result;
 };

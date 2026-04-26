@@ -58,9 +58,14 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
         setLoading(true);
 
         try {
-            // 显式注入 requestId 至 API 层，保持全链路打通
-            const data = await getLocationsApi(requestId, query);
-            setLocations(data);
+            const response = await getLocationsApi(requestId, query);
+
+            // ✅ 修复：只有当 success 为 true 时，才取 response.data 赋值给状态
+            if (response.success && Array.isArray(response.data)) {
+                setLocations(response.data);
+            } else {
+                setLocations([]); // 或者处理异常情况
+            }
 
             logger.info({
                 module: MODULE_NAME,

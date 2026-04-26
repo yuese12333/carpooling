@@ -3,10 +3,10 @@
  * @description 拼车发布相关 API 封装。
  */
 
-import { AxiosError } from 'axios';
 import logger from '@/utils/logger';
 import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
+import type { ApiResponse } from '@/api/api.d';
 
 const MODULE_NAME = 'OFFER_RIDE_API';
 
@@ -38,130 +38,114 @@ export interface PublishConfigResponse {
     presetTags: { label: string; value: string }[];
 }
 
-export interface StandardResponse<T> {
-    code: number;
-    data: T;
-    message?: string;
-}
-
-// --- 工具函数 ---
+// --- API 函数 ---
 
 /**
- * 安全地将错误转换为字符串，标准化错误输出
- */
-const formatError = (error: unknown): string => {
-    if (error instanceof Error) return error.message;
-    return String(error || 'Unknown Error');
-};
-
-// --- API 函数 (显式注入 requestId) ---
-
-/**
- * 6.1 初始化发布配置加载
+ * 6.1 获取发布配置（时间轴、座位限制等）
  * @param requestId 显式链路追踪 ID
  */
-export const getPublishConfig = async (requestId: string): Promise<StandardResponse<PublishConfigResponse>> => {
-    const operate = 'GET_PUBLISH_CONFIG';
+export const getPublishConfig = async (requestId: string): Promise<ApiResponse<PublishConfigResponse>> => {
+    const operate = 'FETCH_CONFIG';
 
-    try {
-        if (useEnvStore.getState().isMockMode) {
-            const MOCK_CONFIG: StandardResponse<PublishConfigResponse> = {
-                code: 200,
-                data: {
-                    timeSlots: ["08:00", "09:00", "18:00"],
-                    seatLimit: { min: 1, max: 6 },
-                    presetTags: [{ label: "车内禁烟", value: "no_smoking" }]
-                }
-            };
-            return new Promise((resolve) => {
-                setTimeout(() => resolve(MOCK_CONFIG), 300);
-            });
-        }
+    // Mock 模式逻辑
+    if (useEnvStore.getState().isMockMode) {
+        return {
+            success: true,
+            code: 200,
+            message: 'Mock Success',
+            data: {
+                timeSlots: ["06:00", "08:00", "12:00", "18:00", "21:00"],
+                seatLimit: { min: 1, max: 4 },
+                presetTags: [
+                    { label: "不抽烟", value: "no_smoking" },
+                    { label: "有空调", value: "ac" }
+                ]
+            }
+        };
+    }
 
-        const response = await request.get<StandardResponse<PublishConfigResponse>>('/rides/publish-config');
-        return response.data;
-    } catch (error) {
-        // API 层仅保留关键异常日志，确保包含所有标准化字段
-        logger.error({
+    // 线性请求：底层 request 已处理异常并返回标准的 ApiResponse 对象
+    const result = await request.get<any, ApiResponse<PublishConfigResponse>>('/rides/publish-config');
+
+    // 条件化日志记录：仅在业务成功时记录
+    if (result.success) {
+        logger.info({
             module: MODULE_NAME,
             operate,
             requestId,
             params: undefined,
-            error: formatError(error),
-            errorType: 'NETWORK_ERROR',
-            result: (error as AxiosError).response?.data
-                ? JSON.stringify((error as AxiosError).response?.data)
-                : undefined // 规范：统一以 undefined 替代 null
+            result: 'Config loaded successfully'
         });
-        throw error;
     }
+
+    return result;
 };
 
 /**
- * 6.2 发布拼车行程
+ * 6.2 提交发布行程
  * @param params 发布参数
  * @param requestId 显式链路追踪 ID
  */
-export const publishRide = async (
-    params: PublishRideParams,
-    requestId: string
-): Promise<StandardResponse<{ rideId: string, status: string }>> => {
-    const operate = 'PUBLISH_RIDE';
+export const publishRide = async (params: PublishRideParams, requestId: string): Promise<ApiResponse<{ rideId: string }>> => {
+    const operate = 'SUBMIT_RIDE';
 
-    try {
-        if (useEnvStore.getState().isMockMode) {
-            const mockResult = {
-                code: 200,
-                data: { rideId: "mock_12345", status: "pending" }
-            };
-            return new Promise((resolve) => {
-                setTimeout(() => resolve(mockResult), 500);
-            });
-        }
+    // Mock 模式逻辑
+    if (useEnvStore.getState().isMockMode) {
+        return {
+            success: true,
+            code: 200,
+            message: 'Mock Success',
+            data: { rideId: "mock_ride_888" }
+        };
+    }
 
-        const response = await request.post<StandardResponse<{ rideId: string, status: string }>>('/rides/publish', params);
-        return response.data;
-    } catch (error) {
-        const axiosError = error as AxiosError;
-        logger.error({
+    // 线性请求
+    const result = await request.post<any, ApiResponse<{ rideId: string }>>('/rides/publish', params);
+
+    // 条件化日志记录：仅在业务成功时记录
+    if (result.success) {
+        logger.info({
             module: MODULE_NAME,
             operate,
             requestId,
             params: { ...params, notes: '***' }, // 隐私保护：脱敏备注
-            error: formatError(error),
-            errorType: 'API_BUSINESS_ERROR',
-            result: axiosError.response?.data ? JSON.stringify(axiosError.response?.data) : undefined
+            result: 'Ride published successfully'
         });
-        throw error;
     }
+
+    return result;
 };
 
 /**
  * 6.3 发布权限校验
  * @param requestId 显式链路追踪 ID
  */
-export const checkPublishPermission = async (requestId: string): Promise<StandardResponse<{ canPublish: boolean, creditScore: number }>> => {
+export const checkPublishPermission = async (requestId: string): Promise<ApiResponse<{ canPublish: boolean, creditScore: number }>> => {
     const operate = 'CHECK_PERMISSION';
 
-    try {
-        if (useEnvStore.getState().isMockMode) {
-            return { code: 200, data: { canPublish: true, creditScore: 99 } };
-        }
+    // Mock 模式逻辑
+    if (useEnvStore.getState().isMockMode) {
+        return {
+            success: true,
+            code: 200,
+            message: 'Mock Success',
+            data: { canPublish: true, creditScore: 99 }
+        };
+    }
 
-        const response = await request.get<StandardResponse<{ canPublish: boolean, creditScore: number }>>('/rides/publish-permission');
-        return response.data;
-    } catch (error) {
-        logger.error({
+    // 线性请求
+    const result = await request.get<any, ApiResponse<{ canPublish: boolean, creditScore: number }>>('/rides/publish-permission');
+
+    // 条件化日志记录
+    if (result.success) {
+        logger.info({
             module: MODULE_NAME,
             operate,
             requestId,
             params: undefined,
-            error: formatError(error),
-            errorType: 'AUTH_ERROR',
-            result: (error as AxiosError).response?.data
-                ? JSON.stringify((error as AxiosError).response?.data)
-                : undefined
+            result: `Permission checked: ${result.data?.canPublish}`
         });
-        throw error;
     }
+
+    return result;
 };

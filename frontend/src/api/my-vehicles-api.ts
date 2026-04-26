@@ -7,13 +7,7 @@ import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
 import { MOCK_VEHICLES } from '@/store/mock-vehicle-data';
 import logger from '@/utils/logger';
-
-// 基础响应结构
-export interface ApiResponse<T = any> {
-    success: boolean;
-    message: string;
-    data: T;
-}
+import type { ApiResponse } from '@/api/api.d';
 
 // 车辆信息实体
 export interface VehicleInfo {
@@ -37,63 +31,72 @@ export interface VehicleInfo {
 export const getVehicleListApi = async (requestId: string): Promise<ApiResponse<VehicleInfo[]>> => {
     const isMockMode = useEnvStore.getState().isMockMode;
 
+    // --- Mock 模式逻辑 ---
     if (isMockMode) {
         return { success: true, message: 'Mock Success', data: MOCK_VEHICLES };
     }
 
-    try {
-        const response = await request.get<ApiResponse<VehicleInfo[]>>('/api/v1/vehicles');
-        return response.data;
-    } catch (error: any) {
-        logger.error({
+    // --- 生产请求逻辑 ---
+    // 底层 request 已统一 Resolve 标准 ApiResponse 对象，此处采用线性调用
+    const result = await request.get<any, ApiResponse<VehicleInfo[]>>('/v1/vehicles');
+
+    // 条件化日志记录：仅在业务成功时记录
+    if (result.success) {
+        logger.info({
             module: 'VehicleAPI',
             operate: 'getVehicleList',
-            error: error?.message,
-            errorType: 'NETWORK_ERROR',
+            result: 'Success',
             requestId
         });
-        throw error;
     }
+
+    return result;
 };
 
 /**
  * 设置默认车辆
  * @param id 车辆ID
  * @param requestId 链路追踪ID
+ * @returns Promise<ApiResponse>
  */
 export const setDefaultVehicleApi = async (id: string, requestId: string): Promise<ApiResponse> => {
-    try {
-        const response = await request.post<ApiResponse>(`/api/v1/vehicles/${id}/set-default`);
-        return response.data;
-    } catch (error: any) {
-        logger.error({
+    // --- 生产请求逻辑 ---
+    const result = await request.post<any, ApiResponse>(`/api/v1/vehicles/${id}/set-default`);
+
+    // 条件化日志记录：仅在业务成功时记录
+    if (result.success) {
+        logger.info({
             module: 'VehicleAPI',
             operate: 'setDefaultVehicle',
             params: { id },
-            error: error?.message,
+            result: 'Success',
             requestId
         });
-        throw error;
     }
+
+    return result;
 };
 
 /**
  * 删除车辆
  * @param id 车辆ID
  * @param requestId 链路追踪ID
+ * @returns Promise<ApiResponse>
  */
 export const deleteVehicleApi = async (id: string, requestId: string): Promise<ApiResponse> => {
-    try {
-        const response = await request.delete<ApiResponse>(`/api/v1/vehicles/${id}`);
-        return response.data;
-    } catch (error: any) {
-        logger.error({
+    // --- 生产请求逻辑 ---
+    const result = await request.delete<any, ApiResponse>(`/api/v1/vehicles/${id}`);
+
+    // 条件化日志记录：仅在业务成功时记录
+    if (result.success) {
+        logger.info({
             module: 'VehicleAPI',
             operate: 'deleteVehicle',
             params: { id },
-            error: error?.message,
+            result: 'Success',
             requestId
         });
-        throw error;
     }
+
+    return result;
 };

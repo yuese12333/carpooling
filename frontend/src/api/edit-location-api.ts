@@ -6,6 +6,7 @@
 import request from "@/utils/request";
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
+import type { ApiResponse } from '@/api/api.d';
 
 // --- 类型定义 ---
 
@@ -19,16 +20,6 @@ export interface UpdateLocationParams {
     id: string;
     label: string;
     address: string;
-}
-
-/**
- * 标准业务响应结构
- */
-export interface ApiResponse<T = any> {
-    success: boolean;
-    code?: number;
-    data: T | undefined;
-    message: string;
 }
 
 const MODULE_NAME = 'EditLocationApi';
@@ -46,33 +37,32 @@ export const updateLocationApi = async (
 ): Promise<ApiResponse<undefined>> => {
     const isMockMode = useEnvStore.getState().isMockMode;
 
-    try {
-        if (isMockMode) {
-            logger.info({
-                module: MODULE_NAME,
-                operate: 'updateLocation_Mock',
-                params: { ...params },
-                result: 'Triggering mock success',
-                requestId
-            });
+    // --- Mock 逻辑 ---
+    if (isMockMode) {
+        logger.info({
+            module: MODULE_NAME,
+            operate: 'updateLocation_Mock',
+            params: { ...params },
+            result: 'Triggering mock success',
+            requestId
+        });
 
-            return new Promise((resolve) =>
-                setTimeout(() => resolve({
-                    success: true,
-                    code: 200,
-                    data: undefined,
-                    message: "更新成功"
-                }), 800)
-            );
-        }
+        return new Promise((resolve) =>
+            setTimeout(() => resolve({
+                success: true,
+                code: 200,
+                data: undefined,
+                message: "更新成功"
+            }), 800)
+        );
+    }
 
-        /**
-         * 修复点：显式解构 AxiosResponse 中的 data。
-         * 底层 request 返回的是 AxiosResponse<ApiResponse<T>>，
-         * 我们需要提取出 ApiResponse<T> 以匹配函数返回值类型。
-         */
-        const response = await request.put<ApiResponse<undefined>>(`/user/locations/${params.id}`, params);
+    // --- 线性请求逻辑 ---
+    // 底层 request.ts 已处理异常并返回标准的 ApiResponse 对象
+    const result = await request.put<any, ApiResponse<undefined>>(`/user/locations/${params.id}`, params);
 
+    // 仅在业务成功时记录日志
+    if (result.success) {
         logger.info({
             module: MODULE_NAME,
             operate: 'updateLocation_Success',
@@ -80,28 +70,9 @@ export const updateLocationApi = async (
             result: 'API response received',
             requestId
         });
-
-        // 核心修复：返回 response.data 转换后的业务对象
-        return response.data;
-
-    } catch (error: any) {
-        const errorResult: ApiResponse<undefined> = {
-            success: false,
-            message: error.response?.data?.message ?? '网络请求失败，请稍后重试',
-            data: undefined
-        };
-
-        logger.error({
-            module: MODULE_NAME,
-            operate: 'updateLocation_Error',
-            params: { id: params.id },
-            error: errorResult.message,
-            errorType: 'API_ERROR',
-            requestId
-        });
-
-        return errorResult;
     }
+
+    return result;
 };
 
 /**
@@ -115,26 +86,28 @@ export const getLocationDetailApi = async (
 ): Promise<ApiResponse<LocationDetail>> => {
     const isMockMode = useEnvStore.getState().isMockMode;
 
-    try {
-        if (isMockMode) {
-            logger.info({
-                module: MODULE_NAME,
-                operate: 'getLocationDetail_Mock',
-                params: { id },
-                result: 'Return mock data',
-                requestId
-            });
-            return {
-                success: true,
-                code: 200,
-                data: MOCK_DETAIL,
-                message: "success"
-            };
-        }
+    // --- Mock 逻辑 ---
+    if (isMockMode) {
+        logger.info({
+            module: MODULE_NAME,
+            operate: 'getLocationDetail_Mock',
+            params: { id },
+            result: 'Return mock data',
+            requestId
+        });
+        return {
+            success: true,
+            code: 200,
+            data: MOCK_DETAIL,
+            message: "success"
+        };
+    }
 
-        // 修复点：显式解构 data
-        const response = await request.get<ApiResponse<LocationDetail>>(`/user/locations/${id}`);
+    // --- 线性请求逻辑 ---
+    const result = await request.get<any, ApiResponse<LocationDetail>>(`/user/locations/${id}`);
 
+    // 仅在业务成功时记录日志
+    if (result.success) {
         logger.info({
             module: MODULE_NAME,
             operate: 'getLocationDetail_Success',
@@ -142,27 +115,9 @@ export const getLocationDetailApi = async (
             result: 'Detail fetched',
             requestId
         });
-
-        return response.data;
-
-    } catch (error: any) {
-        const errorResult: ApiResponse<LocationDetail> = {
-            success: false,
-            message: error.response?.data?.message ?? '获取详情失败，请重试',
-            data: undefined
-        };
-
-        logger.error({
-            module: MODULE_NAME,
-            operate: 'getLocationDetail_Error',
-            params: { id },
-            error: errorResult.message,
-            errorType: 'API_ERROR',
-            requestId
-        });
-
-        return errorResult;
     }
+
+    return result;
 };
 
 // --- Mock 数据 ---
