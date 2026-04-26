@@ -347,9 +347,9 @@ async function checkPhoneRisk({ phone, requestId }) {
     requestId,
   });
 
-  const inBlacklist = await riskDao.checkPhoneBlacklist(phone);
+  const inBlacklist = await riskDao.checkPhoneBlacklist(phone, requestId);
   const smsCount = Number((await redisUtils.get(`${REDIS_KEY_PREFIX.SMS_TOTAL}${phone}`)) || 0);
-  const hasDeviceRisk = await riskDao.checkPhoneDeviceAbuse(phone);
+  const hasDeviceRisk = await riskDao.checkPhoneDeviceAbuse(phone, requestId);
 
   let riskLevel = 'low';
   if (inBlacklist || hasDeviceRisk || smsCount > SMS_COUNT_THRESHOLD_HIGH) {
