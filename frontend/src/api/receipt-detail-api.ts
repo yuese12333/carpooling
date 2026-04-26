@@ -1,20 +1,13 @@
 /**
  * @file receipt-detail-api.ts
  * @description 凭证详情业务请求模块，支持 Mock 切换与全链路追踪
+ * @version 1.2.0 (Refactored: Linear logic without Try-Catch)
  */
 
 import request from "@/utils/request";
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
-
-/**
- * 接口返回统一响应体格式
- */
-interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data: T;
-}
+import type { ApiResponse } from '@/api/api.d';
 
 /**
  * 凭证详情数据模型
@@ -54,70 +47,47 @@ const MOCK_RECEIPT: ReceiptDetail = {
  * 获取凭证详情
  * @param id 凭证ID
  * @param requestId 链路追踪ID (必须由外部页面级 useMemo 生成并传入)
- * @returns Promise<ReceiptDetail>
+ * @returns Promise<ApiResponse<ReceiptDetail>>
  */
-export const getReceiptDetail = async (id: string, requestId: string): Promise<ReceiptDetail> => {
+export const getReceiptDetail = async (id: string, requestId: string): Promise<ApiResponse<ReceiptDetail>> => {
     const isMockMode = useEnvStore.getState().isMockMode;
     const moduleName = 'ReceiptService';
     const operationName = 'getReceiptDetail';
 
-    try {
-        // 1. Mock 模式处理
-        if (isMockMode) {
-            await new Promise(resolve => setTimeout(resolve, 500));
+    // 1. Mock 模式处理
+    if (isMockMode) {
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-            logger.info({
-                module: moduleName,
-                operate: `${operationName}_MOCK`,
-                params: { id },
-                result: "Mock data returned successfully",
-                requestId: requestId
-            });
-
-            return MOCK_RECEIPT;
-        }
-
-        // 2. 真实接口请求
-        // 显式标注泛型：AxiosResponse<ApiResponse<ReceiptDetail>>
-        const response = await request.get<ApiResponse<ReceiptDetail>>(`/api/receipt/${id}`);
-
-        // 3. 业务逻辑校验
-        if (response.data && response.data.success) {
-            logger.info({
-                module: moduleName,
-                operate: operationName,
-                params: { id },
-                result: "Success",
-                requestId: requestId
-            });
-            return response.data.data;
-        } else {
-            const errorMsg = response.data?.message || "后端返回业务逻辑错误";
-
-            logger.error({
-                module: moduleName,
-                operate: operationName,
-                params: { id },
-                error: errorMsg,
-                errorType: 'BUSINESS_ERROR',
-                requestId: requestId
-            });
-
-            throw new Error(errorMsg);
-        }
-    } catch (error: unknown) {
-        // 4. 异常捕获与统一日志上报
-        const finalMessage = error instanceof Error ? error.message : "未知请求异常";
-
-        logger.error({
+        logger.info({
             module: moduleName,
-            operate: operationName,
+            operate: `${operationName}_MOCK`,
             params: { id },
-            error: finalMessage,
-            errorType: 'NETWORK_OR_RUNTIME_ERROR',
+            result: "Mock data returned successfully",
             requestId: requestId
         });
 
-        throw error;
+        return {
+            success: true,
+            message: "Mock 获取成功",
+            data: MOCK_RECEIPT
+        };
     }
+
+    // 2. 真实接口请求
+    // 底层 request.ts 无论成功失败都会 Resolve 标准的 ApiResponse 对象
+    const response = await request.get<any, ApiResponse<ReceiptDetail>>(`/api/receipt/${id}`);
+
+    // 3. 条件化日志记录
+    // 仅在业务成功时记录成功日志，底层已自动记录错误日志，此处不再使用 Try-Catch 捕获
+    if (response.success) {
+        logger.info({
+            module: moduleName,
+            operate: operationName,
+            params: { id },
+            result: "Success",
+            requestId: requestId
+        });
+    }
+
+    return response;
 };

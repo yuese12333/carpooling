@@ -6,6 +6,7 @@
 import request from '@/utils/request';
 import logger from '@/utils/logger';
 import { useEnvStore } from '@/store/env-store';
+import type { ApiResponse } from '@/api/api.d';
 
 // --- 类型定义 ---
 
@@ -17,18 +18,13 @@ export interface LocationData {
     address: string;
 }
 
-/**
- * 接口统一响应包装格式
- * @template T 业务数据类型
- */
-export interface ApiResponse<T = undefined> {
-    success: boolean;
-    message?: string;
-    data?: T;
-}
-
 // --- 常量配置 ---
 const MODULE_NAME = 'location-api';
+
+const syncRequestId = (id: string) => {
+    useEnvStore.getState().setCurrentRequestId(id);
+};
+
 
 /**
  * 新增常用地点
@@ -40,6 +36,7 @@ export const saveFavoriteLocation = async (
     data: LocationData,
     requestId: string
 ): Promise<ApiResponse> => {
+    syncRequestId(requestId);
     // 获取全局 Mock 状态
     const isMockMode = useEnvStore.getState().isMockMode;
 
@@ -60,13 +57,11 @@ export const saveFavoriteLocation = async (
         };
     }
 
-    try {
-        // 统一使用 @/utils/request，并显式传递泛型与 RequestId
-        const response = await request.post<ApiResponse>('/user/locations', data, {
-            headers: { 'X-Request-Id': requestId }
-        });
+    // 统一使用 @/utils/request，并显式传递泛型与 RequestId
+    const response = await request.post<any, ApiResponse>('/user/locations', data);
 
-        // 记录操作成功的结构化日志
+    // 记录操作成功的结构化日志
+    if (response.success) {
         logger.info({
             module: MODULE_NAME,
             operate: 'saveFavoriteLocation',
@@ -75,29 +70,7 @@ export const saveFavoriteLocation = async (
             result: JSON.stringify(response.data ?? {}),
             requestId,
         });
-
-        return response.data;
-    } catch (error: unknown) {
-        // 异常捕获与日志留痕
-        // 转换 error 类型，并处理潜在的 undefined 属性以符合规范
-        const axiosError = error as any;
-
-        const errorResult: ApiResponse = {
-            success: false,
-            message: axiosError.response?.data?.message ?? '网络请求失败，请稍后重试',
-            data: undefined
-        };
-
-        logger.error({
-            module: MODULE_NAME,
-            operate: 'saveFavoriteLocation',
-            params: { ...data },
-            result: JSON.stringify(errorResult),
-            error: axiosError.message ?? 'Unknown Error',
-            errorType: 'API_HTTP_ERROR',
-            requestId,
-        });
-
-        return errorResult;
     }
+
+    return response;
 };

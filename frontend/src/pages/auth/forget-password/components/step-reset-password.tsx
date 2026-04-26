@@ -150,7 +150,7 @@ export const StepResetPassword: React.FC<StepResetPasswordProps> = ({
             loading={loading}
             style={forgetPasswordStyles.submitBtn}
         >
-            保存设置
+            <Text style={forgetPasswordStyles.submitBtnText}>保存设置</Text>
         </Button>
     </View>
 );

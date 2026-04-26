@@ -5,27 +5,18 @@
  * 遵循规范：2.4 接口请求与数据处理规范、严格结构化日志输出规范。
  */
 
-import axios from 'axios';
 import { Platform } from 'react-native';
 import logger from '../utils/logger';
 import { useEnvStore } from '../store/env-store';
-import request from '../utils/request';
-
-// --- 类型定义 ---
-
-/** 接口响应通用结构 */
-export interface ApiResponse<T> {
-    code: number;
-    message: string;
-    data: T;
-}
+import type { ApiResponse } from '@/api/api.d';
+import request from '@/utils/request';
 
 /** 账号密码登录请求载荷 */
 export interface LoginRequest {
     phone: string;
     password?: string;
     code?: string;
-    rememberMe?: boolean;
+    shouldRemember?: boolean;
 }
 
 /** 登录成功返回的身份令牌数据 */
@@ -121,42 +112,30 @@ const getContextRequestId = (): string => useEnvStore.getState().currentRequestI
  * 获取登录页动态 UI 配置
  * @param {boolean} isMockMode - 是否启用 Mock 模式
  * @param {string} requestId - 全链路追踪 ID
- * @returns {Promise<PageConfig>} 返回页面配置数据
+ * @returns {Promise<ApiResponse<PageConfig>>} 返回页面配置数据
  */
 export const fetchLoginConfig = async (
     isMockMode: boolean,
-): Promise<PageConfig> => {
+): Promise<ApiResponse<PageConfig>> => {
     if (isMockMode) {
         return new Promise((resolve) => {
-            setTimeout(() => resolve(MOCK_CONFIG), MOCK_DELAY.CONFIG);
+            setTimeout(() => resolve({ success: true, message: 'mock', data: MOCK_CONFIG }), MOCK_DELAY.CONFIG);
         });
     }
 
-    try {
-        const response = await request.get<ApiResponse<PageConfig>>('/auth/login/config', {
-            params: { appVersion: '1.0.0', platform: Platform.OS },
-        });
+    const result = await request.get<any, ApiResponse<PageConfig>>('/auth/login/config', {
+        params: { appVersion: '1.0.0', platform: Platform.OS }
+    });
 
-        if (response.data.code === 200) {
-            return response.data.data;
-        }
-        throw new Error(response.data.message || '配置获取失败');
-    } catch (error) {
-        // 异常拦截处记录含 requestId 和 errorType 的日志
-        logger.error({
+    if (result.success) {
+        logger.info({
             module: 'auth-api',
-            operate: 'fetchLoginConfig',
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'API_RESPONSE_ERROR',
+            operate: 'fetchLoginConfig_SUCCESS',
             requestId: getContextRequestId()
         });
-
-        return {
-            title: "欢迎回来",
-            subtitle: "登录您的拼车账号",
-            activeSocialPlatforms: ["wechat", "apple"]
-        };
     }
+
+    return result;
 };
 
 /**
@@ -164,39 +143,35 @@ export const fetchLoginConfig = async (
  * @param {LoginRequest} payload - 登录请求参数
  * @param {boolean} isMockMode - 是否启用 Mock 模式
  * @param {string} requestId - 全链路追踪 ID
- * @returns {Promise<LoginData>}
+ * @returns {Promise<ApiResponse<LoginData>>}
  * @throws {Error}
  */
 export const loginByPassword = async (
     payload: LoginRequest,
     isMockMode: boolean,
-): Promise<LoginData> => {
+): Promise<ApiResponse<LoginData>> => {
     if (isMockMode) {
         return new Promise((resolve) => {
-            setTimeout(() => resolve(MOCK_LOGIN_SUCCESS), MOCK_DELAY.LOGIN);
+            setTimeout(() => resolve({
+                success: true,
+                message: 'mock success',
+                data: MOCK_LOGIN_SUCCESS
+            }), MOCK_DELAY.LOGIN);
         });
     }
 
-    try {
-        const response = await request.post<ApiResponse<LoginData>>('/auth/login/password', payload);
+    const result = await request.post<any, ApiResponse<LoginData>>('/auth/login/password', payload);
 
-        if (response.data.code === 200) {
-            return response.data.data;
-        } else {
-            throw new Error(response.data.message || '登录失败');
-        }
-    } catch (error) {
-        // 记录含 requestId 的错误日志，严禁记录敏感隐私（如 password）
-        logger.error({
+    if (result.success) {
+        logger.info({
             module: 'auth-api',
-            operate: 'loginByPassword',
-            params: { phone: payload.phone },
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'LOGIN_ACTION_ERROR',
+            operate: 'loginByPassword_SUCCESS',
+            params: { phone: payload.phone }, // 严禁记录 password
             requestId: getContextRequestId()
         });
-        throw error;
     }
+
+    return result;
 };
 
 // --- 注册相关接口实现 ---
@@ -205,60 +180,55 @@ export const loginByPassword = async (
  * 检测用户昵称是否可用
  * @param {string} nickname - 待检测的昵称
  * @param {boolean} isMock - 是否启用 Mock 模式
- * @returns {Promise<NicknameCheckData>} 可用性检测结果
+ * @returns {Promise<ApiResponse<NicknameCheckData>>} 可用性检测结果
  */
 export const checkNickname = async (
     nickname: string,
     isMock: boolean
-): Promise<NicknameCheckData> => {
+): Promise<ApiResponse<NicknameCheckData>> => {
     if (isMock) {
-        return { isAvailable: nickname !== "已占用" };
+        return { success: true, message: 'mock', data: { isAvailable: nickname !== "已占用" } };
     }
-    try {
-        const res = await axios.get<ApiResponse<NicknameCheckData>>('/api/auth/register/check-nickname', {
-            params: { nickname }
-        });
-        return res.data.data;
-    } catch (error) {
-        logger.error({
+    const result = await request.get<any, ApiResponse<NicknameCheckData>>('/auth/register/check-nickname', {
+        params: { nickname }
+    });
+
+    if (result.success) {
+        logger.info({
             module: 'auth-api',
-            operate: 'checkNickname',
-            params: { nickname },
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'VALIDATION_ERROR',
+            operate: 'checkNickname_SUCCESS',
             requestId: getContextRequestId()
         });
-        throw error;
     }
+
+    return result;
 };
 
 /**
  * 发送短信验证码
  * @param {string} phoneNumber - 手机号
  * @param {boolean} isMock - 是否启用 Mock 模式
- * @returns {Promise<boolean>} 是否发送成功
+ * @returns {Promise<ApiResponse<{ success: boolean }>>} 是否发送成功
  */
 export const sendSmsCode = async (
     phoneNumber: string,
     isMock: boolean
-): Promise<boolean> => {
+): Promise<ApiResponse<{ success: boolean }>> => {
     if (isMock) {
-        return true;
+        return { success: true, message: 'mock', data: { success: true } };
     }
-    try {
-        const res = await axios.post<ApiResponse<{ success: boolean }>>('/api/sms/send-verify-code', { phoneNumber });
-        return res.data.code === 200;
-    } catch (error) {
-        logger.error({
+    const result = await request.post<any, ApiResponse<{ success: boolean }>>('/sms/send-verify-code', { phoneNumber });
+
+    if (result.success) {
+        logger.info({
             module: 'auth-api',
-            operate: 'sendSmsCode',
+            operate: 'sendSmsCode_SUCCESS',
             params: { phoneNumber },
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'SMS_SERVICE_ERROR',
             requestId: getContextRequestId()
         });
-        return false;
     }
+
+    return result;
 };
 
 /**
@@ -266,68 +236,63 @@ export const sendSmsCode = async (
  * @param {string} phoneNumber - 手机号
  * @param {string} verifyCode - 验证码
  * @param {boolean} isMock - 是否启用 Mock 模式
- * @returns {Promise<VerifyCodeData>} 校验结果及临时令牌
+ * @returns {Promise<ApiResponse<VerifyCodeData>>} 校验结果及临时令牌
  */
 export const verifySmsCode = async (
     phoneNumber: string,
     verifyCode: string,
     isMock: boolean
-): Promise<VerifyCodeData> => {
+): Promise<ApiResponse<VerifyCodeData>> => {
     if (isMock) {
-        return { isValid: true, tempToken: "mock_temp_token_123" };
+        return { success: true, message: 'mock', data: { isValid: true, tempToken: "mock_token" } };
     }
-    try {
-        const res = await axios.post<ApiResponse<VerifyCodeData>>('/api/auth/register/verify-code', {
-            phoneNumber,
-            verifyCode
-        });
-        return res.data.data;
-    } catch (error) {
-        logger.error({
+    const result = await request.post<any, ApiResponse<VerifyCodeData>>('/auth/register/verify-code', {
+        phoneNumber,
+        verifyCode
+    });
+
+    if (result.success) {
+        logger.info({
             module: 'auth-api',
-            operate: 'verifySmsCode',
-            params: { phoneNumber },
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'VERIFY_CODE_ERROR',
+            operate: 'verifySmsCode_SUCCESS',
             requestId: getContextRequestId()
         });
-        throw error;
     }
+
+    return result;
 };
 
 /**
  * 提交用户注册信息
  * @param {RegisterRequest} params - 注册请求完整参数
  * @param {boolean} isMock - 是否启用 Mock 模式
- * @returns {Promise<RegisterData>} 注册成功后的用户数据
+ * @returns {Promise<ApiResponse<RegisterData>>} 注册成功后的用户数据
  */
 export const registerUser = async (
     params: RegisterRequest,
     isMock: boolean
-): Promise<RegisterData> => {
+): Promise<ApiResponse<RegisterData>> => {
     if (isMock) {
         return {
-            userId: "u_mock_1001",
-            accessToken: "mock_jwt_token",
-            userInfo: { nickname: params.nickname, avatarUrl: "" }
+            success: true,
+            message: 'mock',
+            data: { userId: "mock_1", accessToken: "tk", userInfo: { nickname: params.nickname, avatarUrl: "" } }
         };
     }
-    try {
-        const res = await axios.post<ApiResponse<RegisterData>>('/api/auth/register', params);
-        return res.data.data;
-    } catch (error) {
-        logger.error({
+    const result = await request.post<any, ApiResponse<RegisterData>>('/auth/register', params);
+
+    if (result.success) {
+        logger.info({
             module: 'auth-api',
-            operate: 'registerUser',
+            operate: 'registerUser_SUCCESS',
             params: {
                 nickname: params.nickname,
                 phoneNumber: params.phoneNumber,
                 agreeProtocol: params.agreeProtocol
             }, // 剔除敏感字段 password 和 verifyCode
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'REGISTER_SUBMIT_ERROR',
             requestId: getContextRequestId()
         });
-        throw error;
     }
+
+    return result;
 };

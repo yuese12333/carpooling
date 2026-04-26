@@ -6,6 +6,7 @@
 import request from '@/utils/request';
 import logger from '@/utils/logger';
 import { useEnvStore } from '@/store/env-store';
+import type { ApiResponse } from '@/api/api.d';
 
 // --- 类型定义 ---
 
@@ -32,23 +33,29 @@ const MOCK_LOCATIONS: LocationItem[] = [
     { id: '3', type: 'other', label: '健身房', address: '上海市长宁区延安西路威尔士健身' },
 ];
 
+const syncRequestId = (id: string) => {
+    useEnvStore.getState().setCurrentRequestId(id);
+};
+
 /**
  * 获取地点列表
  * @param requestId - 由页面级使用 useMemo 生成并显式传递的链路 ID
  * @param query - 搜索关键字（可选）
- * @returns {Promise<LocationItem[]>} 过滤后的地点列表
+ * @returns {ApiResponse<LocationItem[]>} 过滤后的地点列表
  */
 export const getLocationsApi = async (
     requestId: string,
     query?: string
-): Promise<LocationItem[]> => {
+): Promise<ApiResponse<LocationItem[]>> => {
+    syncRequestId(requestId);
     const operateName = 'getLocationsApi';
     const isMockMode = useEnvStore.getState().isMockMode;
 
     // --- Mock 模式逻辑 ---
     if (isMockMode) {
         await new Promise((resolve) => setTimeout(resolve, 500));
-        const filteredData = !query
+        const isQueryEmpty = !query || query.trim() === '';
+        const filteredData = isQueryEmpty
             ? MOCK_LOCATIONS
             : MOCK_LOCATIONS.filter(
                 (l) => l.label.includes(query) || l.address.includes(query)
@@ -61,52 +68,54 @@ export const getLocationsApi = async (
             result: JSON.stringify(filteredData),
             requestId: requestId,
         });
-        return filteredData;
+
+        // 统一返回包装格式，确保页面通过 res.data 能拿到数组
+        return {
+            code: 200,
+            success: true,
+            message: 'Mock Success',
+            data: filteredData
+        };
     }
 
     // --- 生产请求逻辑 ---
-    try {
-        const { data } = await request.get<LocationItem[]>('/api/v1/locations', {
-            params: { query },
-            headers: { 'X-Request-Id': requestId },
-        });
+    // 移除 try-catch，底层 request 已处理 HTTP 异常并 Resolve ApiResponse
+    const response = await request.get<any, any>('/v1/locations', {
+        params: { query },
+    });
 
+    // 适配拦截器返回 AxiosResponse 的情况
+    const result: ApiResponse<LocationItem[]> = response.data || response;
+
+    // 仅在业务成功时记录日志
+    if (result.success) {
         logger.info({
             module: MODULE_NAME,
             operate: operateName,
             params: { query },
-            result: JSON.stringify(data),
+            result: JSON.stringify(result.data),
             requestId: requestId,
         });
-
-        return data;
-    } catch (error: any) {
-        logger.error({
-            module: MODULE_NAME,
-            operate: operateName,
-            params: { query },
-            result: undefined,
-            error: error.message,
-            errorType: error.code || 'API_FETCH_ERROR',
-            requestId: requestId,
-        });
-        throw error;
     }
+
+    return result;
 };
 
 /**
  * 删除指定地点
  * @param requestId - 由页面级使用 useMemo 生成并显式传递的链路 ID
  * @param id - 地点唯一标识
- * @returns {Promise<void>}
+ * @returns {Promise<ApiResponse<null>>}
  */
 export const deleteLocationApi = async (
     requestId: string,
     id: string
-): Promise<void> => {
+): Promise<ApiResponse<null>> => {
+    syncRequestId(requestId);
     const operateName = 'deleteLocationApi';
     const isMockMode = useEnvStore.getState().isMockMode;
 
+    // --- Mock 模式逻辑 ---
     if (isMockMode) {
         logger.info({
             module: MODULE_NAME,
@@ -115,14 +124,15 @@ export const deleteLocationApi = async (
             result: 'Mock delete success',
             requestId: requestId,
         });
-        return;
+        return { code: 200, success: true, message: 'Mock delete success', data: null };
     }
 
-    try {
-        await request.delete<void>(`/api/v1/locations/${id}`, {
-            headers: { 'X-Request-Id': requestId },
-        });
+    // --- 生产请求逻辑 ---
+    const response = await request.delete<any, any>(`/v1/locations/${id}`);
+    const result: ApiResponse<null> = response.data || response;
 
+    // 仅在业务成功时记录日志
+    if (result.success) {
         logger.info({
             module: MODULE_NAME,
             operate: operateName,
@@ -130,16 +140,7 @@ export const deleteLocationApi = async (
             result: 'Success',
             requestId: requestId,
         });
-    } catch (error: any) {
-        logger.error({
-            module: MODULE_NAME,
-            operate: operateName,
-            params: { id },
-            result: undefined,
-            error: error.message,
-            errorType: error.code || 'API_DELETE_ERROR',
-            requestId: requestId,
-        });
-        throw error;
     }
+
+    return result;
 };

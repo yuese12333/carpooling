@@ -34,20 +34,23 @@ export const usePaymentMethods = (requestId: string) => {
         const moduleName = 'PaymentMethodsHook';
         const operate = 'initPageData';
 
-        try {
-            // 显式传递 requestId 至 API 层
-            const [balanceRes, methodsRes] = await Promise.all([
-                getAccountBalance({ requestId }),
-                getPaymentMethods({ requestId })
-            ]);
+        // 并发请求数据
+        const [balanceRes, methodsRes] = await Promise.all([
+            getAccountBalance(requestId),
+            getPaymentMethods(requestId)
+        ]);
 
-            if (balanceRes.success) {
-                setBalance(balanceRes.data.amount);
-            }
-            if (methodsRes.success) {
-                setMethods(methodsRes.data);
-            }
+        // 业务成功处理
+        if (balanceRes.success) {
+            setBalance(balanceRes.data);
+        }
 
+        if (methodsRes.success) {
+            setMethods(methodsRes.data);
+        }
+
+        // 仅在核心数据获取成功时记录业务日志（可选：可根据需求判断是全部成功还是部分成功）
+        if (balanceRes.success && methodsRes.success) {
             logger.info({
                 module: moduleName,
                 operate,
@@ -55,22 +58,12 @@ export const usePaymentMethods = (requestId: string) => {
                 result: 'Data initialization completed',
                 requestId
             });
-        } catch (error: unknown) {
-            const errorMsg = error instanceof Error ? error.message : 'Unknown Error';
-
-            logger.error({
-                module: moduleName,
-                operate,
-                params: { requestId },
-                error: errorMsg,
-                errorType: 'INIT_DATA_FAILED',
-                requestId
-            });
-
+        } else if (!balanceRes.success || !methodsRes.success) {
+            // 业务层面的失败提示
             Alert.alert("同步失败", "获取支付数据异常，请稍后重试");
-        } finally {
-            setIsLoading(false);
         }
+
+        setIsLoading(false);
     }, [requestId]);
 
     // 监听环境切换或组件挂载
@@ -93,7 +86,7 @@ export const usePaymentMethods = (requestId: string) => {
         setMethods(prev => prev.map(m => ({ ...m, isDefault: m.id === id })));
 
         try {
-            const res = await setDefaultPaymentMethod(id, { requestId });
+            const res = await setDefaultPaymentMethod(id, requestId);
 
             if (!res.success) {
                 throw new Error(res.message);

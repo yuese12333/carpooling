@@ -1,7 +1,6 @@
 /**
  * @file use-help-center-form.ts
  * @description 帮助中心页面业务逻辑 Hook，封装了搜索、分类加载及折叠面板交互逻辑。
- * @version 1.1.0
  */
 
 import { useState, useCallback, useEffect } from "react";
@@ -44,8 +43,15 @@ export const useHelpCenterForm = (requestId: string) => {
                 getHotQuestions(requestId, keyword)
             ]);
 
-            setCategories(catRes);
-            setQuestions(quesRes);
+            // 直接判断 catRes (它是 ApiResponse 类型)
+            if (catRes.success && Array.isArray(catRes.data)) {
+                setCategories(catRes.data);
+            }
+
+            // 直接判断 quesRes (它是 ApiResponse 类型)
+            if (quesRes.success && Array.isArray(quesRes.data)) {
+                setQuestions(quesRes.data);
+            }
 
             // 记录成功日志
             logger.info({

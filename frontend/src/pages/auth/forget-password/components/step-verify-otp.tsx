@@ -96,7 +96,7 @@ export const StepVerifyOtp: React.FC<StepVerifyOtpProps> = ({
                 loading={loading}
                 style={forgetPasswordStyles.submitBtn}
             >
-                确认验证
+                <Text style={forgetPasswordStyles.submitBtnText}>确认验证</Text>
             </Button>
         </View>
     );

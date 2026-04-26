@@ -1,19 +1,13 @@
 /**
  * @file real-name-auth-api.ts
  * @description 实名认证模块 API 请求定义，支持链路追踪与 Mock/真实模式切换
- * @version 1.1.0
+ * @version 1.2.0 (Refactored: Linear logic without Try-Catch)
  */
 
 import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
-
-/** 接口返回统一结构定义 */
-interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data: T;
-}
+import type { ApiResponse } from '@/api/api.d';
 
 /** 实名信息数据结构 */
 export interface RealNameInfo {
@@ -39,27 +33,30 @@ const MODULE_NAME = 'RealNameAuthAPI';
 export const getRealNameStatus = async (requestId: string): Promise<ApiResponse<RealNameInfo>> => {
     const isMock = useEnvStore.getState().isMockMode;
 
-    try {
-        if (isMock) {
-            logger.info({
-                module: MODULE_NAME,
-                operate: 'getRealNameStatus_Mock',
-                params: { requestId },
-                result: 'Fetching mock data for identity status',
-                requestId,
-            });
+    // --- Mock 模式处理 ---
+    if (isMock) {
+        logger.info({
+            module: MODULE_NAME,
+            operate: 'getRealNameStatus_Mock',
+            params: { requestId },
+            result: 'Fetching mock data for identity status',
+            requestId,
+        });
 
-            return {
-                success: true,
-                message: 'Mock 数据获取成功',
-                data: {
-                    isVerified: false,
-                },
-            };
-        }
+        return {
+            success: true,
+            message: 'Mock 数据获取成功',
+            data: {
+                isVerified: false,
+            },
+        };
+    }
 
-        const response = await request.get<ApiResponse<RealNameInfo>>('/user/auth/status');
+    // --- 真实请求处理 ---
+    const result = await request.get<any, ApiResponse<RealNameInfo>>('/user/auth/status');
 
+    // 仅在业务成功时记录日志，失败日志已由底层处理
+    if (result.success) {
         logger.info({
             module: MODULE_NAME,
             operate: 'getRealNameStatus_Success',
@@ -67,19 +64,9 @@ export const getRealNameStatus = async (requestId: string): Promise<ApiResponse<
             result: 'Successfully retrieved real-name status',
             requestId,
         });
-
-        return response.data;
-    } catch (error) {
-        logger.error({
-            module: MODULE_NAME,
-            operate: 'getRealNameStatus_Error',
-            params: { requestId },
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'API_ERROR',
-            requestId,
-        });
-        throw error;
     }
+
+    return result;
 };
 
 /**
@@ -101,33 +88,36 @@ export const submitRealNameAuth = async (
         requestId,
     };
 
-    try {
-        if (isMock) {
-            logger.info({
-                module: MODULE_NAME,
-                operate: 'submitRealNameAuth_Mock',
-                params: logParams,
-                result: 'Simulating auth submission',
-                requestId,
-            });
+    // --- Mock 模式处理 ---
+    if (isMock) {
+        logger.info({
+            module: MODULE_NAME,
+            operate: 'submitRealNameAuth_Mock',
+            params: logParams,
+            result: 'Simulating auth submission',
+            requestId,
+        });
 
-            // 模拟网络延迟
-            await new Promise((resolve) => setTimeout(resolve, 800));
+        // 模拟网络延迟
+        await new Promise((resolve) => setTimeout(resolve, 800));
 
-            return {
-                success: true,
-                message: '模拟认证成功',
-                data: {
-                    isVerified: true,
-                    realName: '*' + params.name.slice(1),
-                    idCardNo: params.idNumber.replace(/^(\d{3})\d+(\d{4})$/, '$1***********$2'),
-                    idType: '中国居民身份证',
-                },
-            };
-        }
+        return {
+            success: true,
+            message: '模拟认证成功',
+            data: {
+                isVerified: true,
+                realName: '*' + params.name.slice(1),
+                idCardNo: params.idNumber.replace(/^(\d{3})\d+(\d{4})$/, '$1***********$2'),
+                idType: '中国居民身份证',
+            },
+        };
+    }
 
-        const response = await request.post<ApiResponse<RealNameInfo>>('/user/auth/verify', params);
+    // --- 真实请求处理 ---
+    const result = await request.post<any, ApiResponse<RealNameInfo>>('/user/auth/verify', params);
 
+    // 仅在业务成功时记录成功日志
+    if (result.success) {
         logger.info({
             module: MODULE_NAME,
             operate: 'submitRealNameAuth_Success',
@@ -135,17 +125,7 @@ export const submitRealNameAuth = async (
             result: 'Auth submission successful',
             requestId,
         });
-
-        return response.data;
-    } catch (error) {
-        logger.error({
-            module: MODULE_NAME,
-            operate: 'submitRealNameAuth_Error',
-            params: logParams,
-            error: error instanceof Error ? error.message : String(error),
-            errorType: 'API_ERROR',
-            requestId,
-        });
-        throw error;
     }
+
+    return result;
 };

@@ -104,25 +104,42 @@ export default function LoginPage(): JSX.Element {
    */
   const loadPageConfig = useCallback(async (): Promise<void> => {
     const loadKey = `${requestId}|${String(isMockMode)}`;
+
+    // 防止重复请求的幂等检查
     if (lastConfigLoadKeyRef.current === loadKey) return;
     lastConfigLoadKeyRef.current = loadKey;
 
     setIsConfigLoading(true);
     try {
-      const data = await fetchLoginConfig(isMockMode);
-      setPageConfig(data);
+      // 1. 调用 API 获取标准响应结构
+      const res = await fetchLoginConfig(isMockMode);
 
-      logger.info({
-        module: 'LoginPage',
-        operate: 'loadPageConfig',
-        requestId,
-        result: 'success'
-      });
+      // 2. 检查业务成功状态
+      if (res.success && res.data) {
+        // 适配点：提取真正的配置数据存储到状态中
+        setPageConfig(res.data);
+
+        logger.info({
+          module: 'LoginPage',
+          operate: 'loadPageConfig_SUCCESS',
+          requestId,
+          result: 'success'
+        });
+      } else {
+        // 处理业务级失败
+        logger.error({
+          module: 'LoginPage',
+          operate: 'loadPageConfig_BIZ_FAIL',
+          error: res.message || '获取配置失败',
+          errorType: 'BIZ_LOGIC_ERROR',
+          requestId
+        });
+      }
     } catch (error) {
-      // 严格遵循 ERROR 级别日志规范
+      // 3. 处理网络或系统异常，严格遵循 ERROR 级别日志规范
       logger.error({
         module: 'LoginPage',
-        operate: 'loadPageConfig',
+        operate: 'loadPageConfig_EXCEPTION',
         error: error instanceof Error ? error.message : String(error),
         errorType: 'API_FETCH_ERROR',
         requestId

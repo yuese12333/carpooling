@@ -6,6 +6,7 @@
 import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
+import type { ApiResponse } from '@/api/api.d';
 
 // --- 类型定义 ---
 
@@ -21,15 +22,6 @@ export interface NotificationItem {
     isRead: boolean;
     /** 图标映射类型 */
     type: 'success' | 'location' | 'warning';
-}
-
-/**
- * 统一接口返回包装
- */
-export interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data: T;
 }
 
 // --- 模拟数据 (Mock Data) ---
@@ -56,19 +48,26 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
     {
         id: '3',
         category: 'system',
-        title: '安全提醒',
-        content: '您的账号于新设备登录，若非本人操作请及时修改密码。',
+        title: '账号安全提醒',
+        content: '您的账号于今日 08:15 在新设备上登录，如非本人操作请及时修改密码。',
         time: '昨天',
         isRead: true,
         type: 'warning',
     },
 ];
 
+/**
+ * 同步请求追踪 ID 到全局状态
+ */
+const syncRequestId = (id: string) => {
+    useEnvStore.getState().setCurrentRequestId(id);
+};
+
 // --- 接口函数 ---
 
 /**
  * 获取通知列表
- * @param category 筛选分类 (all | trip | system)
+ * @param category 筛选分类：'all' | 'trip' | 'system'
  * @param requestId 显式传递的页面级链路追踪 ID
  * @returns Promise<ApiResponse<NotificationItem[]>>
  */
@@ -76,57 +75,42 @@ export const fetchNotifications = async (
     category: string,
     requestId: string
 ): Promise<ApiResponse<NotificationItem[]>> => {
+    syncRequestId(requestId);
     const isMockMode = useEnvStore.getState().isMockMode;
     const module = 'notification-api';
-    const operate = 'fetchNotifications';
+    const operate = 'getNotifications';
 
-    try {
-        if (isMockMode) {
-            // 模拟网络延迟
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            const filtered =
-                category === 'all'
-                    ? MOCK_NOTIFICATIONS
-                    : MOCK_NOTIFICATIONS.filter((item) => item.category === category);
+    // --- Mock 逻辑 ---
+    if (isMockMode) {
+        const data = category === 'all'
+            ? MOCK_NOTIFICATIONS
+            : MOCK_NOTIFICATIONS.filter((i) => i.category === category);
 
-            logger.info({
-                module,
-                operate,
-                params: { category, isMock: true },
-                result: 'Success (Mock)',
-                requestId,
-            });
+        return {
+            success: true,
+            message: 'success (mock)',
+            data: data,
+        };
+    }
 
-            return { success: true, message: 'Success (Mock)', data: filtered };
-        }
+    // --- 线性请求逻辑 ---
+    // 底层 request.ts 已统一处理 HTTP 错误并返回 Resolve 后的 ApiResponse
+    const result = await request.get<any, ApiResponse<NotificationItem[]>>('/v1/notifications', {
+        params: { category },
+    });
 
-        // 真实接口调用
-        const response = await request.get<ApiResponse<NotificationItem[]>>('/v1/notifications', {
-            params: { category },
-            headers: { 'X-Request-Id': requestId }, // 注入链路 ID
-        });
-
+    // 条件化日志记录：仅在业务成功时记录
+    if (result.success) {
         logger.info({
             module,
             operate,
             params: { category },
-            result: response.data.message,
+            result: `Fetched ${result.data?.length || 0} items`,
             requestId,
         });
-
-        return response.data;
-    } catch (error: any) {
-        logger.error({
-            module,
-            operate,
-            params: { category },
-            error: error?.message || 'Unknown Error',
-            errorType: error?.code || 'FETCH_ERROR',
-            requestId,
-        });
-        // 抛出异常或返回标准错误结构，确保调用方能感知
-        throw error;
     }
+
+    return result;
 };
 
 /**
@@ -139,45 +123,38 @@ export const clearNotifications = async (
     category: string,
     requestId: string
 ): Promise<ApiResponse<null>> => {
+    syncRequestId(requestId);
     const isMockMode = useEnvStore.getState().isMockMode;
     const module = 'notification-api';
     const operate = 'clearNotifications';
 
-    try {
-        if (isMockMode) {
-            logger.info({
-                module,
-                operate,
-                params: { category, isMock: true },
-                result: 'Cleared (Mock)',
-                requestId,
-            });
-            return { success: true, message: 'Cleared (Mock)', data: null };
-        }
-
-        const response = await request.delete<ApiResponse<null>>('/v1/notifications', {
-            data: { category },
-            headers: { 'X-Request-Id': requestId },
+    // --- Mock 逻辑 ---
+    if (isMockMode) {
+        logger.info({
+            module,
+            operate,
+            params: { category, isMock: true },
+            result: 'Cleared (Mock)',
+            requestId,
         });
+        return { success: true, message: 'Cleared (Mock)', data: null };
+    }
 
+    // --- 线性请求逻辑 ---
+    const result = await request.delete<any, ApiResponse<null>>('/v1/notifications', {
+        data: { category },
+    });
+
+    // 条件化日志记录：仅在业务成功时记录
+    if (result.success) {
         logger.info({
             module,
             operate,
             params: { category },
-            result: response.data.message,
+            result: result.message,
             requestId,
         });
-
-        return response.data;
-    } catch (error: any) {
-        logger.error({
-            module,
-            operate,
-            params: { category },
-            error: error?.message || 'Unknown Error',
-            errorType: error?.code || 'DELETE_ERROR',
-            requestId,
-        });
-        throw error;
     }
+
+    return result;
 };

@@ -55,18 +55,22 @@ export const useHomeForm = (requestId: string) => {
                     requestId
                 });
 
-                // 并发请求：强制透传 requestId 至 Service 层
-                const [u, r, s, n] = await Promise.all([
+                const [uRes, rRes, sRes, nRes] = await Promise.all([
                     HomeService.getUserInfo(requestId),
                     HomeService.getRecommendRides(locationParams.latitude, locationParams.longitude, requestId),
                     HomeService.getStatistics(requestId),
                     HomeService.getUnreadStatus(requestId)
                 ]);
 
-                setUserInfo(u);
-                setRides(r);
-                setStats(s);
-                setHasUnread(n);
+                // 只有在 success 为 true 时才更新状态，并提取内部的 .data
+                if (uRes.success) setUserInfo(uRes.data);
+                if (rRes.success) setRides(rRes.data || []); // 确保是数组
+                if (sRes.success) setStats(sRes.data);
+
+                // 注意：这里需要提取 data 内部的 hasUnread 属性
+                if (nRes.success && nRes.data) {
+                    setHasUnread(nRes.data.hasUnread);
+                }
 
                 logger.info({
                     module: 'useHomeForm',
