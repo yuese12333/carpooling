@@ -45,7 +45,7 @@ async function initCoreSchemaController(req, res) {
     });
     return res
       .status(500)
-      .json(buildFailureResponse(500, '初始化核心数据库表结构失败', null, requestId));
+      .json(buildFailureResponse(500, '数据库状态检查失败', null, requestId));
   }
 }
 

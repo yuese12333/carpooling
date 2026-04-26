@@ -5,10 +5,30 @@
  */
 const express = require('express');
 
-const { loginByPasswordController } = require('../controller/auth-controller');
+const {
+	loginByPasswordController,
+	loginBySocialController,
+	sendAuthSmsController,
+	getLoginConfigController,
+	getDemoAccountsController,
+	getCaptchaImageController,
+	behaviorVerifyController,
+	checkPhoneRiskController,
+	deviceScoreController,
+	oauthBindController,
+} = require('../controller/auth-controller');
 
 const router = express.Router();
 
 router.post('/login/password', loginByPasswordController);
+router.post('/login/social', loginBySocialController);
+router.post('/sms/send', sendAuthSmsController);
+router.get('/login/config', getLoginConfigController);
+router.get('/demo-accounts', getDemoAccountsController);
+router.get('/captcha/image', getCaptchaImageController);
+router.post('/risk/behavior-verify', behaviorVerifyController);
+router.post('/risk/check-phone', checkPhoneRiskController);
+router.post('/risk/device-score', deviceScoreController);
+router.post('/oauth/bind', oauthBindController);
 
 module.exports = router;

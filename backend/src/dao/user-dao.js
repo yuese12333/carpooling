@@ -1,45 +1,50 @@
 /**
  * 文件功能：用户数据访问层
  * 关联业务：用户登录鉴权
- * 说明：使用 MySQL 持久化存储登录用户数据
+ * 说明：基于 Prisma ORM，映射 auth_users 表
  */
-const pool = require('../config/db');
+const prisma = require('../config/prisma');
 const { logger, maskSensitive } = require('../utils/logger');
-
-function formatDateTimeForMySql(input) {
-  if (!input) return null;
-  const date = input instanceof Date ? input : new Date(input);
-  if (Number.isNaN(date.getTime())) return null;
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
-    date.getHours(),
-  )}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-}
-
 /**
  * 函数功能：按手机号查询用户
  * 入参：phone（手机号）
  * 出参：用户对象或 null
  */
 async function findByPhone(phone, requestId) {
-  const sql = `
-    SELECT
-      user_id AS userId,
-      phone,
-      password_hash AS passwordHash,
-      user_name AS userName,
-      avatar_url AS avatarUrl,
-      created_at AS createdAt,
-      updated_at AS updatedAt,
-      last_login_at AS lastLoginAt,
-      last_login_device_info AS lastLoginDeviceInfo
-    FROM auth_users
-    WHERE phone = :phone
-    LIMIT 1
-  `;
+  const user = await prisma.authUser.findUnique({
+    where: { phone },
+  });
 
-  const [rows] = await pool.execute(sql, { phone });
-  return rows?.[0] || null;
+  if (!user) {
+    logger.debug({
+      module: 'user-dao',
+      operate: 'find-by-phone',
+      requestId,
+      params: { phone: maskSensitive({ phone }).phone },
+      result: 'User not found',
+    });
+    return null;
+  }
+
+  logger.debug({
+    module: 'user-dao',
+    operate: 'find-by-phone',
+    requestId,
+    params: { phone: maskSensitive({ phone }).phone },
+    result: 'User found',
+  });
+
+  return {
+    userId: user.user_id,
+    phone: user.phone,
+    passwordHash: user.password_hash,
+    userName: user.user_name,
+    avatarUrl: user.avatar_url,
+    createdAt: user.created_at,
+    updatedAt: user.updated_at,
+    lastLoginAt: user.last_login_at,
+    lastLoginDeviceInfo: user.last_login_device_info,
+  };
 }
 
 /**
@@ -48,28 +53,14 @@ async function findByPhone(phone, requestId) {
  * 出参：boolean（是否创建成功）
  */
 async function createAuthUser({ userId, phone, passwordHash, userName, avatarUrl = '' }, requestId) {
-  const sql = `
-    INSERT INTO auth_users (
-      user_id,
+  await prisma.authUser.create({
+    data: {
+      user_id: userId,
       phone,
-      password_hash,
-      user_name,
-      avatar_url
-    ) VALUES (
-      :userId,
-      :phone,
-      :passwordHash,
-      :userName,
-      :avatarUrl
-    )
-  `;
-
-  await pool.execute(sql, {
-    userId,
-    phone,
-    passwordHash,
-    userName,
-    avatarUrl,
+      password_hash: passwordHash,
+      user_name: userName,
+      avatar_url: avatarUrl,
+    },
   });
 
   logger.info({
@@ -86,23 +77,16 @@ async function createAuthUser({ userId, phone, passwordHash, userName, avatarUrl
 /**
  * 函数功能：更新用户最近登录时间与设备信息
  * 入参：userId、lastLoginAt、deviceInfo
- * 出参：更新后的用户对象或 null
+ * 出参：void
  */
 async function updateLastLoginInfo(userId, { lastLoginAt, deviceInfo }, requestId) {
-  const sql = `
-    UPDATE auth_users
-    SET
-      last_login_at = :lastLoginAt,
-      last_login_device_info = :lastLoginDeviceInfo
-    WHERE user_id = :userId
-  `;
-
-  const payload = {
-    userId,
-    lastLoginAt: formatDateTimeForMySql(lastLoginAt),
-    lastLoginDeviceInfo: deviceInfo ? JSON.stringify(deviceInfo) : null,
-  };
-  await pool.execute(sql, payload);
+  await prisma.authUser.update({
+    where: { user_id: userId },
+    data: {
+      last_login_at: lastLoginAt || new Date(),
+      last_login_device_info: deviceInfo ? JSON.stringify(deviceInfo) : null,
+    },
+  });
 
   logger.info({
     module: 'user-dao',

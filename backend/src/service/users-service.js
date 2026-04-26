@@ -3,8 +3,8 @@
  * 关联业务：用户数据初始化与最小注册能力
  */
 const crypto = require('crypto');
+const prisma = require('../config/prisma');
 const { createAuthUser, findByPhone } = require('../dao/user-dao');
-const { ensureCoreSchema, getCoreSchemaStatus } = require('../dao/schema-dao');
 const passwordUtils = require('../utils/password-utils');
 const { logger, maskSensitive } = require('../utils/logger');
 
@@ -31,22 +31,21 @@ async function checkCoreSchema(requestId) {
       module: 'users-service',
       operate: 'check-core-schema',
       requestId,
-      result: 'Starting core schema status check',
+      result: 'Checking prisma migration managed schema',
     });
 
-    const checkResult = await getCoreSchemaStatus(requestId);
+    await prisma.$queryRaw`SELECT 1`;
 
     logger.info({
       module: 'users-service',
       operate: 'check-core-schema',
       requestId,
-      params: {
-        tableCount: checkResult.tableCount,
-        missingCount: checkResult.missingCount,
-      },
-      result: 'Core schema status check completed',
+      result: 'Prisma schema connectivity check passed',
     });
-    return checkResult;
+    return {
+      initialized: true,
+      managedBy: 'prisma-migrate',
+    };
   } catch (error) {
     logger.error({
       module: 'users-service',
@@ -65,17 +64,16 @@ async function initCoreSchema(requestId) {
       module: 'users-service',
       operate: 'init-core-schema',
       requestId,
-      result: 'Starting core schema initialization',
+      result: 'Init schema requested in prisma migration mode',
     });
 
-    const initResult = await ensureCoreSchema(requestId);
+    const initResult = await checkCoreSchema(requestId);
 
     logger.info({
       module: 'users-service',
       operate: 'init-core-schema',
       requestId,
-      params: { tableCount: initResult.tableCount },
-      result: 'Core schema initialization completed',
+      result: 'Schema check completed (no runtime DDL)',
     });
     return initResult;
   } catch (error) {
@@ -124,7 +122,7 @@ async function registerUser({ phone, nickname, password }, requestId) {
         avatarUrl: '',
       }, requestId);
     } catch (error) {
-      if (error && error.code === 'ER_DUP_ENTRY') {
+      if (error && (error.code === 'P2002' || error.code === 'ER_DUP_ENTRY')) {
         const duplicatedUser = await findByPhone(phone, requestId);
         return {
           created: false,

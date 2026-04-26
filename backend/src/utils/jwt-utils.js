@@ -32,7 +32,18 @@ function generateRefreshToken(payload, options = {}) {
   return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn });
 }
 
+/**
+ * 函数功能：生成临时令牌（用于 OAuth 绑定流程）
+ * 入参：payload/options
+ * 出参：temp token string
+ */
+function generateTempToken(payload, options = {}) {
+  const expiresIn = options.expiresIn || 30 * 60; // 默认 30 分钟
+  return jwt.sign({ ...payload, type: 'temp' }, JWT_SECRET, { expiresIn });
+}
+
 module.exports = {
   generateToken,
   generateRefreshToken,
+  generateTempToken,
 };

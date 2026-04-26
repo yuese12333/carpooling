@@ -9,7 +9,7 @@ const smsRouter = require('./router/sms-router');
 const uploadRouter = require('./router/upload-router');
 const authRouter = require('./router/auth-router');
 const usersRouter = require('./router/users-router');
-const pool = require('./config/db');
+const prisma = require('./config/prisma');
 const { logger } = require('./utils/logger');
 const { createRequestId } = require('./utils/response');
 
@@ -28,7 +28,7 @@ app.get('/health', async (req, res) => {
   const requestId = createRequestId();
 
   try {
-    await pool.query('SELECT 1');
+    await prisma.$queryRaw`SELECT 1`;
     logger.info({
       module: 'system-health',
       operate: 'health-check',
@@ -74,13 +74,12 @@ app.listen(Number(PORT), HOST, async () => {
   });
 
   try {
-    const connection = await pool.getConnection();
-    connection.release();
+    await prisma.$connect();
     logger.info({
       module: 'server-bootstrap',
       operate: 'database-connectivity-check',
       requestId,
-      result: 'MySQL connection established',
+      result: 'Prisma connected',
     });
   } catch (error) {
     logger.error({
@@ -90,5 +89,6 @@ app.listen(Number(PORT), HOST, async () => {
       error: error.message,
       errorType: 'DatabaseConnectionError',
     });
+    process.exit(1);
   }
 });

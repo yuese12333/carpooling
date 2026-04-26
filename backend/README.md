@@ -39,11 +39,12 @@ cp .env.example .env
 # Windows PowerShell: Copy-Item .env.example .env
 ```
 
-1. 编辑 **`.env`**：至少配置 [环境变量](#环境变量) 中的阿里云 AK/SK 与 `DB_*`（并先在 MySQL 中 [创建数据库](#数据库)）。  
+1. 编辑 **`.env`**：至少配置 [环境变量](#环境变量) 中的阿里云 AK/SK 与 `DB_*`、`DATABASE_URL`（并先在 MySQL 中 [创建数据库](#数据库)）。  
 2. 启动：`npm start` 或 `npm run dev`（默认监听 `0.0.0.0:3000`；可通过 `PORT` 覆盖，本项目公网示例常用 `3005`）。  
 3. 探活：`curl http://localhost:3000/health` — 成功时返回 `status: ok` 与 `db_connected: true`；数据库不可用时 HTTP 500，正文为固定文案「数据库暂不可用」（不返回数据库内部错误信息）。  
-4. 初始化检查（联调/首次）：`curl -X POST http://localhost:3000/api/users/init-schema`  
-5. 短信联调说明见 [`docx/短信验证接口联调文档.md`](../docx/短信验证接口联调文档.md)。
+4. 初始化 Prisma Client：`npm run prisma:generate`  
+5. 若本地是首次接入已存在库，请按迁移文档执行 baseline（见 [`后端Prisma开发规范`](../docs/后端Prisma开发规范.md)）。
+6. 短信联调说明见 [`docx/短信验证接口联调文档.md`](../docx/短信验证接口联调文档.md)。
 
 ---
 
@@ -53,49 +54,28 @@ cp .env.example .env
 |---|------|------|------|
 | 1 | POST | `/api/sms/send-verify-code` | 发送短信验证码 |
 | 2 | POST | `/api/sms/check-verify-code` | 校验短信验证码 |
-| 3 | POST | `/api/users/init-schema` | 检查核心业务表状态；管理员可显式执行初始化 |
+| 3 | POST | `/api/users/init-schema` | Prisma 迁移模式下的连接/状态检查（兼容保留） |
 | 4 | POST | `/api/users/create` | 创建登录用户（写入 `auth_users`） |
 | 5 | POST | `/api/auth/login/password` | 用户密码登录（返回 access/refresh token） |
 
 ### 用户接口补充
 
 **`POST /api/users/init-schema`**  
-默认无请求体，执行“核心表状态检查”（只读，不执行 DDL）。
-
-访问限制：
-
-- `check`（默认）：仅内网或管理员 token 可调用。
-- `apply`（执行建表）：仅管理员 token 可调用，且有冷却时间（默认 5 分钟）。
-
-管理员调用头：`x-schema-init-token: <SCHEMA_INIT_TOKEN>`。
-
-`check` 成功示例：
+无请求体。该接口在 Prisma 迁移后不再执行运行时建表，仅用于兼容保留与数据库连通性检查。成功示例：
 
 ```json
 {
   "code": 200,
   "message": "操作成功",
   "data": {
-    "action": "check",
     "initialized": true,
-    "database": "carpooling",
-    "tableCount": 16,
-    "existingCount": 16,
-    "missingCount": 0,
-    "missingTables": []
+    "managedBy": "prisma-migrate"
   },
   "requestId": "RN-xxx"
 }
 ```
 
-`apply` 示例（管理员执行 DDL）：
-
-```bash
-curl -X POST http://localhost:3000/api/users/init-schema \
-  -H "Content-Type: application/json" \
-  -H "x-schema-init-token: your_admin_token" \
-  -d '{"action":"apply"}'
-```
+访问限制：仅内网或管理员 token 可调用。管理员调用头：`x-schema-init-token: <SCHEMA_INIT_TOKEN>`。
 
 **`POST /api/users/create`**  
 
@@ -157,31 +137,19 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 
 在 **`.env`** 中设置 `DB_HOST`、`DB_PORT`、`DB_USER`、`DB_PASSWORD`、`DB_NAME`、`DB_CONNECTION_LIMIT`（见 [.env.example](.env.example)）。
 
-### 3. 初始化表结构
+同时设置 Prisma 连接串：`DATABASE_URL`（格式：`mysql://用户名:密码@主机:端口/数据库名`）。
 
-服务启动后可调用 **`POST /api/users/init-schema`** 做状态检查。生产环境建议由迁移脚本或受控运维执行建表（`action=apply`），勿挂在业务高频请求链路。
+### 3. 表结构迁移（Prisma）
 
-### 核心业务表（按需求规格说明书扩展）
+不再使用运行时 `CREATE TABLE`。请通过 Prisma 迁移命令管理表结构：
 
-以下为当前已落地的核心表（覆盖必做主链路，选做采用可扩展字段/表支持）：
+```bash
+npm run prisma:migrate:dev -- --name <migration-name>
+npm run prisma:migrate:deploy
+npm run prisma:migrate:status
+```
 
-| 表名 | 作用 |
-|------|------|
-| `auth_users` | 登录账号主表（手机号、密码哈希、昵称、最近登录信息） |
-| `user_profiles` | 用户基础属性（角色、性别、国籍、无障碍需求、信用分） |
-| `emergency_contacts` | 紧急联系人 |
-| `driver_credentials` | 车主驾驶证/行驶证资质审核 |
-| `vehicles` | 车辆档案 |
-| `ride_requests` | 乘客发布拼车需求 |
-| `ride_orders` | 司乘匹配后的订单主表 |
-| `trip_locations` | 行程轨迹点（偏航监控） |
-| `safety_alerts` | 安全警报记录（偏航/紧急） |
-| `order_payments` | 费用与支付状态（含高速费分摊） |
-| `user_violations` | 违约/违规记录 |
-| `order_ratings` | 司乘评价与标签 |
-| `user_preference_tags` | 用户偏好标签（社交/效率等） |
-| `compliance_region_rules` | 地域合规规则（接单上限等） |
-| `carbon_accounts`、`carbon_transactions` | 碳积分与减碳流水（选做支撑） |
+首次接入已存在的 `auth_users` 表，请执行 baseline 流程（见 [`后端Prisma开发规范`](../docs/后端Prisma开发规范.md)）。
 
 ### `auth_users` 表字段（注册/登录统一）
 
@@ -209,6 +177,7 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 |------|------|
 | `ALIBABA_CLOUD_ACCESS_KEY_ID` / `ALIBABA_CLOUD_ACCESS_KEY_SECRET` | 阿里云短信相关能力 |
 | `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` | MySQL |
+| `DATABASE_URL` | Prisma 数据库连接串（MySQL） |
 | `JWT_SECRET` / `JWT_REFRESH_SECRET` | 登录鉴权签名密钥（后端启动必填） |
 | `PORT` / `HOST` | 服务监听，默认 `3000` / `0.0.0.0` |
 
@@ -220,7 +189,6 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 | `NODE_ENV` | 如 `production`；影响日志级别等 |
 | `ALLOW_RETURN_VERIFY_CODE` | 仅 `NODE_ENV=production` 时读取；`true` 时在发送验证码成功响应中带回 `verifyCode`（**仅联调，生产勿开**） |
 | `SCHEMA_INIT_TOKEN` | 管理员执行 `init-schema` 的凭证（`action=apply` 必填） |
-| `SCHEMA_INIT_APPLY_COOLDOWN_MS` | `action=apply` 冷却时间（毫秒），默认 `300000` |
 
 敏感配置可向内网负责人索取；完整字段表以 **`.env.example`** 为准。
 
@@ -256,8 +224,11 @@ CREATE DATABASE carpooling DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode
 
 ```
 backend/
+├── prisma/
+│   ├── schema.prisma     # Prisma schema（数据库结构唯一真相）
+│   └── migrations/       # Prisma 迁移文件（需提交Git）
 ├── src/
-│   ├── config/          # db.js / load-env.js
+│   ├── config/          # prisma.js / load-env.js
 │   ├── router/          # sms-router.js, users-router.js, auth-router.js
 │   ├── controller/      # sms-controller.js, users-controller.js, auth-controller.js
 │   ├── service/         # aliyun-sms-service.js, users-service.js, auth-service.js
