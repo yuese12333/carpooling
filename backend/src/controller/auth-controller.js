@@ -1,6 +1,6 @@
 /**
  * 文件功能：认证鉴权控制层
- * 关联业务：用户密码登录
+ * 关联业务：用户密码登录、三方登录、短信验证、风控检测
  * 说明：负责参数校验、调用 service、返回标准响应
  */
 const {
@@ -21,13 +21,18 @@ const {
   buildFailureResponse,
 } = require('../utils/response');
 const { logger, maskSensitive } = require('../utils/logger');
-
-const CHINA_MAINLAND_PHONE_REGEX = /^1\d{10}$/;
-const IPV4_REGEX =
-  /^(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)\.(25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
-const SOCIAL_PLATFORM_SET = new Set(['wechat', 'qq', 'apple']);
-const SMS_TYPE_SET = new Set(['login', 'register', 'reset_pwd']);
-const CLIENT_PLATFORM_SET = new Set(['ios', 'android', 'web']);
+const {
+  SOCIAL_PLATFORM_SET,
+  SMS_TYPE_SET,
+  CLIENT_PLATFORM_SET,
+  MAX_PASSWORD_LENGTH,
+  MAX_AUTH_CODE_LENGTH,
+  MAX_SESSION_ID_LENGTH,
+  MAX_VERIFY_ID_LENGTH,
+  MAX_ACCESS_TOKEN_LENGTH,
+  validatePhone,
+  validateIPv4,
+} = require('../constants/auth-constants');
 
 /**
  * 函数功能：处理“用户密码登录”接口请求
@@ -39,15 +44,16 @@ async function loginByPasswordController(req, res) {
   const { phone, password, rememberMe } = req.body || {};
 
   try {
-    if (!phone || typeof phone !== 'string' || !CHINA_MAINLAND_PHONE_REGEX.test(phone)) {
+    const phoneValidation = validatePhone(phone);
+    if (!phoneValidation.valid) {
       logger.warn({
         module: 'auth-controller',
         operate: 'login-by-password',
         params: maskSensitive({ phone }),
-        result: '手机号格式不正确',
+        result: phoneValidation.error,
         requestId,
       });
-      return res.status(400).json(buildFailureResponse(400, '手机号格式不正确', null, requestId));
+      return res.status(400).json(buildFailureResponse(400, phoneValidation.error, null, requestId));
     }
 
     if (!password || typeof password !== 'string' || !password.trim()) {
@@ -59,6 +65,17 @@ async function loginByPasswordController(req, res) {
         requestId,
       });
       return res.status(400).json(buildFailureResponse(400, '密码不能为空', null, requestId));
+    }
+
+    if (password.length > MAX_PASSWORD_LENGTH) {
+      logger.warn({
+        module: 'auth-controller',
+        operate: 'login-by-password',
+        params: maskSensitive({ phone }),
+        result: '密码长度超出限制',
+        requestId,
+      });
+      return res.status(400).json(buildFailureResponse(400, '密码长度超出限制', null, requestId));
     }
 
     if (rememberMe !== undefined && typeof rememberMe !== 'boolean') {
@@ -139,8 +156,12 @@ async function loginBySocialController(req, res) {
       return res.status(400).json(buildFailureResponse(400, 'authCode 不能为空', null, requestId));
     }
 
+    if (authCode.length > MAX_AUTH_CODE_LENGTH) {
+      return res.status(400).json(buildFailureResponse(400, 'authCode 长度超出限制', null, requestId));
+    }
+
     const data = await loginBySocial({ platform, authCode, requestId });
-    return res.json({ code: 200, message: 'success', data });
+    return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
     logger.error({
       module: 'auth-controller',
@@ -162,8 +183,9 @@ async function sendAuthSmsController(req, res) {
   const { phone, type } = req.body || {};
 
   try {
-    if (!phone || typeof phone !== 'string' || !CHINA_MAINLAND_PHONE_REGEX.test(phone)) {
-      return res.status(400).json(buildFailureResponse(400, '手机号格式不正确', null, requestId));
+    const phoneValidation = validatePhone(phone);
+    if (!phoneValidation.valid) {
+      return res.status(400).json(buildFailureResponse(400, phoneValidation.error, null, requestId));
     }
     if (!type || typeof type !== 'string' || !SMS_TYPE_SET.has(type)) {
       return res
@@ -172,8 +194,16 @@ async function sendAuthSmsController(req, res) {
     }
 
     const data = await sendAuthSms({ phone, type, requestId });
-    return res.json({ code: 200, message: 'success', data });
+    return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
+    logger.error({
+      module: 'auth-controller',
+      operate: 'send-auth-sms',
+      params: maskSensitive({ phone, type }),
+      requestId,
+      error: error?.message || '发送验证码失败',
+      errorType: error?.name || 'UnknownError',
+    });
     const status = error?.statusCode || 500;
     return res
       .status(status)
@@ -193,8 +223,16 @@ async function getLoginConfigController(req, res) {
     }
 
     const data = await getLoginConfig({ appVersion, platform, requestId });
-    return res.json({ code: 200, message: 'success', data });
+    return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
+    logger.error({
+      module: 'auth-controller',
+      operate: 'get-login-config',
+      params: { appVersion, platform },
+      requestId,
+      error: error?.message || '获取配置失败',
+      errorType: error?.name || 'UnknownError',
+    });
     const status = error?.statusCode || 500;
     return res.status(status).json(buildFailureResponse(status, error?.message || '获取配置失败', null, requestId));
   }
@@ -205,8 +243,15 @@ async function getDemoAccountsController(req, res) {
 
   try {
     const data = await getDemoAccounts({ requestId });
-    return res.json({ code: 200, message: 'success', data });
+    return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
+    logger.error({
+      module: 'auth-controller',
+      operate: 'get-demo-accounts',
+      requestId,
+      error: error?.message || '获取演示账号失败',
+      errorType: error?.name || 'UnknownError',
+    });
     const status = error?.statusCode || 500;
     return res
       .status(status)
@@ -223,13 +268,28 @@ async function getCaptchaImageController(req, res) {
       return res.status(400).json(buildFailureResponse(400, 'sessionId 不能为空', null, requestId));
     }
 
-    if (phone && (typeof phone !== 'string' || !CHINA_MAINLAND_PHONE_REGEX.test(phone))) {
-      return res.status(400).json(buildFailureResponse(400, '手机号格式不正确', null, requestId));
+    if (sessionId.length > MAX_SESSION_ID_LENGTH) {
+      return res.status(400).json(buildFailureResponse(400, 'sessionId 长度超出限制', null, requestId));
+    }
+
+    if (phone) {
+      const phoneValidation = validatePhone(phone);
+      if (!phoneValidation.valid) {
+        return res.status(400).json(buildFailureResponse(400, phoneValidation.error, null, requestId));
+      }
     }
 
     const data = await getCaptchaImage({ sessionId, phone, requestId });
-    return res.json({ code: 200, message: 'success', data });
+    return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
+    logger.error({
+      module: 'auth-controller',
+      operate: 'get-captcha-image',
+      params: { sessionId },
+      requestId,
+      error: error?.message || '下发图形验证码失败',
+      errorType: error?.name || 'UnknownError',
+    });
     const status = error?.statusCode || 500;
     return res
       .status(status)
@@ -245,13 +305,26 @@ async function behaviorVerifyController(req, res) {
     if (!verifyId || typeof verifyId !== 'string' || !verifyId.trim()) {
       return res.status(400).json(buildFailureResponse(400, 'verifyId 不能为空', null, requestId));
     }
+
+    if (verifyId.length > MAX_VERIFY_ID_LENGTH) {
+      return res.status(400).json(buildFailureResponse(400, 'verifyId 长度超出限制', null, requestId));
+    }
+
     if (!trackData || typeof trackData !== 'object' || Array.isArray(trackData)) {
       return res.status(400).json(buildFailureResponse(400, 'trackData 必须为对象', null, requestId));
     }
 
     const data = await behaviorVerify({ verifyId, trackData, requestId });
-    return res.json({ code: 200, message: 'success', data });
+    return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
+    logger.error({
+      module: 'auth-controller',
+      operate: 'behavior-verify',
+      params: { verifyId },
+      requestId,
+      error: error?.message || '行为验签失败',
+      errorType: error?.name || 'UnknownError',
+    });
     const status = error?.statusCode || 500;
     return res
       .status(status)
@@ -261,16 +334,25 @@ async function behaviorVerifyController(req, res) {
 
 async function checkPhoneRiskController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
-  const { phoneNumber } = req.body || {};
+  const { phone } = req.body || {};
 
   try {
-    if (!phoneNumber || typeof phoneNumber !== 'string' || !CHINA_MAINLAND_PHONE_REGEX.test(phoneNumber)) {
-      return res.status(400).json(buildFailureResponse(400, '手机号格式不正确', null, requestId));
+    const phoneValidation = validatePhone(phone);
+    if (!phoneValidation.valid) {
+      return res.status(400).json(buildFailureResponse(400, phoneValidation.error, null, requestId));
     }
 
-    const data = await checkPhoneRisk({ phoneNumber, requestId });
-    return res.json({ code: 200, message: 'success', data });
+    const data = await checkPhoneRisk({ phone, requestId });
+    return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
+    logger.error({
+      module: 'auth-controller',
+      operate: 'check-phone-risk',
+      params: maskSensitive({ phone }),
+      requestId,
+      error: error?.message || '手机号风控检测失败',
+      errorType: error?.name || 'UnknownError',
+    });
     const status = error?.statusCode || 500;
     return res
       .status(status)
@@ -286,13 +368,22 @@ async function deviceScoreController(req, res) {
     if (!deviceInfo || typeof deviceInfo !== 'object' || Array.isArray(deviceInfo)) {
       return res.status(400).json(buildFailureResponse(400, 'deviceInfo 必须为对象', null, requestId));
     }
-    if (!ip || typeof ip !== 'string' || !IPV4_REGEX.test(ip)) {
-      return res.status(400).json(buildFailureResponse(400, 'IP 格式不合法', null, requestId));
+    const ipValidation = validateIPv4(ip);
+    if (!ipValidation.valid) {
+      return res.status(400).json(buildFailureResponse(400, ipValidation.error, null, requestId));
     }
 
     const data = await deviceScore({ deviceInfo, ip, requestId });
-    return res.json({ code: 200, message: 'success', data });
+    return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
+    logger.error({
+      module: 'auth-controller',
+      operate: 'device-score',
+      params: { deviceId: deviceInfo?.deviceId, ip },
+      requestId,
+      error: error?.message || '设备风险评级失败',
+      errorType: error?.name || 'UnknownError',
+    });
     const status = error?.statusCode || 500;
     return res
       .status(status)
@@ -315,8 +406,12 @@ async function oauthBindController(req, res) {
       return res.status(400).json(buildFailureResponse(400, 'accessToken 不能为空', null, requestId));
     }
 
+    if (accessToken.length > MAX_ACCESS_TOKEN_LENGTH) {
+      return res.status(400).json(buildFailureResponse(400, 'accessToken 长度超出限制', null, requestId));
+    }
+
     const data = await oauthBind({ platform, accessToken, requestId });
-    return res.json({ code: 200, message: 'success', data });
+    return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
     logger.error({
       module: 'auth-controller',

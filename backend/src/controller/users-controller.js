@@ -19,7 +19,7 @@ async function initAuthUsersSchemaController(req, res) {
       module: 'users-controller',
       operate: 'init-auth-users-schema',
       requestId,
-      result: 'Auth users schema initialized',
+      result: 'Prisma schema status checked',
     });
     return res.json(buildSuccessResponse(data, requestId));
   } catch (error) {
@@ -32,7 +32,7 @@ async function initAuthUsersSchemaController(req, res) {
     });
     return res
       .status(500)
-      .json(buildFailureResponse(500, '初始化认证用户表(auth_users)失败', null, requestId));
+      .json(buildFailureResponse(500, 'Prisma迁移模式下的数据库状态检查失败', null, requestId));
   }
 }
 
