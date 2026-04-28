@@ -97,8 +97,44 @@ async function updateLastLoginInfo(userId, { lastLoginAt, deviceInfo }, requestI
   });
 }
 
+/**
+ * 函数功能：按昵称查询用户
+ * 入参：userName（用户昵称）
+ * 出参：用户对象或 null
+ */
+async function findByUserName(userName, requestId) {
+  const user = await prisma.authUser.findFirst({
+    where: { user_name: userName },
+  });
+
+  if (!user) {
+    logger.debug({
+      module: 'user-dao',
+      operate: 'find-by-user-name',
+      requestId,
+      params: { userName },
+      result: 'User not found by nickname',
+    });
+    return null;
+  }
+
+  logger.debug({
+    module: 'user-dao',
+    operate: 'find-by-user-name',
+    requestId,
+    params: { userName },
+    result: 'User found by nickname',
+  });
+
+  return {
+    userId: user.user_id,
+    userName: user.user_name,
+  };
+}
+
 module.exports = {
   findByPhone,
   createAuthUser,
   updateLastLoginInfo,
+  findByUserName,
 };
