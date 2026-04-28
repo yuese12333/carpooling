@@ -11,8 +11,10 @@ const AmapNavi = (NativeModules as any)?.AmapNavi;
 export type NaviParams = {
   startLat: number;
   startLng: number;
+  startName?: string;
   endLat: number;
   endLng: number;
+  endName?: string;
 };
 
 /**
@@ -40,7 +42,9 @@ export async function startNavi(params: NaviParams): Promise<void> {
   await AmapNavi.startNavi(
     params.startLat,
     params.startLng,
+    params.startName ?? '起点',
     params.endLat,
     params.endLng,
+    params.endName ?? '终点',
   );
 }
