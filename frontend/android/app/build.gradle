@@ -164,16 +164,19 @@ android {
         jniLibs {
             def enableLegacyPackaging = findProperty('expo.useLegacyPackaging') ?: 'false'
             useLegacyPackaging enableLegacyPackaging.toBoolean()
+            // 高德 SDK 携带旧版 libc++_shared.so（NDK r21d），已从 libs/ 目录手动删除。
+            // pickFirst 作为兜底：若将来任意依赖重新引入同名库，优先保留 RN/NDK r27 版本。
+            pickFirsts += ['**/libc++_shared.so']
         }
     }
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
 
-    // 高德导航 .so 放在 libs/ 子目录，通过 sourceSets 告知 Gradle
+    // 高德导航 .so 放在 libs/ 子目录，追加到 sourceSets（不能用 = 赋值，否则会覆盖 RN 默认路径导致 libjsi.so 丢失）
     sourceSets {
         main {
-            jniLibs.srcDirs = ['src/main/jniLibs', 'libs']
+            jniLibs.srcDirs += ['libs']
         }
     }
 }

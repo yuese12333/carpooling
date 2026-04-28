@@ -14,8 +14,9 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactNativeHost
 
 import com.amap.api.location.AMapLocationClient
+import com.amap.api.maps.MapsInitializer
+import com.amap.api.navi.NaviSetting
 import com.amap.api.services.core.ServiceSettings
-import com.amap.api.navi.AMapNavi
 
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
@@ -66,11 +67,16 @@ class MainApplication : Application(), ReactApplication {
     ServiceSettings.updatePrivacyAgree(this, true)
 
     /*
-     * 高德导航 SDK 隐私合规（需在首次使用导航能力前调用）
-     * 正式上线请在用户同意隐私政策后再设为 true。
+     * 高德地图 SDK（3D 地图）隐私合规（需在首次使用地图能力前调用）
      */
-    AMapNavi.updatePrivacyShow(this, true, true)
-    AMapNavi.updatePrivacyAgree(this, true)
+    MapsInitializer.updatePrivacyShow(this, true, true)
+    MapsInitializer.updatePrivacyAgree(this, true)
+
+    /*
+     * 高德导航 SDK 隐私合规（需在首次使用 AMapNavi 等导航能力前调用）
+     */
+    NaviSetting.updatePrivacyShow(this, true, true)
+    NaviSetting.updatePrivacyAgree(this, true)
 
     DefaultNewArchitectureEntryPoint.releaseLevel = try {
       ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
