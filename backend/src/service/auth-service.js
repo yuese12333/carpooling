@@ -513,6 +513,222 @@ async function oauthBind({ platform, accessToken, requestId }) {
   };
 }
 
+/**
+ * 函数功能：注册验证码同步预校验
+ * 入参：phone/verifyCode/requestId
+ * 出参：{ isValid, tempToken }
+ */
+async function registerPreVerify({ phone, verifyCode, requestId }) {
+  logger.info({
+    module: 'auth-service',
+    operate: 'register-pre-verify',
+    params: maskSensitive({ phone }),
+    result: 'Start register pre-verify',
+    requestId,
+  });
+
+  const codeKey = `${REDIS_KEY_PREFIX.SMS_CODE}register:${phone}`;
+  const storedCode = await redisUtils.get(codeKey);
+
+  if (!storedCode) {
+    const error = new Error('验证码不存在或已过期');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (storedCode !== verifyCode) {
+    const error = new Error('验证码错误');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // 生成临时令牌，有效期 10 分钟
+  const tempToken = jwtUtils.generateTempToken(
+    { phone, type: 'register' },
+    { expiresIn: 10 * 60 },
+  );
+
+  // 缓存临时令牌，用于后续注册提交验证
+  const tempKey = `register_temp:${phone}`;
+  await redisUtils.setExpire(tempKey, tempToken, 10 * 60);
+
+  logger.info({
+    module: 'auth-service',
+    operate: 'register-pre-verify',
+    params: maskSensitive({ phone }),
+    result: 'Pre-verify passed, tempToken generated',
+    requestId,
+  });
+
+  return {
+    isValid: true,
+    tempToken,
+  };
+}
+
+/**
+ * 函数功能：校验验证码
+ * 入参：phone/verifyCode/requestId
+ * 出参：{ isValid, tempToken }
+ */
+async function verifyRegisterCode({ phone, verifyCode, requestId }) {
+  logger.info({
+    module: 'auth-service',
+    operate: 'verify-register-code',
+    params: maskSensitive({ phone }),
+    result: 'Start verify register code',
+    requestId,
+  });
+
+  const codeKey = `${REDIS_KEY_PREFIX.SMS_CODE}register:${phone}`;
+  const storedCode = await redisUtils.get(codeKey);
+
+  if (!storedCode) {
+    const error = new Error('验证码不存在或已过期');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (storedCode !== verifyCode) {
+    const error = new Error('验证码错误');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // 生成临时校验令牌
+  const tempToken = jwtUtils.generateTempToken(
+    { phone, type: 'verify' },
+    { expiresIn: 10 * 60 },
+  );
+
+  logger.info({
+    module: 'auth-service',
+    operate: 'verify-register-code',
+    params: maskSensitive({ phone }),
+    result: 'Verify code passed, tempToken generated',
+    requestId,
+  });
+
+  return {
+    isValid: true,
+    tempToken,
+  };
+}
+
+/**
+ * 函数功能：用户注册
+ * 入参：nickname/phone/password/verifyCode/agreeProtocol/requestId
+ * 出参：{ userId, accessToken, userInfo }
+ */
+async function registerUser({ nickname, phone, password, verifyCode, agreeProtocol, requestId }) {
+  logger.info({
+    module: 'auth-service',
+    operate: 'register-user',
+    params: maskSensitive({ phone, nickname }),
+    result: 'Start user registration',
+    requestId,
+  });
+
+  // 检查手机号是否已注册
+  const existingUser = await userDao.findByPhone(phone, requestId);
+  if (existingUser) {
+    const error = new Error('该手机号已注册');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  // 检查昵称是否被占用
+  const existingNickname = await userDao.findByUserName(nickname, requestId);
+  if (existingNickname) {
+    const error = new Error('该昵称已被占用');
+    error.statusCode = 409;
+    throw error;
+  }
+
+  // 校验验证码
+  const codeKey = `${REDIS_KEY_PREFIX.SMS_CODE}register:${phone}`;
+  const storedCode = await redisUtils.get(codeKey);
+  if (!storedCode || storedCode !== verifyCode) {
+    const error = new Error('验证码错误或已过期');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // 对密码进行加盐哈希处理
+  const passwordHash = await passwordUtils.hash(password);
+
+  // 生成用户 ID
+  const timestamp = Date.now().toString(36);
+  const randomPart = Math.random().toString(36).slice(2, 8);
+  const userId = `u_${timestamp}_${randomPart}`;
+
+  // 创建用户账号
+  await userDao.createAuthUser(
+    {
+      userId,
+      phone,
+      passwordHash,
+      userName: nickname,
+      avatarUrl: '',
+    },
+    requestId,
+  );
+
+  // 生成登录态 Token
+  const tokenPayload = { userId, phone };
+  const accessToken = jwtUtils.generateToken(tokenPayload, { expiresIn: TOKEN_EXPIRE_DEFAULT });
+  const refreshToken = jwtUtils.generateRefreshToken(
+    { ...tokenPayload, type: 'refresh' },
+    { expiresIn: REFRESH_TOKEN_EXPIRE_DEFAULT },
+  );
+
+  logger.info({
+    module: 'auth-service',
+    operate: 'register-user',
+    params: maskSensitive({ phone, nickname }),
+    result: 'User registered successfully',
+    requestId,
+  });
+
+  return {
+    userId,
+    accessToken,
+    refreshToken,
+    userInfo: {
+      nickname,
+      avatarUrl: '',
+    },
+  };
+}
+
+/**
+ * 函数功能：昵称可用性检测
+ * 入参：nickname/requestId
+ * 出参：{ isAvailable }
+ */
+async function checkNickname({ nickname, requestId }) {
+  logger.info({
+    module: 'auth-service',
+    operate: 'check-nickname',
+    params: { nickname },
+    result: 'Checking nickname availability',
+    requestId,
+  });
+
+  const existingUser = await userDao.findByUserName(nickname, requestId);
+  const isAvailable = !existingUser;
+
+  logger.info({
+    module: 'auth-service',
+    operate: 'check-nickname',
+    params: { nickname },
+    result: isAvailable ? 'Nickname available' : 'Nickname taken',
+    requestId,
+  });
+
+  return { isAvailable };
+}
+
 module.exports = {
   loginByPassword,
   loginBySocial,
@@ -524,4 +740,8 @@ module.exports = {
   checkPhoneRisk,
   deviceScore,
   oauthBind,
+  registerPreVerify,
+  verifyRegisterCode,
+  registerUser,
+  checkNickname,
 };

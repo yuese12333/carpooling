@@ -14,6 +14,10 @@ const {
   checkPhoneRisk,
   deviceScore,
   oauthBind,
+  registerPreVerify,
+  verifyRegisterCode,
+  registerUser,
+  checkNickname,
 } = require('../service/auth-service');
 const {
   createRequestId,
@@ -428,6 +432,277 @@ async function oauthBindController(req, res) {
   }
 }
 
+/**
+ * 函数功能：处理"注册验证码同步预校验"接口请求
+ * 入参：req/res（Express 请求与响应对象）
+ * 出参：标准化 JSON 响应
+ */
+async function registerPreVerifyController(req, res) {
+  const requestId = req.headers['x-request-id'] || createRequestId();
+  const { phoneNumber, verifyCode } = req.body || {};
+
+  try {
+    // 校验手机号格式
+    const phoneValidation = validatePhone(phoneNumber);
+    if (!phoneValidation.valid) {
+      logger.warn({
+        module: 'auth-controller',
+        operate: 'register-pre-verify',
+        params: maskSensitive({ phone: phoneNumber }),
+        result: phoneValidation.error,
+        requestId,
+      });
+      return res.status(400).json(buildFailureResponse(400, phoneValidation.error, null, requestId));
+    }
+
+    // 校验验证码长度为 6 位
+    if (!verifyCode || typeof verifyCode !== 'string' || verifyCode.length !== 6) {
+      logger.warn({
+        module: 'auth-controller',
+        operate: 'register-pre-verify',
+        params: maskSensitive({ phone: phoneNumber }),
+        result: '验证码必须为 6 位',
+        requestId,
+      });
+      return res.status(400).json(buildFailureResponse(400, '验证码必须为 6 位', null, requestId));
+    }
+
+    const data = await registerPreVerify({ phone: phoneNumber, verifyCode, requestId });
+
+    logger.info({
+      module: 'auth-controller',
+      operate: 'register-pre-verify',
+      params: maskSensitive({ phone: phoneNumber }),
+      result: 'Pre-verify successful',
+      requestId,
+    });
+
+    return res.json(buildSuccessResponse(data, requestId));
+  } catch (error) {
+    const status = error?.statusCode || 500;
+    const message = error?.message || '预校验失败';
+
+    logger.error({
+      module: 'auth-controller',
+      operate: 'register-pre-verify',
+      params: maskSensitive({ phone: phoneNumber }),
+      requestId,
+      error: message,
+      errorType: error?.name || 'UnknownError',
+    });
+
+    return res.status(status).json(buildFailureResponse(status, message, null, requestId));
+  }
+}
+
+/**
+ * 函数功能：处理"校验验证码"接口请求
+ * 入参：req/res（Express 请求与响应对象）
+ * 出参：标准化 JSON 响应
+ */
+async function verifyRegisterCodeController(req, res) {
+  const requestId = req.headers['x-request-id'] || createRequestId();
+  const { phoneNumber, verifyCode } = req.body || {};
+
+  try {
+    // 校验手机号格式
+    const phoneValidation = validatePhone(phoneNumber);
+    if (!phoneValidation.valid) {
+      return res.status(400).json(buildFailureResponse(400, phoneValidation.error, null, requestId));
+    }
+
+    // 校验验证码长度
+    if (!verifyCode || typeof verifyCode !== 'string' || verifyCode.length !== 6) {
+      return res.status(400).json(buildFailureResponse(400, '验证码必须为 6 位', null, requestId));
+    }
+
+    const data = await verifyRegisterCode({ phone: phoneNumber, verifyCode, requestId });
+
+    logger.info({
+      module: 'auth-controller',
+      operate: 'verify-register-code',
+      params: maskSensitive({ phone: phoneNumber }),
+      result: 'Verify code successful',
+      requestId,
+    });
+
+    return res.json(buildSuccessResponse(data, requestId));
+  } catch (error) {
+    const status = error?.statusCode || 500;
+    const message = error?.message || '验证码校验失败';
+
+    logger.error({
+      module: 'auth-controller',
+      operate: 'verify-register-code',
+      params: maskSensitive({ phone: phoneNumber }),
+      requestId,
+      error: message,
+      errorType: error?.name || 'UnknownError',
+    });
+
+    return res.status(status).json(buildFailureResponse(status, message, null, requestId));
+  }
+}
+
+/**
+ * 函数功能：处理"用户注册"接口请求
+ * 入参：req/res（Express 请求与响应对象）
+ * 出参：标准化 JSON 响应
+ */
+async function registerUserController(req, res) {
+  const requestId = req.headers['x-request-id'] || createRequestId();
+  const { nickname, phoneNumber, password, verifyCode, agreeProtocol } = req.body || {};
+
+  try {
+    // 校验手机号格式
+    const phoneValidation = validatePhone(phoneNumber);
+    if (!phoneValidation.valid) {
+      logger.warn({
+        module: 'auth-controller',
+        operate: 'register-user',
+        params: maskSensitive({ phone: phoneNumber }),
+        result: phoneValidation.error,
+        requestId,
+      });
+      return res.status(400).json(buildFailureResponse(400, phoneValidation.error, null, requestId));
+    }
+
+    // 校验密码长度在 8-20 位之间
+    if (!password || typeof password !== 'string' || password.length < 8 || password.length > 20) {
+      logger.warn({
+        module: 'auth-controller',
+        operate: 'register-user',
+        params: maskSensitive({ phone: phoneNumber }),
+        result: '密码长度必须在 8-20 位之间',
+        requestId,
+      });
+      return res.status(400).json(buildFailureResponse(400, '密码长度必须在 8-20 位之间', null, requestId));
+    }
+
+    // 校验密码复杂度（必须包含字母+数字）
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    if (!hasLetter || !hasNumber) {
+      logger.warn({
+        module: 'auth-controller',
+        operate: 'register-user',
+        params: maskSensitive({ phone: phoneNumber }),
+        result: '密码必须包含字母和数字',
+        requestId,
+      });
+      return res.status(400).json(buildFailureResponse(400, '密码必须包含字母和数字', null, requestId));
+    }
+
+    // 校验昵称
+    if (!nickname || typeof nickname !== 'string' || !nickname.trim()) {
+      return res.status(400).json(buildFailureResponse(400, '昵称不能为空', null, requestId));
+    }
+
+    // 校验验证码
+    if (!verifyCode || typeof verifyCode !== 'string' || verifyCode.length !== 6) {
+      return res.status(400).json(buildFailureResponse(400, '验证码必须为 6 位', null, requestId));
+    }
+
+    // 校验是否同意用户协议
+    if (agreeProtocol !== true) {
+      logger.warn({
+        module: 'auth-controller',
+        operate: 'register-user',
+        params: maskSensitive({ phone: phoneNumber }),
+        result: '必须同意用户协议',
+        requestId,
+      });
+      return res.status(400).json(buildFailureResponse(400, '必须同意用户协议', null, requestId));
+    }
+
+    const data = await registerUser({
+      nickname,
+      phone: phoneNumber,
+      password,
+      verifyCode,
+      agreeProtocol,
+      requestId,
+    });
+
+    logger.info({
+      module: 'auth-controller',
+      operate: 'register-user',
+      params: maskSensitive({ phone: phoneNumber, nickname }),
+      result: 'User registered successfully',
+      requestId,
+    });
+
+    return res.json(buildSuccessResponse(data, requestId));
+  } catch (error) {
+    const status = error?.statusCode || 500;
+    const message = error?.message || '注册失败';
+
+    const logPayload = {
+      module: 'auth-controller',
+      operate: 'register-user',
+      params: maskSensitive({ phone: phoneNumber, nickname }),
+      requestId,
+    };
+
+    if (status === 409) {
+      logger.warn({
+        ...logPayload,
+        result: message,
+      });
+    } else {
+      logger.error({
+        ...logPayload,
+        error: message,
+        errorType: error?.name || 'UnknownError',
+      });
+    }
+
+    return res.status(status).json(buildFailureResponse(status, message, null, requestId));
+  }
+}
+
+/**
+ * 函数功能：处理"昵称可用性检测"接口请求
+ * 入参：req/res（Express 请求与响应对象）
+ * 出参：标准化 JSON 响应
+ */
+async function checkNicknameController(req, res) {
+  const requestId = req.headers['x-request-id'] || createRequestId();
+  const { nickname } = req.query || {};
+
+  try {
+    if (!nickname || typeof nickname !== 'string' || !nickname.trim()) {
+      return res.status(400).json(buildFailureResponse(400, '昵称不能为空', null, requestId));
+    }
+
+    const data = await checkNickname({ nickname, requestId });
+
+    logger.info({
+      module: 'auth-controller',
+      operate: 'check-nickname',
+      params: { nickname },
+      result: data.isAvailable ? 'Nickname available' : 'Nickname taken',
+      requestId,
+    });
+
+    return res.json(buildSuccessResponse(data, requestId));
+  } catch (error) {
+    const status = error?.statusCode || 500;
+    const message = error?.message || '昵称检测失败';
+
+    logger.error({
+      module: 'auth-controller',
+      operate: 'check-nickname',
+      params: { nickname },
+      requestId,
+      error: message,
+      errorType: error?.name || 'UnknownError',
+    });
+
+    return res.status(status).json(buildFailureResponse(status, message, null, requestId));
+  }
+}
+
 module.exports = {
   loginByPasswordController,
   loginBySocialController,
@@ -439,4 +714,8 @@ module.exports = {
   checkPhoneRiskController,
   deviceScoreController,
   oauthBindController,
+  registerPreVerifyController,
+  verifyRegisterCodeController,
+  registerUserController,
+  checkNicknameController,
 };
