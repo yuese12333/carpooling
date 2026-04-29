@@ -54,7 +54,7 @@ export default function TripsPage() {
       result: "SUCCESS",
       requestId
     });
-  }, [requestId]);
+  }, [requestId, activeRole, isMockMode]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>

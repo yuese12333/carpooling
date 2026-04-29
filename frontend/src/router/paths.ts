@@ -18,6 +18,12 @@ export const ROUTES = {
         FORGET_PASSWORD: '/auth/forget-password/forget-password',
     },
 
+    // 管理员模块（仅用于前端路由跳转/守卫）
+    ADMIN: {
+        LOGIN: '/admin/login',
+        USERS: '/admin/users',
+    },
+
     // 个人中心模块
     PROFILE: {
         FAVORITE_LOCATIONS: '/profile/favorite-locations',

@@ -42,8 +42,18 @@ function generateTempToken(payload, options = {}) {
   return jwt.sign({ ...payload, type: 'temp' }, JWT_SECRET, { expiresIn });
 }
 
+/**
+ * 函数功能：校验 access token 并返回 payload
+ * 入参：token
+ * 出参：payload（包含 userId/phone/role 等字段）
+ */
+function verifyToken(token) {
+  return jwt.verify(token, JWT_SECRET);
+}
+
 module.exports = {
   generateToken,
   generateRefreshToken,
   generateTempToken,
+  verifyToken,
 };

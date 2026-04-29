@@ -65,9 +65,17 @@ async function loginByPassword({ phone, password, rememberMe, deviceInfo, reques
     throw error;
   }
 
+  // 管理员系统规则：禁用用户不可登录
+  if (user.status === 'disabled') {
+    const error = new Error('账号已被禁用，无法登录');
+    error.statusCode = 401;
+    throw error;
+  }
+
   const tokenPayload = {
     userId: user.userId,
     phone: user.phone,
+    role: user.role,
   };
 
   const expireIn = rememberMe ? TOKEN_EXPIRE_REMEMBER_ME : TOKEN_EXPIRE_DEFAULT;
@@ -146,8 +154,33 @@ async function loginBySocial({ platform, authCode, requestId }) {
     };
   }
 
+  // 只有绑定的正式用户才需要检查状态/角色
+  const authUser = await userDao.findByUserId(bindRecord.userId, requestId);
+  if (!authUser) {
+    // 数据不一致：存在绑定记录但找不到对应登录用户，视为服务侧异常
+    logger.error({
+      module: 'auth-service',
+      operate: 'login-by-social',
+      requestId,
+      params: { platform, userId: bindRecord.userId },
+      error: 'auth user not found for existing bind record',
+      errorType: 'AuthUserNotFound',
+    });
+    const error = new Error('登录失败');
+    error.statusCode = 500;
+    throw error;
+  }
+
+  if (authUser.status === 'disabled') {
+    const error = new Error('账号已被禁用，无法登录');
+    error.statusCode = 401;
+    throw error;
+  }
+
   const token = jwtUtils.generateToken({
     userId: bindRecord.userId,
+    phone: authUser.phone,
+    role: authUser.role,
     platform,
     openId,
     isNewUser: false,

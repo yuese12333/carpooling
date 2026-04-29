@@ -52,7 +52,7 @@ export default function HomePage() {
       errorType: undefined,
       requestId: requestId
     });
-  }, [requestId]);
+  }, [requestId, isMockMode]);
 
   /**
    * 切换 Mock 模式并记录轨迹
