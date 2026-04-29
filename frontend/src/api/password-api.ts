@@ -4,7 +4,7 @@
  */
 
 import request from '@/utils/request';
-import logger from '@/utils/logger';
+import logger, { maskSensitive } from '@/utils/logger';
 import { useEnvStore } from '@/store/env-store';
 
 /** ----------------配置项---------------- */
@@ -79,7 +79,7 @@ export const passwordApi = {
             logger.error({
                 module: 'PasswordApi',
                 operate: 'sendSmsCode',
-                params: { phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') }, // 脱敏处理
+                params: maskSensitive({ phone }),
                 result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'API_RUNTIME_ERROR',
@@ -108,7 +108,7 @@ export const passwordApi = {
             logger.error({
                 module: 'PasswordApi',
                 operate: 'verifyCode',
-                params: { phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'), code: '****' }, // 隐私脱敏
+                params: maskSensitive({ phone, code: '****' }),
                 result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'API_RUNTIME_ERROR',

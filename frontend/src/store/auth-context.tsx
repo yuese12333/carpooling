@@ -5,8 +5,9 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import logger from "@/utils/logger";
+import logger, { maskSensitive } from "@/utils/logger";
 import { useEnvStore } from "@/store/env-store";
+import { loginByPassword as loginByPasswordApi } from "@/api/auth";
 
 /**
  * 用户信息接口定义
@@ -16,6 +17,9 @@ interface User {
     name: string;
     phone: string;
     avatar: string;
+    token: string;
+    refreshToken: string;
+    role: string;
 }
 
 /**
@@ -29,26 +33,54 @@ interface AuthContextType {
     /** 当前用户信息 */
     user: User | null;
     /** 登录函数 */
-    login: (phone: string, password: string) => Promise<void>;
+    login: (phone: string, password: string, rememberMe?: boolean) => Promise<void>;
     /** 注册函数 */
-    register: (name: string, phone: string, password: string) => Promise<void>;
+    register: (name: string, phone: string, password: string, accessToken?: string) => Promise<void>;
     /** 退出登录 */
     logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const MOCK_USER: User | null = __DEV__
-    ? {
-          id: "u1",
-          name: "李小明",
-          phone: "13888888888",
-          avatar:
-              "https://images.unsplash.com/photo-1605504836193-e77d3d9ede8a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGluZXNlJTIwbWFuJTIwcG9ydHJhaXQlMjBhdmF0YXJ8ZW58MXx8fHwxNzczOTcyNDA3fDA&ixlib=rb-4.1.0&q=80&w=400",
-      }
-    : null;
-
 const STORAGE_KEY = "carpooling_auth";
+
+function decodeTokenPayload(token: string): Record<string, unknown> | null {
+    if (!token || typeof token !== "string") return null;
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64 + "===".slice((base64.length + 3) % 4);
+
+    try {
+        const atobFn = (globalThis as any).atob;
+        if (typeof atobFn === "function") {
+            const binary = atobFn(padded);
+            const jsonStr = decodeURIComponent(
+                Array.prototype.map
+                    .call(binary, (c: string) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join(""),
+            );
+            return JSON.parse(jsonStr);
+        }
+    } catch {
+        // ignore
+    }
+
+    // RN 环境有时可能没有 atob，此处尝试 Buffer（若可用）
+    const buf: any = (globalThis as any).Buffer;
+    if (buf) {
+        try {
+            const jsonStr = buf.from(padded, "base64").toString("utf8");
+            return JSON.parse(jsonStr);
+        } catch {
+            return null;
+        }
+    }
+
+    return null;
+}
 
 /**
  * 身份认证提供者组件
@@ -66,8 +98,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const stored = await AsyncStorage.getItem(STORAGE_KEY);
                 if (stored) {
                     const parsed = JSON.parse(stored);
-                    setUser(parsed);
-                    setIsAuthenticated(true);
+                    const nextToken = typeof parsed?.token === "string" ? parsed.token : "";
+                    const decoded = decodeTokenPayload(nextToken);
+                    const nextRoleRaw =
+                        typeof parsed?.role === "string" && parsed.role.trim()
+                            ? parsed.role
+                            : decoded?.role;
+                    const nextRole = typeof nextRoleRaw === "string" && nextRoleRaw.trim() ? nextRoleRaw.trim() : "user";
+
+                    const safeUser =
+                        nextToken && typeof nextToken === "string"
+                            ? {
+                                  id: typeof parsed?.id === "string" ? parsed.id : decoded?.userId || "",
+                                  name: typeof parsed?.name === "string" ? parsed.name : "",
+                                  phone: typeof parsed?.phone === "string" ? parsed.phone : "",
+                                  avatar: typeof parsed?.avatar === "string" ? parsed.avatar : "",
+                                  token: nextToken,
+                                  refreshToken: typeof parsed?.refreshToken === "string" ? parsed.refreshToken : "",
+                                  role: nextRole,
+                              }
+                            : null;
+
+                    setUser(safeUser);
+                    setIsAuthenticated(Boolean(safeUser?.token));
+
+                    // 同步到 Zustand：供 request 拦截器注入 Authorization
+                    if (safeUser?.token) {
+                        useEnvStore.getState().setToken(safeUser.token);
+                        useEnvStore.getState().setRole(safeUser.role);
+                    }
                 }
             } catch (error) {
                 await AsyncStorage.removeItem(STORAGE_KEY);
@@ -91,27 +150,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      * @param phone 手机号
      * @param password 密码
      */
-    const login = async (phone: string, password: string) => {
+    const login = async (phone: string, password: string, rememberMe?: boolean) => {
         const requestId = useEnvStore.getState().currentRequestId;
+        const isMockMode = useEnvStore.getState().isMockMode;
         try {
-            // 模拟 API 调用延迟（仅 Dev 环境）
-            if (!__DEV__ || !MOCK_USER) {
-                throw new Error("login API not implemented");
-            }
-            await new Promise((res) => setTimeout(res, 1000));
+            const data = await loginByPasswordApi(
+                { phone, password, rememberMe },
+                isMockMode
+            );
 
-            const loggedUser = { ...MOCK_USER, phone };
+            const decoded = decodeTokenPayload(data.token);
+            const roleRaw = decoded?.role;
+            // 安全兜底：解码失败时必须默认 user，避免越权
+            const role =
+                typeof roleRaw === "string" && roleRaw.trim() ? roleRaw.trim() : "user";
 
-            // 数据持久化
+            const loggedUser: User = {
+                id: data.userId,
+                name: data.userName,
+                phone,
+                avatar: data.avatarUrl || "",
+                token: data.token,
+                refreshToken: data.refreshToken,
+                role,
+            };
+
+            // 数据持久化（用于刷新恢复鉴权态）
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(loggedUser));
 
             setUser(loggedUser);
-            setIsAuthenticated(true);
+            setIsAuthenticated(Boolean(loggedUser.token));
+
+            // 同步到 Zustand：供 request 拦截器注入 Authorization
+            useEnvStore.getState().setToken(loggedUser.token);
+            useEnvStore.getState().setRole(loggedUser.role);
 
             logger.info({
                 module: "AuthContext",
                 operate: "login",
-                params: { phone }, // 禁止记录 password 敏感隐私
+                params: { ...maskSensitive({ phone }), rememberMe: Boolean(rememberMe), isMockMode },
                 result: "success",
                 requestId,
             });
@@ -119,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             logger.error({
                 module: "AuthContext",
                 operate: "login",
-                params: { phone },
+                params: { ...maskSensitive({ phone }), rememberMe: Boolean(rememberMe) },
                 error: error instanceof Error ? error.message : "Login Failed",
                 errorType: "AUTH_LOGIN_ERROR",
                 requestId,
@@ -134,25 +211,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      * @param phone 手机号
      * @param password 密码
      */
-    const register = async (name: string, phone: string, password: string) => {
+    const register = async (name: string, phone: string, password: string, accessToken?: string) => {
         const requestId = useEnvStore.getState().currentRequestId;
         try {
-            if (!__DEV__ || !MOCK_USER) {
-                throw new Error("register API not implemented");
+            // registerLocal 在 useRegisterForm 中会传回 accessToken（来自 registerUser 接口响应）
+            const token = typeof accessToken === "string" ? accessToken : "";
+            if (!token) {
+                setUser(null);
+                setIsAuthenticated(false);
+                useEnvStore.getState().setToken("");
+                useEnvStore.getState().setRole("user");
+                return;
             }
-            await new Promise((res) => setTimeout(res, 1000));
 
-            const newUser = { ...MOCK_USER, name, phone };
+            const decoded = decodeTokenPayload(token);
+            const roleRaw = decoded?.role;
+            // 安全兜底：解码失败默认 user
+            const role =
+                typeof roleRaw === "string" && roleRaw.trim() ? roleRaw.trim() : "user";
+
+            const userIdRaw = decoded?.userId;
+            const userId = typeof userIdRaw === "string" ? userIdRaw : "";
+
+            const newUser: User = {
+                id: userId || "",
+                name,
+                phone,
+                avatar: "",
+                token,
+                refreshToken: "",
+                role,
+            };
 
             await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newUser));
 
             setUser(newUser);
             setIsAuthenticated(true);
 
+            // 同步到 Zustand：供 request 拦截器注入 Authorization
+            useEnvStore.getState().setToken(newUser.token);
+            useEnvStore.getState().setRole(newUser.role);
+
             logger.info({
                 module: "AuthContext",
                 operate: "register",
-                params: { name, phone },
+                params: { name, phone, isMockMode: useEnvStore.getState().isMockMode },
                 result: "success",
                 requestId,
             });
@@ -178,6 +281,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null);
             setIsAuthenticated(false);
             await AsyncStorage.removeItem(STORAGE_KEY);
+
+            // 清理鉴权态：防止携带旧 token 访问管理接口
+            useEnvStore.getState().setToken("");
+            useEnvStore.getState().setRole("user");
 
             logger.info({
                 module: "AuthContext",

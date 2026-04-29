@@ -202,7 +202,7 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
                 agreeProtocol: isAgreed,
             };
 
-            await registerUser(registerParams, isMockMode);
+            const registerRes = await registerUser(registerParams, isMockMode);
 
             // 记录注册成功日志，严禁记录 password
             logger.info({
@@ -213,8 +213,8 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
                 requestId
             });
 
-            // 本地存储用户信息并重定向
-            await registerLocal(nickname, phoneNumber, password);
+            // 本地存储用户信息并重定向（registerLocal 内部会解析 token payload 获取 role）
+            await registerLocal(nickname, phoneNumber, password, registerRes.accessToken);
             router.replace(ROUTES.HOME);
         } catch (error: any) {
             logger.error({

@@ -79,7 +79,7 @@ export default function FindRidePage() {
       error: undefined,
       errorType: undefined
     });
-  }, [requestId]);
+  }, [requestId, searchFrom, searchTo]);
 
   /**
    * 增强型返回处理
