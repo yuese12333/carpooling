@@ -26,7 +26,14 @@ const request: AxiosInstance = axios.create({
  */
 request.interceptors.request.use(
     (config) => {
-        const { currentRequestId } = useEnvStore.getState();
+        const { currentRequestId, token } = useEnvStore.getState();
+
+        // Authorization 注入：用于受保护接口（如 /api/admin/*）
+        if (typeof token === 'string' && token.trim()) {
+            // Axios headers 在不同环境下类型可能为 undefined，做防御性处理
+            config.headers = config.headers || {};
+            (config.headers as any)['Authorization'] = `Bearer ${token.trim()}`;
+        }
 
         if (currentRequestId) {
             // 严格遵循规范：禁止手动拼接 URL，统一注入 Header
