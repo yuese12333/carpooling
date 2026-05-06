@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Alert, TextInput } from "react-native";
 import { useRouter } from 'expo-router';
 import { passwordApi } from '../api/password-api';
-import logger from "@/utils/logger";
+import logger, { maskSensitive } from "@/utils/logger";
 import {
     validatePhoneNumber,
     validatePassword,
@@ -91,7 +91,7 @@ export const useForgetPasswordForm = (requestId: string) => {
                 logger.info({
                     module: "Auth_ForgetPassword",
                     operate: "SEND_CODE_SUCCESS",
-                    params: { phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') },
+                    params: maskSensitive({ phone }),
                     result: "Step 2 Entered",
                     requestId
                 });
@@ -105,7 +105,7 @@ export const useForgetPasswordForm = (requestId: string) => {
             logger.error({
                 module: "Auth_ForgetPassword",
                 operate: "INITIATE_RESET_FAILED",
-                params: { phone },
+                params: maskSensitive({ phone }),
                 result: undefined,
                 error: msg,
                 errorType: "BIZ_ERROR",

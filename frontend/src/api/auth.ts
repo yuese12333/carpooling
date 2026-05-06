@@ -9,6 +9,7 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import logger from '../utils/logger';
 import { useEnvStore } from '../store/env-store';
+import request from '../utils/request';
 
 // --- 类型定义 ---
 
@@ -24,7 +25,7 @@ export interface LoginRequest {
     phone: string;
     password?: string;
     code?: string;
-    shouldRemember?: boolean;
+    rememberMe?: boolean;
 }
 
 /** 登录成功返回的身份令牌数据 */
@@ -132,8 +133,8 @@ export const fetchLoginConfig = async (
     }
 
     try {
-        const response = await axios.get<ApiResponse<PageConfig>>('/api/auth/login/config', {
-            params: { appVersion: '1.0.0', platform: Platform.OS }
+        const response = await request.get<ApiResponse<PageConfig>>('/auth/login/config', {
+            params: { appVersion: '1.0.0', platform: Platform.OS },
         });
 
         if (response.data.code === 200) {
@@ -177,7 +178,7 @@ export const loginByPassword = async (
     }
 
     try {
-        const response = await axios.post<ApiResponse<LoginData>>('/api/auth/login/password', payload);
+        const response = await request.post<ApiResponse<LoginData>>('/auth/login/password', payload);
 
         if (response.data.code === 200) {
             return response.data.data;

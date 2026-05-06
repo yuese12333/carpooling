@@ -40,6 +40,44 @@ async function findByPhone(phone, requestId) {
     passwordHash: user.password_hash,
     userName: user.user_name,
     avatarUrl: user.avatar_url,
+    role: user.role,
+    status: user.status,
+    createdAt: user.created_at,
+    updatedAt: user.updated_at,
+    lastLoginAt: user.last_login_at,
+    lastLoginDeviceInfo: user.last_login_device_info,
+  };
+}
+
+/**
+ * 函数功能：按 userId 查询用户
+ * 入参：userId（全局唯一）
+ * 出参：用户对象或 null
+ */
+async function findByUserId(userId, requestId) {
+  const user = await prisma.authUser.findUnique({
+    where: { user_id: userId },
+  });
+
+  if (!user) {
+    logger.debug({
+      module: 'user-dao',
+      operate: 'find-by-user-id',
+      requestId,
+      params: { userId: maskSensitive({ userId }).userId },
+      result: 'User not found',
+    });
+    return null;
+  }
+
+  return {
+    userId: user.user_id,
+    phone: user.phone,
+    passwordHash: user.password_hash,
+    userName: user.user_name,
+    avatarUrl: user.avatar_url,
+    role: user.role,
+    status: user.status,
     createdAt: user.created_at,
     updatedAt: user.updated_at,
     lastLoginAt: user.last_login_at,
@@ -99,6 +137,7 @@ async function updateLastLoginInfo(userId, { lastLoginAt, deviceInfo }, requestI
 
 module.exports = {
   findByPhone,
+  findByUserId,
   createAuthUser,
   updateLastLoginInfo,
 };
