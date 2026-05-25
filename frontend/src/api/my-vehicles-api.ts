@@ -8,6 +8,7 @@ import { useEnvStore } from '@/store/env-store';
 import { MOCK_VEHICLES } from '@/store/mock-vehicle-data';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 // 车辆信息实体
 export interface VehicleInfo {
@@ -29,6 +30,7 @@ export interface VehicleInfo {
  * @returns Promise<ApiResponse<VehicleInfo[]>>
  */
 export const getVehicleListApi = async (requestId: string): Promise<ApiResponse<VehicleInfo[]>> => {
+    syncRequestId(requestId);
     const isMockMode = useEnvStore.getState().isMockMode;
 
     // --- Mock 模式逻辑 ---
@@ -60,8 +62,9 @@ export const getVehicleListApi = async (requestId: string): Promise<ApiResponse<
  * @returns Promise<ApiResponse>
  */
 export const setDefaultVehicleApi = async (id: string, requestId: string): Promise<ApiResponse> => {
+    syncRequestId(requestId);
     // --- 生产请求逻辑 ---
-    const result = await request.post<any, ApiResponse>(`/api/v1/vehicles/${id}/set-default`);
+    const result = await request.post<any, ApiResponse>(`/v1/vehicles/${id}/set-default`);
 
     // 条件化日志记录：仅在业务成功时记录
     if (result.success) {
@@ -84,8 +87,9 @@ export const setDefaultVehicleApi = async (id: string, requestId: string): Promi
  * @returns Promise<ApiResponse>
  */
 export const deleteVehicleApi = async (id: string, requestId: string): Promise<ApiResponse> => {
+    syncRequestId(requestId);
     // --- 生产请求逻辑 ---
-    const result = await request.delete<any, ApiResponse>(`/api/v1/vehicles/${id}`);
+    const result = await request.post<any, ApiResponse>('/v1/vehicles/delete', { id });
 
     // 条件化日志记录：仅在业务成功时记录
     if (result.success) {

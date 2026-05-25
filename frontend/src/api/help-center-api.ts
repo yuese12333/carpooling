@@ -8,6 +8,7 @@ import { useEnvStore } from '@/store/env-store';
 import { COLORS } from "@/pages/style";
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 // --- 类型定义 ---
 
@@ -48,6 +49,7 @@ const MOCK_QUESTIONS: HotQuestion[] = [
  * @returns {Promise<ApiResponse<HelpCategory[]>>} 包装后的 API 响应
  */
 export const getHelpCategories = async (requestId: string): Promise<ApiResponse<HelpCategory[]>> => {
+    syncRequestId(requestId);
     const isMock = useEnvStore.getState().isMockMode;
     const MODULE_NAME = 'HelpCenter';
     const OPERATE_NAME = 'getHelpCategories';
@@ -90,6 +92,7 @@ export const getHotQuestions = async (
     requestId: string,
     keyword: string = ""
 ): Promise<ApiResponse<HotQuestion[]>> => {
+    syncRequestId(requestId);
     const isMock = useEnvStore.getState().isMockMode;
     const MODULE_NAME = 'HelpCenter';
     const OPERATE_NAME = 'getHotQuestions';

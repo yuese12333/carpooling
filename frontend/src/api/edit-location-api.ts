@@ -7,6 +7,8 @@ import request from "@/utils/request";
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
+import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 // --- 类型定义 ---
 
@@ -35,6 +37,7 @@ export const updateLocationApi = async (
     params: UpdateLocationParams,
     requestId: string
 ): Promise<ApiResponse<undefined>> => {
+    syncRequestId(requestId);
     const isMockMode = useEnvStore.getState().isMockMode;
 
     // --- Mock 逻辑 ---
@@ -47,19 +50,18 @@ export const updateLocationApi = async (
             requestId
         });
 
-        return new Promise((resolve) =>
-            setTimeout(() => resolve({
-                success: true,
-                code: 200,
-                data: undefined,
-                message: "更新成功"
-            }), 800)
-        );
+        await mockDelay(MOCK_DELAY_MS.MEDIUM);
+        return {
+            success: true,
+            code: 200,
+            data: undefined,
+            message: "更新成功"
+        };
     }
 
     // --- 线性请求逻辑 ---
     // 底层 request.ts 已处理异常并返回标准的 ApiResponse 对象
-    const result = await request.put<any, ApiResponse<undefined>>(`/user/locations/${params.id}`, params);
+    const result = await request.post<any, ApiResponse<undefined>>('/user/locations/update', params);
 
     // 仅在业务成功时记录日志
     if (result.success) {
@@ -84,6 +86,7 @@ export const getLocationDetailApi = async (
     id: string,
     requestId: string
 ): Promise<ApiResponse<LocationDetail>> => {
+    syncRequestId(requestId);
     const isMockMode = useEnvStore.getState().isMockMode;
 
     // --- Mock 逻辑 ---

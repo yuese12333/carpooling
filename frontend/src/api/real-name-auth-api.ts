@@ -8,6 +8,8 @@ import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
+import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 /** 实名信息数据结构 */
 export interface RealNameInfo {
@@ -31,6 +33,7 @@ const MODULE_NAME = 'RealNameAuthAPI';
  * @returns {Promise<ApiResponse<RealNameInfo>>}
  */
 export const getRealNameStatus = async (requestId: string): Promise<ApiResponse<RealNameInfo>> => {
+    syncRequestId(requestId);
     const isMock = useEnvStore.getState().isMockMode;
 
     // --- Mock 模式处理 ---
@@ -79,6 +82,7 @@ export const submitRealNameAuth = async (
     params: AuthParams,
     requestId: string,
 ): Promise<ApiResponse<RealNameInfo>> => {
+    syncRequestId(requestId);
     const isMock = useEnvStore.getState().isMockMode;
 
     // 严禁在日志中记录原始证件号，此处仅记录脱敏后的长度或状态
@@ -99,7 +103,7 @@ export const submitRealNameAuth = async (
         });
 
         // 模拟网络延迟
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        await mockDelay(MOCK_DELAY_MS.MEDIUM);
 
         return {
             success: true,

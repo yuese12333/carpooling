@@ -1,5 +1,5 @@
 /**
- * @file use-profile-form.ts
+ * @file use-profile-page.ts
  * @description 封装个人中心页面的业务逻辑。集成全链路日志追踪、环境感知及数据脱敏处理。
  */
 
@@ -7,48 +7,14 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { Alert } from "react-native";
 import { useRouter, Href } from 'expo-router';
 import { useAuth } from "../store/auth-context";
-import { profileApi } from "../api/profile-api";
+import { profileApi, type BadgeItem } from "../api/profile-api";
 import { useEnvStore } from "@/store/env-store";
 import { currentUser } from "../store/mock-data";
 import { ROUTES } from '../router/paths';
 import logger from '@/utils/logger';
-import { getMenuData } from "@/pages/profile/profile/profile-config";
+import { getMenuData, type IMenuItem } from "@/pages/profile/profile/profile-config";
+import type { IProfileState } from "@/pages/profile/profile/profile-types";
 
-/**
- * 菜单项接口定义
- */
-interface IMenuItem {
-    label: string;
-    path?: Href;
-}
-
-/**
- * 勋章项接口定义
- */
-export interface IBadgeItem {
-    emoji: string;
-    label: string;
-    unlocked: boolean;
-}
-
-/**
- * 个人中心基础信息状态定义（已脱敏）
- */
-interface IProfileState {
-    name: string;
-    phone: string; // 脱敏后的手机号
-    avatar: string;
-    memberSince: string;
-    verified: boolean;
-    trips: number;
-    rating: number;
-}
-
-/**
- * 内部脱敏工具函数
- * @param {string} phone - 原始手机号
- * @returns {string} 脱敏后的手机号（例：138****8888）
- */
 const maskPhoneNumber = (phone?: string): string => {
     if (!phone) return '未绑定';
     return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
@@ -56,24 +22,17 @@ const maskPhoneNumber = (phone?: string): string => {
 
 /**
  * 个人中心业务逻辑 Hook
- * @param {string} requestId - 必须由页面入口显式注入的唯一链路追踪 ID
- * @returns 包含页面状态、计算属性及事件处理函数
+ * @param requestId 必须由页面入口显式注入的唯一链路追踪 ID
  */
 export const useProfilePage = (requestId: string) => {
     const router = useRouter();
     const { logout } = useAuth();
 
-    // 响应式环境监测
-    const isMockMode = useEnvStore((state) => state.isMockMode);
-
-    // --- 状态管理 ---
-
-    // 初始化逻辑：若是 Mock 模式，加载并处理 Mock 数据；否则保持 undefined 待请求
     const [profileData, setProfileData] = useState<IProfileState | undefined>(() => {
         if (useEnvStore.getState().isMockMode) {
             return {
                 name: currentUser.name,
-                phone: maskPhoneNumber(currentUser.phone), // Mock 模式下的脱敏处理
+                phone: maskPhoneNumber(currentUser.phone),
                 avatar: currentUser.avatar,
                 memberSince: currentUser.memberSince || '2024-01-01',
                 verified: currentUser.verified ?? false,
@@ -99,18 +58,12 @@ export const useProfilePage = (requestId: string) => {
         return undefined;
     });
 
-    const [badges, setBadges] = useState<IBadgeItem[] | undefined>(undefined);
+    const [badges, setBadges] = useState<BadgeItem[] | undefined>(undefined);
     const [loading, setLoading] = useState<boolean>(false);
     const [realSavings, setRealSavings] = useState<number | undefined>(undefined);
 
-
-    /**
-     * 动态计算菜单配置
-     */
     const menuData = useMemo(() => {
         const isVerified = !!profileData?.verified;
-
-        // 记录状态映射日志
         logger.info({
             module: 'use-profile-page',
             operate: 'compute-dynamic-menu',
@@ -118,13 +71,9 @@ export const useProfilePage = (requestId: string) => {
             result: 'success',
             requestId
         });
-
         return getMenuData(isVerified);
     }, [profileData?.verified, requestId]);
 
-    /**
-     * 执行聚合数据加载
-     */
     const fetchData = useCallback(async () => {
         const currentMockMode = useEnvStore.getState().isMockMode;
         if (currentMockMode) return;
@@ -133,7 +82,7 @@ export const useProfilePage = (requestId: string) => {
         logger.info({
             module: 'use-profile-page',
             operate: 'fetch-profile-data-start',
-            params: { requestId, isMockMode: currentMockMode },
+            params: { isMockMode: currentMockMode },
             requestId
         });
 
@@ -144,12 +93,11 @@ export const useProfilePage = (requestId: string) => {
                 profileApi.getBadges(requestId)
             ]);
 
-            // 处理个人基础信息并执行脱敏 (8.1)
             if (infoRes.code === 200) {
                 const d = infoRes.data;
                 setProfileData({
                     name: d.name,
-                    phone: maskPhoneNumber(d.phone), // 生产数据脱敏处理
+                    phone: maskPhoneNumber(d.phone),
                     avatar: d.avatar,
                     memberSince: d.memberSince,
                     verified: d.isVerified,
@@ -159,13 +107,11 @@ export const useProfilePage = (requestId: string) => {
                 setRealSavings(d.accumulatedSavings);
             }
 
-            // 处理车辆信息 (8.3)
             if (carRes.code === 200) {
                 const c = carRes.data;
                 setCarData({ brand: c.brand, color: c.color, carPlate: c.carPlate });
             }
 
-            // 处理勋章信息 (8.5)
             if (badgeRes.code === 200) {
                 setBadges(badgeRes.data.list);
             }
@@ -173,8 +119,6 @@ export const useProfilePage = (requestId: string) => {
             logger.error({
                 module: 'use-profile-page',
                 operate: 'fetch-profile-data-error',
-                params: undefined,
-                result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'API_AGGREGATION_ERROR',
                 requestId
@@ -185,16 +129,10 @@ export const useProfilePage = (requestId: string) => {
         }
     }, [requestId]);
 
-    /**
-     * 生命周期初始化
-     */
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
-    /**
-     * 计算累计节省金额
-     */
     const displaySavings = useMemo(() => {
         const currentMockMode = useEnvStore.getState().isMockMode;
         if (!currentMockMode && realSavings !== undefined) {
@@ -205,9 +143,6 @@ export const useProfilePage = (requestId: string) => {
         return trips * SAVINGS_PER_TRIP;
     }, [profileData?.trips, realSavings]);
 
-    /**
-     * 菜单点击处理
-     */
     const handleMenuClick = useCallback(async (item: IMenuItem) => {
         logger.info({
             module: 'use-profile-page',
@@ -242,7 +177,6 @@ export const useProfilePage = (requestId: string) => {
     }, [requestId]);
 
     const handleEditCar = useCallback(() => {
-        // 记录触发编辑的日志
         logger.info({
             module: 'use-profile-page',
             operate: 'edit-car-trigger',
@@ -250,10 +184,8 @@ export const useProfilePage = (requestId: string) => {
         });
 
         try {
-            // 跳转到修改车辆信息页面
             router.push(ROUTES.PROFILE.EDIT_VEHICLE_INFORMATION);
         } catch (error) {
-            // 捕获可能的导航错误并记录
             logger.error({
                 module: 'use-profile-page',
                 operate: 'handle-edit-car-error',

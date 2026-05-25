@@ -7,9 +7,7 @@ import request from '@/utils/request';
 import logger from '@/utils/logger';
 import { useEnvStore } from '@/store/env-store';
 import type { ApiResponse } from '@/api/api.d';
-
-/** ----------------配置项---------------- */
-const IS_MOCK = true;
+import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 /** ----------------类型定义---------------- */
 
@@ -38,8 +36,8 @@ export const passwordApi = {
         const requestId = useEnvStore.getState().currentRequestId;
 
         // --- Mock 逻辑 ---
-        if (IS_MOCK) {
-            await new Promise(resolve => setTimeout(resolve, 800));
+        if (useEnvStore.getState().isMockMode) {
+            await mockDelay(MOCK_DELAY_MS.MEDIUM);
             return { success: true, code: 200, message: "success", data: { isRegistered: true, userStatus: "active" } };
         }
 
@@ -69,8 +67,8 @@ export const passwordApi = {
         const requestId = useEnvStore.getState().currentRequestId;
 
         // --- Mock 逻辑 ---
-        if (IS_MOCK) {
-            await new Promise(resolve => setTimeout(resolve, 500));
+        if (useEnvStore.getState().isMockMode) {
+            await mockDelay(MOCK_DELAY_MS.SHORT);
             return { success: true, code: 200, message: "success", data: { success: true } };
         }
 
@@ -100,7 +98,7 @@ export const passwordApi = {
         const requestId = useEnvStore.getState().currentRequestId;
 
         // --- Mock 逻辑 ---
-        if (IS_MOCK) {
+        if (useEnvStore.getState().isMockMode) {
             return { success: true, code: 200, message: "success", data: { isValid: true, tempToken: "mock_token_xyz123" } };
         }
 
@@ -130,8 +128,8 @@ export const passwordApi = {
         const requestId = useEnvStore.getState().currentRequestId;
 
         // --- Mock 逻辑 ---
-        if (IS_MOCK) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+        if (useEnvStore.getState().isMockMode) {
+            await mockDelay(MOCK_DELAY_MS.LONG);
             return { success: true, code: 200, message: "success", data: {} };
         }
 

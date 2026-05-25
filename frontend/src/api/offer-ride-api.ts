@@ -7,6 +7,7 @@ import logger from '@/utils/logger';
 import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 const MODULE_NAME = 'OFFER_RIDE_API';
 
@@ -45,6 +46,7 @@ export interface PublishConfigResponse {
  * @param requestId 显式链路追踪 ID
  */
 export const getPublishConfig = async (requestId: string): Promise<ApiResponse<PublishConfigResponse>> => {
+    syncRequestId(requestId);
     const operate = 'FETCH_CONFIG';
 
     // Mock 模式逻辑
@@ -87,6 +89,7 @@ export const getPublishConfig = async (requestId: string): Promise<ApiResponse<P
  * @param requestId 显式链路追踪 ID
  */
 export const publishRide = async (params: PublishRideParams, requestId: string): Promise<ApiResponse<{ rideId: string }>> => {
+    syncRequestId(requestId);
     const operate = 'SUBMIT_RIDE';
 
     // Mock 模式逻辑
@@ -121,6 +124,7 @@ export const publishRide = async (params: PublishRideParams, requestId: string):
  * @param requestId 显式链路追踪 ID
  */
 export const checkPublishPermission = async (requestId: string): Promise<ApiResponse<{ canPublish: boolean, creditScore: number }>> => {
+    syncRequestId(requestId);
     const operate = 'CHECK_PERMISSION';
 
     // Mock 模式逻辑

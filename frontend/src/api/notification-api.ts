@@ -7,6 +7,7 @@ import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 // --- 类型定义 ---
 
@@ -55,13 +56,6 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
         type: 'warning',
     },
 ];
-
-/**
- * 同步请求追踪 ID 到全局状态
- */
-const syncRequestId = (id: string) => {
-    useEnvStore.getState().setCurrentRequestId(id);
-};
 
 // --- 接口函数 ---
 
@@ -141,9 +135,7 @@ export const clearNotifications = async (
     }
 
     // --- 线性请求逻辑 ---
-    const result = await request.delete<any, ApiResponse<null>>('/v1/notifications', {
-        data: { category },
-    });
+    const result = await request.post<any, ApiResponse<null>>('/v1/notifications/clear', { category });
 
     // 条件化日志记录：仅在业务成功时记录
     if (result.success) {
