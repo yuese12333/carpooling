@@ -16,7 +16,8 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, SlidersHorizontal } from "lucide-react-native";
 
 // 导入样式与常量
-import styles, { COLORS } from "./find-ride.style";
+import styles from "./find-ride.style";
+import { COLORS } from '@/pages/style';
 
 // 导入业务逻辑 Hook
 import { useFindRideForm } from "../../hooks/use-find-ride-form";
@@ -79,7 +80,7 @@ export default function FindRidePage() {
       error: undefined,
       errorType: undefined
     });
-  }, [requestId]);
+  }, [requestId, searchFrom, searchTo]);
 
   /**
    * 增强型返回处理
@@ -125,7 +126,7 @@ export default function FindRidePage() {
             style={styles.iconButton}
             accessibilityLabel="返回"
           >
-            <ArrowLeft size={20} color={COLORS.textSecondary} />
+            <ArrowLeft size={20} color={COLORS.textSub} />
           </TouchableOpacity>
 
           <Text style={styles.headerTitle}>找拼车</Text>
@@ -135,7 +136,7 @@ export default function FindRidePage() {
             style={styles.iconButton}
             accessibilityLabel="排序筛选"
           >
-            <SlidersHorizontal size={18} color={COLORS.textSecondary} />
+            <SlidersHorizontal size={18} color={COLORS.textSub} />
           </TouchableOpacity>
         </View>
 
@@ -205,7 +206,7 @@ export default function FindRidePage() {
         {/* 列表为空时的占位提示 */}
         {!loading && filteredRides.length === 0 && (
           <View style={{ alignItems: 'center', marginTop: 40 }}>
-            <Text style={{ color: COLORS.textLight }}>
+            <Text style={{ color: COLORS.textMuted }}>
               未找到匹配行程，请尝试更改搜索条件
             </Text>
           </View>

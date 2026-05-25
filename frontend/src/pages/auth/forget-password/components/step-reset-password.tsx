@@ -6,7 +6,8 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Lock, Eye, EyeOff } from "lucide-react-native";
-import forgetPasswordStyles, { COLORS } from '../forget-password.style';
+import forgetPasswordStyles from '../forget-password.style';
+import { COLORS } from '@/pages/style'
 import { Button } from "@/../components/button";
 import { Label } from "@/../components/label";
 import { Progress } from "@/../components/progress";
@@ -149,7 +150,7 @@ export const StepResetPassword: React.FC<StepResetPasswordProps> = ({
             loading={loading}
             style={forgetPasswordStyles.submitBtn}
         >
-            保存设置
+            <Text style={forgetPasswordStyles.submitBtnText}>保存设置</Text>
         </Button>
     </View>
 );

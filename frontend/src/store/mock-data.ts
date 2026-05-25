@@ -10,13 +10,16 @@
 export interface Driver {
   id: string;
   name: string;
+  phone: string;
   avatar: string;
+  memberSince: string;
   rating: number;
   trips: number;
   verified: boolean;
   car: string;
   carColor: string;
   carPlate: string;
+  accumulatedSavings?: number;
 }
 
 /**
@@ -59,13 +62,16 @@ export interface MyTrip {
 export const currentUser: Driver = {
   id: "u1",
   name: "李小明",
+  phone: "13800138000",
   avatar: "https://images.unsplash.com/photo-1605504836193-e77d3d9ede8a?q=80&w=400",
+  memberSince: "2023-10-12",
   rating: 4.9,
   trips: 47,
   verified: true,
   car: "大众帕萨特",
   carColor: "白色",
   carPlate: "京A·12345",
+  accumulatedSavings: 1034,
 };
 
 /**
@@ -75,7 +81,9 @@ const drivers: Driver[] = [
   {
     id: "d1",
     name: "王建国",
+    phone: "13911112222",
     avatar: "https://images.unsplash.com/photo-1762708590808-c453c0e4fb0f?q=80&w=400",
+    memberSince: "2022-05-20",
     rating: 4.9,
     trips: 128,
     verified: true,
@@ -86,7 +94,9 @@ const drivers: Driver[] = [
   {
     id: "d2",
     name: "陈雨晴",
+    phone: "13700009999",
     avatar: "https://images.unsplash.com/photo-1697510364485-e900c2fe7524?q=80&w=400",
+    memberSince: "2023-01-15",
     rating: 5.0,
     trips: 63,
     verified: true,
@@ -139,7 +149,7 @@ export const mockRides: Ride[] = [
 ];
 
 /**
- * @description 用户个人行程列表数据（包含乘客与司机双重角色）
+ * @description 用户个人行程列表数据
  */
 export const myTrips: MyTrip[] = [
   {
@@ -154,7 +164,7 @@ export const myTrips: MyTrip[] = [
     role: "driver",
     ride: {
       ...mockRides[1],
-      driver: currentUser, // 修正类型断言，直接引用符合 Driver 接口的 currentUser
+      driver: currentUser,
     },
     status: "upcoming",
     bookedSeats: 0,
@@ -169,6 +179,18 @@ export const myTrips: MyTrip[] = [
       status: "completed",
     },
     status: "completed",
+    bookedSeats: 1,
+  },
+  {
+    id: "mt4",
+    role: "passenger",
+    ride: {
+      ...mockRides[1],
+      id: "r-old-2",
+      date: "昨天",
+      status: "cancelled",
+    },
+    status: "cancelled",
     bookedSeats: 1,
   }
 ];

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <uses-permission android:name="android.permission.INTERNET"/>
-  <!-- 高德 2D 地图：网络与定位相关（定位能力需在运行时向用户申请权限） -->
+  <!-- 高德 3D 地图 + 导航 + 定位相关权限 -->
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
   <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
   <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
@@ -10,8 +10,9 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-  <!-- 高德定位 SDK 常见依赖（与官方 2D Demo 一致） -->
   <uses-permission android:name="android.permission.WAKE_LOCK"/>
+  <!-- 导航语音播报（Msc.jar 依赖） -->
+  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -28,6 +29,16 @@
     <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
+    <activity
+      android:name="com.amap.api.navi.AmapRouteActivity"
+      android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+      android:screenOrientation="portrait"
+      android:theme="@android:style/Theme.NoTitleBar.Fullscreen"/>
+    <activity
+      android:name=".NaviActivity"
+      android:configChanges="orientation|keyboardHidden|screenSize|uiMode"
+      android:screenOrientation="portrait"
+      android:theme="@style/AppTheme"/>
     <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
@@ -40,5 +51,5 @@
         <data android:scheme="carpooling"/>
       </intent-filter>
     </activity>
-  </application>
+    </application>
 </manifest>

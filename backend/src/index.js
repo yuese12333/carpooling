@@ -9,6 +9,7 @@ const smsRouter = require('./router/sms-router');
 const uploadRouter = require('./router/upload-router');
 const authRouter = require('./router/auth-router');
 const usersRouter = require('./router/users-router');
+const adminRouter = require('./router/admin-router');
 const prisma = require('./config/prisma');
 const { logger } = require('./utils/logger');
 const { createRequestId } = require('./utils/response');
@@ -61,6 +62,7 @@ app.use('/api/sms', smsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/admin', adminRouter);
 
 app.listen(Number(PORT), HOST, async () => {
   const requestId = `startup-${Date.now()}`;

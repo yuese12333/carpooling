@@ -22,6 +22,15 @@ interface EnvState {
      */
     currentRequestId: string;
 
+    /**
+     * access token（给请求拦截器注入 Authorization）
+     * 注意：token 只保存在内存与 AsyncStorage（由 AuthContext 管理），不在日志输出
+     */
+    token: string;
+
+    /** 当前用户角色（由 token payload 或后端鉴权结果解码得到） */
+    role: string;
+
     /** * 切换 Mock 模式开关。
      * @param {boolean} val - 目标状态
      */
@@ -32,6 +41,12 @@ interface EnvState {
      * @param {string} id - 由工具函数生成的 UUID/NanoID
      */
     setCurrentRequestId: (id: string) => void;
+
+    /** 设置 access token，并同步清理角色（role 也由调用方写入） */
+    setToken: (token: string) => void;
+
+    /** 设置当前用户角色 */
+    setRole: (role: string) => void;
 }
 
 /**
@@ -44,6 +59,12 @@ export const useEnvStore = create<EnvState>((set, get) => ({
 
     // 初始化 RequestId 为空串
     currentRequestId: '',
+
+    // token 默认为空（未登录）
+    token: '',
+
+    // role 默认 user（非管理员）
+    role: 'user',
 
     /**
      * 切换 Mock 模式
@@ -81,5 +102,15 @@ export const useEnvStore = create<EnvState>((set, get) => ({
         }
 
         set({ currentRequestId: id });
+    },
+
+    setToken: (token: string) => {
+      const safeToken = typeof token === 'string' ? token : '';
+      set({ token: safeToken });
+    },
+
+    setRole: (role: string) => {
+      const safeRole = typeof role === 'string' && role.trim() ? role.trim() : 'user';
+      set({ role: safeRole });
     },
 }));

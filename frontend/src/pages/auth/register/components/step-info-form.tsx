@@ -10,7 +10,8 @@ import { User, Phone, ShieldCheck } from "lucide-react-native";
 import { Input } from "@/components/input";
 import { Button } from "@/components/button";
 import logger from '@/utils/logger';
-import styles, { COLORS } from "../register.style";
+import styles from "../register.style";
+import { COLORS } from '@/pages/style';
 import { RegistrationFormData } from '@/hooks/use-register-form';
 
 /**
@@ -101,7 +102,7 @@ export const StepInfoForm: React.FC<StepInfoFormProps> = ({ requestId, state, ac
                 leftIcon={<User size={18} color={COLORS.textSecondary} />}
             />
             {state.fieldErrors.nickname && (
-                <Text style={styles.errorText}>{state.fieldErrors.nickname}</Text>
+                <Text style={styles.generalErrorText}>{state.fieldErrors.nickname}</Text>
             )}
 
             <Text style={[styles.inputLabel, styles.marginTopMd]}>手机号</Text>
@@ -113,7 +114,7 @@ export const StepInfoForm: React.FC<StepInfoFormProps> = ({ requestId, state, ac
                 leftIcon={<Phone size={18} color={COLORS.textSecondary} />}
             />
             {state.fieldErrors.phoneNumber && (
-                <Text style={styles.errorText}>{state.fieldErrors.phoneNumber}</Text>
+                <Text style={styles.generalErrorText}>{state.fieldErrors.phoneNumber}</Text>
             )}
 
             <Text style={[styles.inputLabel, styles.marginTopMd]}>验证码</Text>
@@ -145,7 +146,7 @@ export const StepInfoForm: React.FC<StepInfoFormProps> = ({ requestId, state, ac
                 </TouchableOpacity>
             </View>
             {state.fieldErrors.verifyCode && (
-                <Text style={styles.errorText}>{state.fieldErrors.verifyCode}</Text>
+                <Text style={styles.generalErrorText}>{state.fieldErrors.verifyCode}</Text>
             )}
 
             <Button
@@ -153,7 +154,7 @@ export const StepInfoForm: React.FC<StepInfoFormProps> = ({ requestId, state, ac
                 onPress={onStepForward}
                 disabled={state.isLoading}
             >
-                <Text style={styles.buttonText}>
+                <Text style={styles.primaryButtonText}>
                     {state.isLoading ? "正在校验..." : "下一步"}
                 </Text>
             </Button>

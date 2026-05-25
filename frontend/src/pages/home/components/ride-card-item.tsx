@@ -7,7 +7,8 @@ import React from "react";
 import { View, Text, Image, TouchableOpacity, GestureResponderEvent } from "react-native";
 import { Star, Users } from "lucide-react-native";
 import { RideItem } from '@/api/home-api';
-import styles, { COLORS } from "../home.style";
+import styles from "../home.style";
+import { COLORS } from "@/pages/style";
 
 /**
  * 行程卡片组件属性接口
@@ -92,7 +93,7 @@ export const RideCardItem: React.FC<RideCardItemProps> = ({ ride, onPress }) => 
                     </Text>
                 </View>
                 <View style={styles.seatsBadge}>
-                    <Users size={12} color={COLORS.textGray} />
+                    <Users size={12} color={COLORS.textMuted} />
                     <Text style={styles.seatsText}>
                         {ride.seatsLeft}座
                     </Text>

@@ -1,51 +1,11 @@
 /**
  * @file forget-password.style.ts
- * @description 找回密码页面的样式定义文件，采用模块化色板与响应式布局配置。
+ * @description 找回密码页面的样式定义文件，已完成 Design Token 化重构。
  */
 
 import { StyleSheet, ViewStyle, TextStyle } from "react-native";
+import { COLORS, SPACING, RADIUS, SHADOWS, commonStyles } from '@/pages/style';
 
-/** * 颜色常量定义
- */
-export const COLORS = Object.freeze({
-    // 主色调 (Emerald/Green)
-    primary: '#10B981',
-    primaryLight: '#ECFDF5',
-    primaryDark: '#059669',
-
-    // 基础色
-    white: '#FFFFFF',
-    bgLight: '#F9FAFB',
-    bgInput: '#F9FAFB',
-    borderLight: '#F3F4F6',
-    borderDivider: '#E5E7EB',
-
-    // 文字色
-    textMain: '#111827',
-    textSecondary: '#374151',
-    textMuted: '#6B7280',
-    textPlaceholder: '#9CA3AF',
-
-    // 反馈色
-    error: '#EF4444',
-    errorLight: '#FEF2F2',
-    errorBorder: '#FEE2E2',
-
-    // 强度校验色
-    strengthWeak: '#F87171',
-    strengthMedium: '#FBBF24',
-    strengthStrong: '#60A5FA',
-    strengthVeryStrong: '#10B981',
-
-    // 透明度辅助色
-    whiteTransparent20: 'rgba(255, 255, 255, 0.2)',
-    whiteTransparent30: 'rgba(255, 255, 255, 0.3)',
-    whiteTransparent40: 'rgba(255, 255, 255, 0.4)',
-    whiteTransparent80: 'rgba(255, 255, 255, 0.8)',
-});
-
-/** * 找回密码页面专用样式表
- */
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -55,32 +15,28 @@ export const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        padding: 20
+        padding: SPACING.lg
     } as ViewStyle,
     card: {
         width: "100%",
         maxWidth: 450,
         minHeight: 600,
         backgroundColor: COLORS.white,
-        borderRadius: 30,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
-        elevation: 5,
+        borderRadius: RADIUS.xxl,
+        ...SHADOWS.lg,
         overflow: "hidden",
     } as ViewStyle,
     header: {
         backgroundColor: COLORS.primary,
         paddingHorizontal: 25,
-        paddingTop: 40,
+        paddingTop: SPACING.xxl,
         paddingBottom: 30
     } as ViewStyle,
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: COLORS.whiteTransparent20,
+        backgroundColor: COLORS.whiteTrans[20],
         justifyContent: "center",
         alignItems: "center",
     } as ViewStyle,
@@ -94,7 +50,7 @@ export const styles = StyleSheet.create({
     } as TextStyle,
     headerSubtitle: {
         fontSize: 14,
-        color: COLORS.whiteTransparent80,
+        color: COLORS.whiteTrans[80],
         marginTop: 5
     } as TextStyle,
     stepperContainer: {
@@ -109,7 +65,7 @@ export const styles = StyleSheet.create({
         left: 10,
         right: 10,
         height: 1,
-        backgroundColor: COLORS.whiteTransparent30
+        backgroundColor: COLORS.whiteTrans[30]
     } as ViewStyle,
     stepCircle: {
         width: 32,
@@ -126,7 +82,7 @@ export const styles = StyleSheet.create({
     } as ViewStyle,
     stepCircleInactive: {
         backgroundColor: "transparent",
-        borderColor: COLORS.whiteTransparent40
+        borderColor: COLORS.whiteTrans[40]
     } as ViewStyle,
     stepText: {
         fontSize: 12,
@@ -136,7 +92,7 @@ export const styles = StyleSheet.create({
         color: COLORS.primary
     } as TextStyle,
     stepTextInactive: {
-        color: COLORS.whiteTransparent80
+        color: COLORS.whiteTrans[80]
     } as TextStyle,
     formContent: {
         flex: 1,
@@ -147,18 +103,16 @@ export const styles = StyleSheet.create({
     } as ViewStyle,
     label: {
         color: COLORS.textMuted,
-        marginBottom: 8,
+        marginBottom: SPACING.sm,
         fontSize: 14
     } as TextStyle,
     inputWrapper: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: COLORS.bgInput,
-        borderRadius: 16,
+        ...commonStyles.inputWrapper,
+        backgroundColor: COLORS.bgLight, // 覆盖为页面特定背景
+        borderRadius: RADIUS.lg,
         borderWidth: 2,
         borderColor: "transparent",
-        paddingHorizontal: 15,
-        height: 56
+        height: 56,
     } as ViewStyle,
     inputError: {
         borderColor: COLORS.errorBorder,
@@ -187,17 +141,13 @@ export const styles = StyleSheet.create({
         marginLeft: 4
     } as TextStyle,
     submitBtn: {
+        ...commonStyles.primaryButton,
         marginTop: 25,
         height: 56,
-        borderRadius: 16,
-        backgroundColor: COLORS.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
+        borderRadius: RADIUS.lg,
     } as ViewStyle,
     submitBtnText: {
-        color: COLORS.white, // 确保是白色
-        fontSize: 16,
-        fontWeight: 'bold',
+        ...commonStyles.primaryButtonText,
     } as TextStyle,
     stepHint: {
         fontSize: 14,
@@ -212,13 +162,13 @@ export const styles = StyleSheet.create({
     otpContainer: {
         flexDirection: "row",
         justifyContent: "space-between",
-        marginBottom: 20,
+        marginBottom: SPACING.lg,
         width: "100%"
     } as ViewStyle,
     otpInput: {
         width: "14%",
         height: 56,
-        borderRadius: 12,
+        borderRadius: RADIUS.md,
         borderWidth: 2,
         textAlign: "center",
         fontSize: 20,
@@ -231,11 +181,11 @@ export const styles = StyleSheet.create({
     } as TextStyle,
     otpInputInactive: {
         borderColor: COLORS.borderLight,
-        backgroundColor: COLORS.bgInput
+        backgroundColor: COLORS.bgLight
     } as TextStyle,
     resendBtn: {
         alignItems: "center",
-        marginBottom: 20
+        marginBottom: SPACING.lg
     } as ViewStyle,
     resendText: {
         fontSize: 14,
@@ -246,10 +196,10 @@ export const styles = StyleSheet.create({
         color: COLORS.textPlaceholder
     } as TextStyle,
     inputGroup: {
-        marginBottom: 20
+        marginBottom: SPACING.lg
     } as ViewStyle,
     strengthContainer: {
-        marginTop: 10
+        marginTop: SPACING.sm
     } as ViewStyle,
     progressBase: {
         height: 4,
@@ -273,19 +223,19 @@ export const styles = StyleSheet.create({
         backgroundColor: COLORS.primaryLight,
         justifyContent: "center",
         alignItems: "center",
-        marginBottom: 20
+        marginBottom: SPACING.lg
     } as ViewStyle,
     successTitle: {
         fontSize: 20,
         fontWeight: "bold",
         color: COLORS.textMain,
-        marginBottom: 8
+        marginBottom: SPACING.sm
     } as TextStyle,
     successSubtitle: {
         fontSize: 14,
         color: COLORS.textMuted,
         textAlign: "center",
-        marginBottom: 40
+        marginBottom: SPACING.xxl
     } as TextStyle,
     dotContainer: {
         flexDirection: "row"

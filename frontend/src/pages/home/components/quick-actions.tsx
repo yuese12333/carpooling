@@ -1,10 +1,11 @@
 /**
  * @file quick-actions.tsx
- * @description 首页快捷操作区组件，提供找拼车、发布行程及历史行程的快速入口。
+ * @description 首页快捷操作区组件，提供找拼车、发布行程、导航、历史行程的快速入口。
  * 修复项：
  * 1. 彻底移除从 useEnvStore 隐式读取 requestId 的逻辑。
  * 2. 强制通过 Props 显式注入 requestId，确保链路透明。
  * 3. 规范日志上报结构，确保参数化消费。
+ * 4. 新增导航快捷入口，集成主页面导航功能。
  */
 
 import React from "react";
@@ -12,10 +13,11 @@ import { View, Text, TouchableOpacity, GestureResponderEvent } from "react-nativ
 import { Href } from 'expo-router';
 import logger from '@/utils/logger';
 import styles from "../home.style";
+import { COLORS } from '@/pages/style';
 import { ROUTES } from '@/router/paths';
 
 /**
- * 内部复用的动作单元组件 (原子UI层)
+ * 内部复用的动作单元组件（原子UI层）
  * 规范：严禁感知 requestId，不直接记录业务日志
  */
 interface ActionItemProps {
@@ -57,6 +59,7 @@ interface QuickActionsProps {
         blue: string;
         green: string;
         purple: string;
+        orange?: string;
     };
 }
 
@@ -75,37 +78,33 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
      */
     const handleActionPress = (actionName: string, path: Href) => {
         try {
-            // 记录业务流程起点日志
             logger.info({
                 module: 'QuickActions',
                 operate: `click_action_${actionName}`,
                 params: {
                     targetPath: path,
-                    timestamp: Date.now() // 记录非敏感交互时间
+                    timestamp: Date.now(),
                 },
                 result: 'navigating',
-                error: undefined,
-                errorType: undefined,
-                requestId: requestId // 显式注入
+                requestId,
             });
 
             onNavigate(path);
         } catch (error) {
-            // 异常捕获与错误日志记录
             logger.error({
                 module: 'QuickActions',
                 operate: `click_action_${actionName}_error`,
                 params: { targetPath: path },
-                result: undefined,
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'NAVIGATION_ERROR',
-                requestId: requestId // 显式注入
+                requestId,
             });
         }
     };
 
     return (
         <View style={styles.quickActionSection}>
+            {/* 第一行：找拼车 / 发布行程 / 导航 */}
             <View style={styles.flexRowBetween}>
                 <ActionItem
                     icon="🚗"
@@ -115,12 +114,24 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
                     onPress={() => handleActionPress('find_ride', ROUTES.FIND_RIDE)}
                 />
                 <ActionItem
-                    icon="📍"
+                    icon="📋"
                     label="发布行程"
                     sublabel="接单赚钱"
                     backgroundColor={colors.green}
                     onPress={() => handleActionPress('offer_ride', ROUTES.OFFER_RIDE)}
                 />
+                {/* 新增：导航入口 */}
+                <ActionItem
+                    icon="🧭"
+                    label="导航"
+                    sublabel="实时路线"
+                    backgroundColor={colors.orange ?? COLORS.bgOrangeLight}
+                    onPress={() => handleActionPress('navigation', ROUTES.RIDE.NAVIGATION as Href)}
+                />
+            </View>
+
+            {/* 第二行：我的行程 */}
+            <View style={[styles.flexRowBetween, { marginTop: 10 }]}>
                 <ActionItem
                     icon="🏆"
                     label="我的行程"

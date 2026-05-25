@@ -1,8 +1,8 @@
 package com.anonymous.carpooling
 
-import com.amap.api.maps2d.MapView
-import com.amap.api.maps2d.CameraUpdateFactory
-import com.amap.api.maps2d.model.LatLng
+import com.amap.api.maps.MapView
+import com.amap.api.maps.CameraUpdateFactory
+import com.amap.api.maps.model.LatLng
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.uimanager.SimpleViewManager
@@ -10,7 +10,8 @@ import com.facebook.react.uimanager.ThemedReactContext
 import java.util.IdentityHashMap
 
 /**
- * 高德 2D MapView 测试用原生视图，供 JS 侧 requireNativeComponent('AmapMapTest') 引用。
+ * 高德 3D MapView 原生视图，供 JS 侧 requireNativeComponent('AmapMapTest') 引用。
+ * 已从 2D SDK（maps2d）迁移至 3D 一体化 SDK（maps），支持导航。
  * 生命周期与当前 Activity 同步，避免白屏或崩溃。
  */
 class AmapMapTestViewManager : SimpleViewManager<MapView>() {
@@ -38,7 +39,6 @@ class AmapMapTestViewManager : SimpleViewManager<MapView>() {
           cameraState.remove(mapView)
         }
       }
-    // ThemedReactContext 与 Activity 生命周期绑定
     reactContext.addLifecycleEventListener(listener)
 
     return mapView
@@ -69,7 +69,6 @@ class AmapMapTestViewManager : SimpleViewManager<MapView>() {
   fun setRecenterToken(view: MapView, recenterToken: Double) {
     val state = cameraState.getOrPut(view) { CameraState() }
     state.recenterToken = recenterToken
-    // 每次 token 更新都强制将当前位置移动到中心
     maybeMoveCamera(view)
   }
 
@@ -77,8 +76,6 @@ class AmapMapTestViewManager : SimpleViewManager<MapView>() {
     val state = cameraState.getOrPut(view) { CameraState() }
     val lat = state.latitude ?: return
     val lng = state.longitude ?: return
-
-    // 一旦经纬度齐备就移动镜头
     val zoom = state.zoom ?: DEFAULT_ZOOM
     val cameraUpdate = CameraUpdateFactory.newLatLngZoom(LatLng(lat, lng), zoom)
     view.getMap().moveCamera(cameraUpdate)

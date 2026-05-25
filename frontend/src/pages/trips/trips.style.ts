@@ -1,54 +1,11 @@
 /**
  * @file trips-style.ts
- * @description “我的行程”页面专用样式表。定义了卡片布局、Tab 切换状态及品牌色阶。
- * @version 1.1.0
+ * @description “我的行程”页面专用样式表。
+ * 已基于全局 Design Tokens 重构，保持 UI 表现 100% 一致。
  */
 
 import { StyleSheet, Platform } from "react-native";
-
-/**
- * 品牌及 UI 调色盘
- * 严格执行 Object.freeze 确保运行时不可篡改
- */
-export const COLORS = Object.freeze({
-    primary: "#10B981",         // 品牌主色 (Emerald)
-    primaryLight: "rgba(16, 185, 129, 0.3)", // 交互反馈色
-    primaryGhost: "rgba(16, 185, 129, 0.1)", // 极浅背景色
-    warning: "#FBBF24",         // 状态提示/星级
-    danger: "#EF4444",          // 警告/异常/取消
-    orange: "#FB923C",          // 路线高亮
-
-    // 灰阶定义 (基于 Tailwind Palette)
-    gray50: "#F9FAFB",
-    gray100: "#F3F4F6",
-    gray200: "#E5E7EB",
-    gray300: "#D1D5DB",
-    gray400: "#9CA3AF",
-    gray500: "#6B7280",
-    gray700: "#374151",
-    gray800: "#1F2937",
-
-    white: "#FFFFFF",
-    black: "#000000",
-    transparent: "transparent",
-    overlay: "rgba(249, 250, 251, 0.8)", // 卡片头部半透明遮罩
-
-    backgroundv1: "#DCFCE7", // 页面背景色
-    backgroundv2: "#FEF2F2", // 卡片背景色
-});
-
-/**
- * 投影样式预设
- */
-const SHADOWS = {
-    subtle: {
-        shadowColor: COLORS.black,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
-    }
-};
+import { COLORS, SPACING, RADIUS, SHADOWS, LAYOUT_MIXINS, commonStyles } from '@/pages/style';
 
 export default StyleSheet.create({
     /**
@@ -56,10 +13,12 @@ export default StyleSheet.create({
      */
     safeAreaProvider: {
         flex: 1,
+        backgroundColor: COLORS.white,
     },
+
     container: {
         flex: 1,
-        backgroundColor: COLORS.gray50,
+        backgroundColor: COLORS.bgLight,
     },
 
     /**
@@ -67,24 +26,22 @@ export default StyleSheet.create({
      */
     headerWrapper: {
         backgroundColor: COLORS.white,
-        paddingHorizontal: 16,
-        paddingBottom: 8,
+        paddingHorizontal: SPACING.md,
+        paddingBottom: SPACING.sm,
         zIndex: 10,
-        ...SHADOWS.subtle,
+        ...SHADOWS.xs,
     },
-    navBar: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingVertical: 12,
-    },
+    navBar: LAYOUT_MIXINS.rowBetween,
+
     navTitle: {
         fontSize: 18,
         fontWeight: Platform.OS === 'ios' ? "700" : "bold",
-        color: COLORS.gray800,
+        color: COLORS.textMain,
+        marginTop: SPACING.md,
+        alignItems: 'center',
     },
     backBtn: {
-        padding: 4,
+        padding: SPACING.xs,
     },
 
     /**
@@ -92,13 +49,13 @@ export default StyleSheet.create({
      */
     filterContainer: {
         flexDirection: "row",
-        gap: 8,
-        marginBottom: 16,
+        gap: SPACING.sm,
+        marginTop: SPACING.md,
+        marginBottom: SPACING.sm,
+        alignItems: "center",
     },
-    tabRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-    },
+    tabRow: LAYOUT_MIXINS.rowBetween,
+
     tabItem: {
         flex: 1,
         alignItems: "center",
@@ -116,62 +73,56 @@ export default StyleSheet.create({
         fontWeight: "700",
     },
     tabTextInactive: {
-        color: COLORS.gray400,
+        color: COLORS.textMuted,
     },
 
     /**
      * 列表内容与缺省态
      */
     scrollContentContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 16,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: SPACING.md,
         flexGrow: 1,
     },
     emptyContainer: {
-        alignItems: "center",
-        justifyContent: "center",
+        ...LAYOUT_MIXINS.center,
         paddingVertical: 80,
     },
     emptyIconBox: {
         width: 80,
         height: 80,
-        backgroundColor: COLORS.gray100,
+        backgroundColor: COLORS.borderLight,
         borderRadius: 40,
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 16,
+        ...LAYOUT_MIXINS.center,
+        marginBottom: SPACING.md,
     },
 
     /**
      * 行程卡片组件样式
      */
     cardContainer: {
-        backgroundColor: COLORS.white,
-        borderRadius: 24,
-        marginBottom: 16,
+        ...LAYOUT_MIXINS.cardBase,
+        borderRadius: RADIUS.card,
+        marginBottom: SPACING.md,
         overflow: "hidden",
-        borderWidth: 1,
-        borderColor: COLORS.gray100,
-        ...SHADOWS.subtle,
+        ...SHADOWS.xs,
     },
     cardHeader: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: 16,
+        ...LAYOUT_MIXINS.rowBetween,
+        paddingHorizontal: SPACING.md,
         paddingVertical: 12,
-        backgroundColor: COLORS.overlay,
+        backgroundColor: COLORS.overlayLight,
     },
     roleBadge: {
-        backgroundColor: COLORS.gray100,
-        paddingHorizontal: 8,
+        backgroundColor: COLORS.borderLight,
+        paddingHorizontal: SPACING.sm,
         paddingVertical: 2,
         borderRadius: 6,
     },
     roleBadgeText: {
         fontSize: 10,
         fontWeight: "500",
-        color: COLORS.gray700,
+        color: COLORS.textSub,
     },
     priceText: {
         color: COLORS.primary,
@@ -184,12 +135,12 @@ export default StyleSheet.create({
      */
     routeLineContainer: {
         alignItems: "center",
-        paddingVertical: 4,
+        paddingVertical: SPACING.xs,
     },
     routeLine: {
         width: 1,
-        height: 24,
-        backgroundColor: COLORS.gray200,
+        height: 34,
+        backgroundColor: COLORS.borderDivider,
         marginVertical: 1,
     },
 
@@ -199,16 +150,16 @@ export default StyleSheet.create({
     cardFooter: {
         flexDirection: "row",
         borderTopWidth: 1,
-        borderTopColor: COLORS.gray100,
+        borderTopColor: COLORS.borderLight,
     },
     footerBtn: {
         flex: 1,
-        paddingVertical: 16,
+        paddingVertical: SPACING.md,
         alignItems: "center",
     },
     footerBtnBorder: {
         borderRightWidth: 1,
-        borderRightColor: COLORS.gray100,
+        borderRightColor: COLORS.borderLight,
     },
     footerBtnHighlight: {
         backgroundColor: COLORS.primaryLight,

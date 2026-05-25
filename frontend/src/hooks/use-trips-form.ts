@@ -118,47 +118,53 @@ export const useTripsForm = ({ requestId }: UseTripsFormProps) => {
         const isMockMode = useEnvStore.getState().isMockMode;
         setLoading(true);
 
-        try {
-            let dataList: RawTripItem[] = [];
+        let dataList: RawTripItem[] = [];
 
-            if (isMockMode) {
-                dataList = (myTrips || []) as RawTripItem[];
-            } else {
-                // 链路注入：将 requestId 显式传给 API 层
-                const response = await tripsApi.getList({
-                    page: 1,
-                    pageSize: 50,
-                    role: activeRole === 'all' ? undefined : activeRole
-                }, requestId);
-                dataList = response.list || [];
-            }
-
+        // 1. Mock 模式逻辑
+        if (isMockMode) {
+            dataList = (myTrips || []) as RawTripItem[];
             const formatted = dataList.map(transformApiData);
             setRawTrips(formatted);
 
             logger.info({
                 module: MODULE_NAME,
-                operate: 'fetchTrips',
-                params: { activeRole, isMock: isMockMode },
-                result: `Loaded ${formatted.length} items`,
-                error: undefined,
-                errorType: undefined,
+                operate: 'fetchTrips_Mock',
+                params: { activeRole, isMock: true },
+                result: `Loaded ${formatted.length} items from mock`,
                 requestId
             });
-        } catch (error) {
-            logger.error({
-                module: MODULE_NAME,
-                operate: 'fetchTrips',
-                params: { activeRole },
-                result: undefined,
-                error: error instanceof Error ? error.message : 'Unknown network error',
-                errorType: 'API_FETCH_FAILED',
-                requestId
-            });
-            Alert.alert("提示", "获取行程列表失败，请稍后再试");
-        } finally {
+
             setLoading(false);
+            return;
         }
+
+        // 2. 真实 API 调用逻辑 (线性调用，无 Try-Catch)
+        const result = await tripsApi.getList({
+            page: 1,
+            pageSize: 50,
+            role: activeRole === 'all' ? undefined : activeRole
+        }, requestId);
+
+        // 3. 根据结果状态进行分支处理
+        if (result.success && result.data) {
+            dataList = result.data.list || [];
+            const formatted = dataList.map(transformApiData);
+            setRawTrips(formatted);
+
+            // 仅在业务成功时记录日志
+            logger.info({
+                module: MODULE_NAME,
+                operate: 'fetchTrips_Success',
+                params: { activeRole, isMock: false },
+                result: `Loaded ${formatted.length} items from API`,
+                requestId
+            });
+        } else {
+            // 业务逻辑错误提示，错误日志已在底层的 request.ts 或 API 层记录
+            Alert.alert("提示", result.message || "获取行程列表失败，请稍后再试");
+        }
+
+        setLoading(false);
     }, [activeRole, requestId]);
 
     useEffect(() => {

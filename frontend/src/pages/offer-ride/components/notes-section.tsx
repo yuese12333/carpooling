@@ -9,7 +9,8 @@ import { MessageSquare } from 'lucide-react-native';
 import { Card } from "@/components/card";
 import { Textarea } from "@/components/textarea";
 import { Badge } from "@/components/badge";
-import styles, { COLORS } from "../offer-ride.style";
+import styles from "../offer-ride.style";
+import { COLORS } from "@/pages/style"
 import logger from '@/utils/logger';
 
 /**
@@ -76,7 +77,7 @@ export const NotesSection: React.FC<NotesSectionProps> = ({
         <Card className="p-4 mb-6">
             {/* 区块标题 */}
             <View style={styles.noteHeader}>
-                <MessageSquare size={16} color={COLORS.textTertiary} style={styles.noteIcon} />
+                <MessageSquare size={16} color={COLORS.textMuted} style={styles.noteIcon} />
                 <Text style={styles.sectionTitleSmall}>备注说明（可选）</Text>
             </View>
 

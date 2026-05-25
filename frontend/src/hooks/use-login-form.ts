@@ -8,8 +8,9 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { validatePhoneNumber, validatePassword } from '../utils/validator';
-import { loginByPassword } from '../api/auth';
-import logger from '../utils/logger';
+import { useAuth } from '../store/auth-context';
+import { useEnvStore } from '../store/env-store';
+import logger, { maskSensitive } from '../utils/logger';
 import { ROUTES } from '@/router/paths'
 
 /**
@@ -20,6 +21,7 @@ import { ROUTES } from '@/router/paths'
  */
 export const useLoginForm = (isMockMode: boolean, requestId: string) => {
     const router = useRouter();
+    const { login } = useAuth();
 
     // --- 状态管理 (States) ---
     const [phone, setPhone] = useState('');
@@ -56,10 +58,8 @@ export const useLoginForm = (isMockMode: boolean, requestId: string) => {
         // 2. 提交业务逻辑
         setIsLoading(true);
         try {
-            const payload = { phone, password, shouldRemember };
-
             // 执行 API 请求
-            await loginByPassword(payload, isMockMode);
+            await login(phone, password, shouldRemember);
 
             // 严格遵循规范：INFO 级别结构化日志记录
             logger.info({
@@ -67,14 +67,15 @@ export const useLoginForm = (isMockMode: boolean, requestId: string) => {
                 operate: 'submit_login',
                 requestId,
                 params: {
-                    phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'), // 脱敏处理
+                    ...maskSensitive({ phone }),
                     isMockMode
                 },
                 result: 'success'
             });
 
-            // 登录成功路由跳转
-            router.replace(ROUTES.HOME);
+            // 登录成功路由跳转：管理员自动进入用户管理
+            const role = useEnvStore.getState().role;
+            router.replace(role === 'admin' ? ROUTES.ADMIN.USERS : ROUTES.HOME);
         } catch (error: any) {
             const errorMessage = error.message || '网络繁忙，请稍后再试';
 

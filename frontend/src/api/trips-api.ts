@@ -1,10 +1,13 @@
 /**
  * @file trips-api.ts
  * @description 行程管理模块 API 请求封装。
+ * @version 1.2.0 (Refactored: Linear logic without Try-Catch)
  */
 
 import request from '@/utils/request';
 import logger from '@/utils/logger';
+import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 // --- 类型定义 ---
 
@@ -35,7 +38,7 @@ export interface TripItem {
 }
 
 /** 行程列表响应结构 */
-export interface TripListResponse {
+export interface TripListData {
     list: TripItem[];
     total: number;
 }
@@ -59,6 +62,7 @@ export const tripsApi = {
      * 分页获取行程列表
      * @param params 包含角色、状态及分页信息
      * @param requestId 显式注入的链路请求ID
+     * @returns {Promise<ApiResponse<TripListData>>}
      */
     getList: async (
         params: {
@@ -68,24 +72,24 @@ export const tripsApi = {
             pageSize: number;
         },
         requestId: string
-    ): Promise<TripListResponse> => {
-        try {
-            const response = await request.get<TripListResponse>('/trips/list', {
-                params,
-            });
-            return response.data;
-        } catch (error) {
-            logger.error({
+    ): Promise<ApiResponse<TripListData>> => {
+        syncRequestId(requestId);
+        const result = await request.get<any, ApiResponse<TripListData>>('/trips/list', {
+            params,
+        });
+
+        // 仅在业务成功时记录日志，失败日志已由底层 request.ts 处理
+        if (result.success) {
+            logger.info({
                 module: MODULE_NAME,
                 operate: 'getList',
                 params: params ?? undefined,
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_RESPONSE_ERROR',
+                result: 'Successfully retrieved trip list',
                 requestId,
             });
-            throw error;
         }
+
+        return result;
     },
 
     /**
@@ -93,94 +97,97 @@ export const tripsApi = {
      * @param tripId 行程唯一ID
      * @param requestId 显式注入的链路请求ID
      * @param reason 取消原因
+     * @returns {Promise<ApiResponse<null>>}
      */
-    cancelTrip: async (tripId: string, requestId: string, reason?: string): Promise<void> => {
+    cancelTrip: async (tripId: string, requestId: string, reason?: string): Promise<ApiResponse<null>> => {
+        syncRequestId(requestId);
         const params = { tripId, reason: reason ?? undefined };
-        try {
-            await request.post('/trips/cancel', params);
-        } catch (error) {
-            logger.error({
+
+        const result = await request.post<any, ApiResponse<null>>('/trips/cancel', params);
+
+        if (result.success) {
+            logger.info({
                 module: MODULE_NAME,
                 operate: 'cancelTrip',
                 params,
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_EXECUTE_ERROR',
+                result: 'Trip cancelled successfully',
                 requestId,
             });
-            throw error;
         }
+
+        return result;
     },
 
     /**
      * 提交行程评价
      * @param data 评价详情
      * @param requestId 显式注入的链路请求ID
+     * @returns {Promise<ApiResponse<null>>}
      */
-    rateTrip: async (data: RateTripParams, requestId: string): Promise<void> => {
-        try {
-            await request.post('/trips/rate', data);
-        } catch (error) {
-            logger.error({
+    rateTrip: async (data: RateTripParams, requestId: string): Promise<ApiResponse<null>> => {
+        syncRequestId(requestId);
+        const result = await request.post<any, ApiResponse<null>>('/trips/rate', data);
+
+        if (result.success) {
+            logger.info({
                 module: MODULE_NAME,
                 operate: 'rateTrip',
                 params: { tripId: data.tripId, score: data.score }, // 仅记录非敏感字段
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_EXECUTE_ERROR',
+                result: 'Rating submitted successfully',
                 requestId,
             });
-            throw error;
         }
+
+        return result;
     },
 
     /**
      * 获取再次预约的行程模板
      * @param tripId 原行程ID
      * @param requestId 显式注入的链路请求ID
+     * @returns {Promise<ApiResponse<any>>}
      */
-    getRebookTemplate: async (tripId: string, requestId: string): Promise<any> => {
-        try {
-            const response = await request.get('/trips/template', {
-                params: { tripId },
-            });
-            return response.data;
-        } catch (error) {
-            logger.error({
+    getRebookTemplate: async (tripId: string, requestId: string): Promise<ApiResponse<any>> => {
+        syncRequestId(requestId);
+        const result = await request.get<any, ApiResponse<any>>('/trips/template', {
+            params: { tripId },
+        });
+
+        if (result.success) {
+            logger.info({
                 module: MODULE_NAME,
                 operate: 'getRebookTemplate',
                 params: { tripId },
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_QUERY_ERROR',
+                result: 'Rebook template retrieved',
                 requestId,
             });
-            throw error;
         }
+
+        return result;
     },
 
     /**
      * 获取行程相关紧急联系人或司乘联系信息
      * @param tripId 行程唯一ID
      * @param requestId 显式注入的链路请求ID
+     * @returns {Promise<ApiResponse<any>>}
      */
-    getContact: async (tripId: string, requestId: string): Promise<any> => {
-        try {
-            const response = await request.get('/trips/contact', {
-                params: { tripId },
-            });
-            return response.data;
-        } catch (error) {
-            logger.error({
+    getContact: async (tripId: string, requestId: string): Promise<ApiResponse<any>> => {
+        syncRequestId(requestId);
+        const result = await request.get<any, ApiResponse<any>>('/trips/contact', {
+            params: { tripId },
+        });
+
+        if (result.success) {
+            logger.info({
                 module: MODULE_NAME,
                 operate: 'getContact',
                 params: { tripId },
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_QUERY_ERROR',
+                result: 'Contact info retrieved',
                 requestId,
             });
-            throw error;
         }
+
+        return result;
     }
 };

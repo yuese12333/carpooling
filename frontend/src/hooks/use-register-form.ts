@@ -138,42 +138,35 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
         setIsLoading(true);
 
         try {
-            // 校验昵称可用性
+            // 适配点：从 res.data 中提取 isAvailable
             const nickRes = await checkNickname(formData.nickname, isMockMode);
-            if (!nickRes.isAvailable) {
-                return setFieldErrors({ nickname: "昵称已被占用" });
+            if (!nickRes.success || !nickRes.data?.isAvailable) {
+                return setFieldErrors({ nickname: nickRes.message || "昵称已被占用" });
             }
 
-            // 校验验证码有效性
+            // 适配点：从 res.data 中提取 isValid 和 tempToken
             const verifyRes = await verifySmsCode(formData.phoneNumber, formData.verifyCode, isMockMode);
 
             logger.info({
                 module: 'register-hook',
                 operate: 'verifyStepOne',
-                params: { nickname: formData.nickname, phoneNumber: formData.phoneNumber },
-                result: verifyRes.isValid ? 'VALID' : 'INVALID',
+                result: (verifyRes.success && verifyRes.data?.isValid) ? 'VALID' : 'INVALID',
                 requestId
             });
 
-            if (verifyRes.isValid) {
-                setTempToken(verifyRes.tempToken);
+            if (verifyRes.success && verifyRes.data?.isValid) {
+                setTempToken(verifyRes.data.tempToken);
                 setCurrentStep(2);
                 setFieldErrors({});
+            } else {
+                setFieldErrors({ verifyCode: verifyRes.message || "验证码错误" });
             }
         } catch (error: any) {
-            logger.error({
-                module: 'register-hook',
-                operate: 'verifyStepOne',
-                error: error.message,
-                errorType: 'STEP_VALIDATION_ERROR',
-                requestId
-            });
-            setFieldErrors(prev => ({ ...prev, general: error.message }));
+            setFieldErrors(prev => ({ ...prev, general: "校验失败，请重试" }));
         } finally {
             setIsLoading(false);
         }
     };
-
     /** * 最终注册提交逻辑 
      */
     const handleRegisterSubmit = async () => {
@@ -202,7 +195,7 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
                 agreeProtocol: isAgreed,
             };
 
-            await registerUser(registerParams, isMockMode);
+            const registerRes = await registerUser(registerParams, isMockMode);
 
             // 记录注册成功日志，严禁记录 password
             logger.info({
@@ -213,8 +206,8 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
                 requestId
             });
 
-            // 本地存储用户信息并重定向
-            await registerLocal(nickname, phoneNumber, password);
+            // 本地存储用户信息并重定向（registerLocal 内部会解析 token payload 获取 role）
+            await registerLocal(nickname, phoneNumber, password, registerRes.accessToken);
             router.replace(ROUTES.HOME);
         } catch (error: any) {
             logger.error({

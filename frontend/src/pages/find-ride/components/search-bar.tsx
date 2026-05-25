@@ -6,7 +6,8 @@
 import React from "react";
 import { View, TextInput, TouchableOpacity } from "react-native";
 import { MapPin, Navigation as NavIcon, Search } from "lucide-react-native";
-import styles, { COLORS } from "../find-ride.style";
+import styles from "../find-ride.style";
+import { COLORS } from '@/pages/style';
 import logger from '@/utils/logger';
 
 /**
@@ -102,7 +103,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                     onPress={handleSearchPress}
                     activeOpacity={0.7}
                 >
-                    <Search size={18} color={COLORS.textWhite} />
+                    <Search size={18} color={COLORS.white} />
                 </TouchableOpacity>
             </View>
         </View>

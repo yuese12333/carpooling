@@ -5,7 +5,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { ArrowLeft, Check } from "lucide-react-native";
-import forgetPasswordStyles, { COLORS } from '../forget-password.style';
+import forgetPasswordStyles from '../forget-password.style';
+import { COLORS } from '@/pages/style'
 
 interface PasswordHeaderProps {
     /** 当前步骤 1-4 */

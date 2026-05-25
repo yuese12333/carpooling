@@ -1,7 +1,12 @@
 package com.anonymous.carpooling
 
 import com.amap.api.services.core.AMapException
+import com.amap.api.services.core.LatLonPoint
 import com.amap.api.services.core.PoiItem
+import com.amap.api.services.geocoder.GeocodeResult
+import com.amap.api.services.geocoder.GeocodeSearch
+import com.amap.api.services.geocoder.RegeocodeQuery
+import com.amap.api.services.geocoder.RegeocodeResult
 import com.amap.api.services.poisearch.PoiResult
 import com.amap.api.services.poisearch.PoiSearch
 import com.facebook.react.bridge.Arguments
@@ -83,6 +88,60 @@ class AmapSearchModule(private val reactContext: ReactApplicationContext) :
       poiSearch.searchPOIAsyn()
     } catch (e: Exception) {
       promise.reject("AMAP_SEARCH_EXCEPTION", e.message, e)
+    }
+  }
+
+  /**
+   * 逆地理编码：将经纬度解析为附近地址信息。
+   *
+   * @param latitude  纬度（GCJ-02）
+   * @param longitude 经度（GCJ-02）
+   * @param radius    搜索半径（米），建议 50～500
+   */
+  @ReactMethod
+  fun reverseGeocode(latitude: Double, longitude: Double, radius: Float, promise: Promise) {
+    try {
+      val point = LatLonPoint(latitude, longitude)
+      val query = RegeocodeQuery(point, radius, GeocodeSearch.AMAP)
+      val geocodeSearch = GeocodeSearch(reactContext)
+      var settled = false
+
+      geocodeSearch.setOnGeocodeSearchListener(
+        object : GeocodeSearch.OnGeocodeSearchListener {
+          override fun onRegeocodeSearched(result: RegeocodeResult?, rCode: Int) {
+            if (settled) return
+            settled = true
+            if (rCode != AMapException.CODE_AMAP_SUCCESS || result == null) {
+              promise.reject("AMAP_REGEO_ERROR", "rCode=$rCode", null)
+              return
+            }
+            val addr = result.regeocodeAddress
+            val m = Arguments.createMap()
+            m.putString("formatAddress", addr?.formatAddress ?: "")
+            m.putString("country", addr?.country ?: "")
+            m.putString("province", addr?.province ?: "")
+            m.putString("city", addr?.city ?: "")
+            m.putString("district", addr?.district ?: "")
+            m.putString("township", addr?.township ?: "")
+            m.putString("neighborhood", addr?.neighborhood ?: "")
+            m.putString("building", addr?.building ?: "")
+            m.putString("streetNumber",
+              if (addr?.streetNumber != null)
+                "${addr.streetNumber.street}${addr.streetNumber.number}"
+              else ""
+            )
+            promise.resolve(m)
+          }
+
+          override fun onGeocodeSearched(result: GeocodeResult?, rCode: Int) {
+            // 逆地理走 onRegeocodeSearched；正向编码此处不处理
+          }
+        },
+      )
+
+      geocodeSearch.getFromLocationAsyn(query)
+    } catch (e: Exception) {
+      promise.reject("AMAP_REGEO_EXCEPTION", e.message, e)
     }
   }
 

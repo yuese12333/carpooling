@@ -1,57 +1,19 @@
 /**
  * @file offer-ride-style.ts
- * @description 拼车发布模块语义化样式表，遵循设计系统变量规范
+ * @description 拼车发布模块语义化样式表，重构版 - 遵循全局 Design Tokens
  */
 
 import { StyleSheet } from "react-native";
+import { COLORS, SPACING, RADIUS, LAYOUT_MIXINS, commonStyles } from '@/pages/style';
 
-/**
- * 语义化颜色常量定义，严禁在组件内使用硬编码色值
- */
-export const COLORS = Object.freeze({
-    // 品牌色与状态色
-    primary: '#10B981',      // 绿色 (Success/Primary)
-    secondary: '#3b82f6',    // 蓝色 (Time/Info)
-    warning: '#fb923c',      // 橙色 (Destination/Warning)
-    danger: '#ef4444',       // 红色
-
-    // 背景色
-    background: '#f9fafb',   // 页面背景
-    card: '#ffffff',         // 卡片背景
-    inputBg: '#f9fafb',      // 输入框背景
-    buttonDisabled: '#f3f4f6',
-    tagBg: '#f3f4f6',
-    tipBg: '#f0fdf4',
-    calendarBg: '#ffffff',
-
-    // 文字颜色
-    textPrimary: '#1f2937',  // 深灰/黑
-    textSecondary: '#4b5563', // 中灰
-    textTertiary: '#9ca3af',  // 浅灰
-    textButtonGrey: '#EFEFF4',
-    textLight: '#ffffff',     // 白色文字
-    textLink: '#10B981',
-    textTip: '#166534',
-
-    // 边框与线条
-    border: '#f3f4f6',
-    borderLight: '#d1d5db',
-    borderExtraLight: '#E5E7EB',
-    borderTip: '#dcfce7',
-    borderCalendar: '#f0f0f0',
-});
-
-/**
- * 导出拼车发布页标准化样式对象
- */
 export default StyleSheet.create({
     // --- 容器与通用布局 ---
     container: {
-        flex: 1,
-        backgroundColor: COLORS.background,
+        ...commonStyles.flexOne,
+        backgroundColor: COLORS.bgLight,
     },
     flexOne: {
-        flex: 1,
+        ...commonStyles.flexOne,
     },
     scrollSpacer: {
         height: 40,
@@ -59,49 +21,51 @@ export default StyleSheet.create({
 
     // --- 头部样式 ---
     header: {
-        backgroundColor: COLORS.card,
-        paddingHorizontal: 16,
+        backgroundColor: COLORS.white,
+        paddingHorizontal: SPACING.md,
         paddingVertical: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.rowBetween,
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.border,
+        borderBottomColor: COLORS.borderLight,
     },
     backButton: {
         width: 36,
         height: 36,
-        backgroundColor: COLORS.buttonDisabled,
+        backgroundColor: COLORS.borderLight,
         borderRadius: 18,
-        alignItems: 'center',
-        justifyContent: 'center',
+        ...LAYOUT_MIXINS.center,
         marginRight: 12,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
+        textAlign: 'center',
+    },
+    headerRightPlaceholder: {
+        width: 40,
     },
 
     // --- 内容区域样式 ---
     content: {
-        flex: 1,
-        padding: 16,
+        ...commonStyles.flexOne,
+        padding: SPACING.md,
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: COLORS.textPrimary,
-        marginBottom: 16,
+        color: COLORS.textMain,
+        marginBottom: SPACING.md,
     },
     sectionTitleSmall: {
         fontSize: 15,
         fontWeight: '600',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
     },
     fieldLabel: {
         fontSize: 12,
-        color: COLORS.textTertiary,
-        marginBottom: 8,
+        color: COLORS.textMuted,
+        marginBottom: SPACING.sm,
     },
 
     // --- 路线绘制样式 ---
@@ -123,35 +87,35 @@ export default StyleSheet.create({
     dotOrange: {
         width: 15,
         height: 15,
-        backgroundColor: COLORS.warning,
+        backgroundColor: COLORS.secondary,
         borderRadius: 5,
     },
     dotGray: {
         width: 9,
         height: 9,
         borderWidth: 2,
-        borderColor: COLORS.borderLight,
+        borderColor: COLORS.textPlaceholder,
         borderRadius: 4,
-        backgroundColor: COLORS.card,
+        backgroundColor: COLORS.white,
     },
     dotGrayLight: {
         width: 9,
         height: 9,
         borderWidth: 1.5,
-        borderColor: COLORS.borderExtraLight,
+        borderColor: COLORS.borderDivider,
         borderRadius: 4,
         backgroundColor: 'transparent',
     },
     lineMain: {
         width: 2,
-        backgroundColor: COLORS.border,
+        backgroundColor: COLORS.borderLight,
         flex: 1,
         marginVertical: 10,
         minHeight: 90,
     },
     lineSmall: {
         width: 2,
-        backgroundColor: COLORS.border,
+        backgroundColor: COLORS.borderLight,
         height: 37,
         marginVertical: 4,
     },
@@ -161,34 +125,32 @@ export default StyleSheet.create({
 
     // --- 输入框通用样式 ---
     inputContainer: {
-        flex: 1,
-        paddingRight: 8,
+        ...commonStyles.flexOne,
+        paddingRight: SPACING.sm,
     },
     inputWrapper: {
-        backgroundColor: COLORS.inputBg,
-        borderRadius: 12,
+        backgroundColor: COLORS.bgLight,
+        borderRadius: RADIUS.md,
         paddingHorizontal: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.rowCenter,
+        ...LAYOUT_MIXINS.inputHeight,
         marginBottom: 12,
-        height: 48,
     },
     inputIcon: {
-        marginRight: 8,
+        marginRight: SPACING.sm,
     },
     rnInput: {
-        flex: 1,
+        ...(commonStyles.flexOne as any),
         fontSize: 14,
-        color: COLORS.textSecondary,
+        color: COLORS.textSub,
     },
 
     // --- 途经点样式 ---
     stopItem: {
-        backgroundColor: COLORS.inputBg,
-        borderRadius: 12,
+        backgroundColor: COLORS.bgLight,
+        borderRadius: RADIUS.md,
         padding: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.rowCenter,
         marginBottom: 12,
     },
     stopDot: {
@@ -196,12 +158,12 @@ export default StyleSheet.create({
         height: 6,
         borderRadius: 3,
         borderWidth: 1.5,
-        borderColor: COLORS.textTertiary,
-        marginRight: 8,
+        borderColor: COLORS.textMuted,
+        marginRight: SPACING.sm,
     },
     stopText: {
-        flex: 1,
-        color: COLORS.textSecondary,
+        ...(commonStyles.flexOne as any),
+        color: COLORS.textSub,
         fontSize: 14,
     },
     addStopRow: {
@@ -209,20 +171,19 @@ export default StyleSheet.create({
         marginBottom: 12,
     },
     addStopInputWrapper: {
-        flex: 1,
-        backgroundColor: COLORS.inputBg,
-        borderRadius: 12,
+        ...commonStyles.flexOne,
+        backgroundColor: COLORS.bgLight,
+        borderRadius: RADIUS.md,
         paddingHorizontal: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        height: 48,
-        marginRight: 8,
+        ...LAYOUT_MIXINS.rowCenter,
+        ...LAYOUT_MIXINS.inputHeight,
+        marginRight: SPACING.sm,
     },
     addButton: {
-        backgroundColor: COLORS.tipBg,
-        paddingHorizontal: 16,
+        backgroundColor: COLORS.bgTip,
+        paddingHorizontal: SPACING.md,
         justifyContent: 'center',
-        borderRadius: 12,
+        borderRadius: RADIUS.md,
     },
     addButtonText: {
         color: COLORS.primary,
@@ -235,127 +196,116 @@ export default StyleSheet.create({
         gap: 12,
     },
     selectTriggerContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.rowCenter,
     },
     selectValueWrapper: {
-        marginLeft: 8,
+        marginLeft: SPACING.sm,
     },
     recurringSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingTop: 16,
+        ...LAYOUT_MIXINS.rowBetween,
+        paddingTop: SPACING.md,
         borderTopWidth: 1,
-        borderTopColor: COLORS.border,
+        borderTopColor: COLORS.borderLight,
         paddingHorizontal: 4,
     },
-
     recurringInfo: {
-        flex: 1,
+        ...commonStyles.flexOne,
     },
     calendarContainer: {
         marginTop: 10,
-        backgroundColor: COLORS.calendarBg,
-        borderRadius: 12,
+        backgroundColor: COLORS.white,
+        borderRadius: RADIUS.md,
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: COLORS.borderCalendar,
         minHeight: 340,
     },
     timeSelector: {
-        backgroundColor: COLORS.inputBg,
-        borderRadius: 12,
+        backgroundColor: COLORS.bgLight,
+        borderRadius: RADIUS.md,
         paddingHorizontal: 12,
-        height: 48,
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.inputHeight,
+        ...LAYOUT_MIXINS.rowCenter,
     },
     timeIcon: {
-        marginRight: 8,
+        marginRight: SPACING.sm,
     },
     timeText: {
-        flex: 1,
-        color: COLORS.textSecondary,
+        ...(commonStyles.flexOne as any), // 或者断言为 TextStyle
+        color: COLORS.textSub,
         fontWeight: '500',
     },
     timeGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginTop: 16,
+        marginTop: SPACING.md,
     },
     timeChip: {
         width: '23%',
         paddingVertical: 12,
-        backgroundColor: COLORS.inputBg,
-        borderRadius: 12,
-        alignItems: 'center',
+        backgroundColor: COLORS.bgLight,
+        borderRadius: RADIUS.md,
+        ...LAYOUT_MIXINS.center,
         marginRight: '2%',
-        marginBottom: 8,
+        marginBottom: SPACING.sm,
     },
     timeChipActive: {
         backgroundColor: COLORS.primary,
     },
     timeChipText: {
         fontSize: 14,
-        color: COLORS.textSecondary,
+        color: COLORS.textSub,
         fontWeight: '500',
     },
     timeChipTextActive: {
-        color: COLORS.textLight,
+        color: COLORS.white,
     },
 
     // --- 重复设置样式 ---
     recurringRow: {
-        marginTop: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: COLORS.inputBg,
+        marginTop: SPACING.md,
+        ...LAYOUT_MIXINS.rowBetween,
+        backgroundColor: COLORS.bgLight,
         padding: 12,
-        borderRadius: 12,
+        borderRadius: RADIUS.md,
     },
     recurringTitle: {
         fontSize: 14,
-        color: COLORS.textSecondary,
+        color: COLORS.textSub,
         fontWeight: '500',
     },
     recurringSub: {
         fontSize: 12,
-        color: COLORS.textTertiary,
+        color: COLORS.textMuted,
     },
 
     // --- 计数器与价格样式 ---
     counterContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: COLORS.inputBg,
-        borderRadius: 12,
-        padding: 8,
+        ...LAYOUT_MIXINS.rowBetween,
+        backgroundColor: COLORS.bgLight,
+        borderRadius: RADIUS.md,
+        padding: SPACING.sm,
     },
     counterBtn: {
         width: 32,
         height: 32,
-        backgroundColor: COLORS.card,
+        backgroundColor: COLORS.white,
         borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
+        ...LAYOUT_MIXINS.center,
     },
     counterBtnPlus: {
         backgroundColor: COLORS.primary,
     },
     counterBtnText: {
         fontSize: 18,
-        color: COLORS.textSecondary,
+        color: COLORS.textSub,
     },
     counterBtnTextPlus: {
         fontSize: 18,
-        color: COLORS.textLight,
+        color: COLORS.white,
     },
     counterDisplay: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.rowCenter,
     },
     counterIcon: {
         marginRight: 4,
@@ -363,34 +313,33 @@ export default StyleSheet.create({
     counterValue: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: COLORS.textPrimary,
+        color: COLORS.textMain,
     },
     priceInputWrapper: {
-        backgroundColor: COLORS.inputBg,
-        borderRadius: 12,
-        paddingHorizontal: 8,
-        height: 48,
-        flexDirection: 'row',
-        alignItems: 'center',
+        backgroundColor: COLORS.bgLight,
+        borderRadius: RADIUS.md,
+        paddingHorizontal: SPACING.sm,
+        ...LAYOUT_MIXINS.inputHeight,
+        ...LAYOUT_MIXINS.rowCenter,
     },
     priceInput: {
-        flex: 1,
+        ...(commonStyles.flexOne as any),
         fontWeight: 'bold',
         fontSize: 16,
-        color: COLORS.textPrimary,
-        paddingHorizontal: 8,
+        color: COLORS.textMain,
+        paddingHorizontal: SPACING.sm,
     },
     priceUnit: {
         fontSize: 12,
-        color: COLORS.textTertiary,
+        color: COLORS.textMuted,
         marginLeft: 2,
         minWidth: 30,
     },
     tipBox: {
         marginTop: 12,
-        backgroundColor: COLORS.tipBg,
+        backgroundColor: COLORS.bgTip,
         padding: 12,
-        borderRadius: 12,
+        borderRadius: RADIUS.md,
         borderWidth: 1,
         borderColor: COLORS.borderTip,
     },
@@ -402,12 +351,11 @@ export default StyleSheet.create({
 
     // --- 备注样式 ---
     noteHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.rowCenter,
         marginBottom: 12,
     },
     noteIcon: {
-        marginRight: 8,
+        marginRight: SPACING.sm,
     },
     textareaCustom: {
         minHeight: 100,
@@ -423,41 +371,39 @@ export default StyleSheet.create({
     },
     tagText: {
         fontSize: 12,
-        color: COLORS.textSecondary,
+        color: COLORS.textSub,
     },
 
     // --- 底部按钮样式 ---
     footer: {
-        backgroundColor: COLORS.card,
-        padding: 16,
+        backgroundColor: COLORS.white,
+        padding: SPACING.md,
         borderTopWidth: 1,
-        borderTopColor: COLORS.border,
+        borderTopColor: COLORS.borderLight,
     },
     publishBtn: {
         width: '100%',
-        height: 56, // 给定高度或 padding
-        borderRadius: 16,
+        ...LAYOUT_MIXINS.buttonHeight,
+        borderRadius: RADIUS.lg,
         flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.center,
     },
     successBtn: {
         backgroundColor: COLORS.primary,
-        height: 56,
-        borderRadius: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
+        ...LAYOUT_MIXINS.buttonHeight,
+        borderRadius: RADIUS.lg,
+        ...LAYOUT_MIXINS.rowCenter,
         justifyContent: 'center',
     },
     successIcon: {
-        marginRight: 8,
+        marginRight: SPACING.sm,
     },
     publishBtnText: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: COLORS.textLight,
+        color: COLORS.white,
     },
     disabledText: {
-        color: COLORS.textTertiary,
+        color: COLORS.textMuted,
     },
 });

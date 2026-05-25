@@ -8,7 +8,8 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Navigation, MapPin, Plus, X } from 'lucide-react-native';
 import { Card } from "@/components/card";
 import { Input } from "@/components/input";
-import styles, { COLORS } from "../offer-ride.style";
+import styles from "../offer-ride.style";
+import { COLORS } from "@/pages/style"
 import logger from '@/utils/logger';
 
 /**
@@ -154,7 +155,7 @@ export const RouteSection: React.FC<RouteSectionProps> = ({
                                 activeOpacity={0.6}
                                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                             >
-                                <X size={16} color={COLORS.textTertiary} />
+                                <X size={16} color={COLORS.textMuted} />
                             </TouchableOpacity>
                         </View>
                     ))}
@@ -162,7 +163,7 @@ export const RouteSection: React.FC<RouteSectionProps> = ({
                     {/* 添加途经点交互行 */}
                     <View style={styles.addStopRow}>
                         <View style={styles.addStopInputWrapper}>
-                            <Plus size={16} color={COLORS.textTertiary} style={styles.inputIcon} />
+                            <Plus size={16} color={COLORS.textMuted} style={styles.inputIcon} />
                             <Input
                                 placeholder="添加途经地"
                                 value={newStopInput}
@@ -184,7 +185,7 @@ export const RouteSection: React.FC<RouteSectionProps> = ({
 
                     {/* 目的地 */}
                     <View style={styles.inputWrapper}>
-                        <MapPin size={16} color={COLORS.warning} style={styles.inputIcon} />
+                        <MapPin size={16} color={COLORS.secondary} style={styles.inputIcon} />
                         <Input
                             placeholder="目的地（必填）"
                             value={destination}
