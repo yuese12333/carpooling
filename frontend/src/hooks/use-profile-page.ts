@@ -8,10 +8,12 @@ import { Alert } from "react-native";
 import { useRouter, Href } from 'expo-router';
 import { useAuth } from "../store/auth-context";
 import { profileApi, type BadgeItem } from "../api/profile-api";
+import { getPaymentMethods } from "@/api/payment-methods-api";
 import { useEnvStore } from "@/store/env-store";
 import { currentUser } from "../store/mock-data";
 import { ROUTES } from '../router/paths';
 import logger from '@/utils/logger';
+import { isApiSuccess } from '@/utils/api-response';
 import { getMenuData, type IMenuItem } from "@/pages/profile/profile/profile-config";
 import type { IProfileState } from "@/pages/profile/profile/profile-types";
 
@@ -27,6 +29,7 @@ const maskPhoneNumber = (phone?: string): string => {
 export const useProfilePage = (requestId: string) => {
     const router = useRouter();
     const { logout } = useAuth();
+    const isMockMode = useEnvStore((state) => state.isMockMode);
 
     const [profileData, setProfileData] = useState<IProfileState | undefined>(() => {
         if (useEnvStore.getState().isMockMode) {
@@ -44,56 +47,63 @@ export const useProfilePage = (requestId: string) => {
     });
 
     const [carData, setCarData] = useState<{
+        vehicleId?: string;
         brand?: string;
         color?: string;
         carPlate?: string;
     } | undefined>(() => {
         if (useEnvStore.getState().isMockMode) {
             return {
+                vehicleId: 'v1',
                 brand: currentUser.car,
                 color: currentUser.carColor,
-                carPlate: currentUser.carPlate
+                carPlate: currentUser.carPlate,
             };
         }
         return undefined;
     });
+
+    const [paymentMethodSub, setPaymentMethodSub] = useState<string>(
+        () => (useEnvStore.getState().isMockMode ? '微信支付 已绑定' : '管理支付方式')
+    );
 
     const [badges, setBadges] = useState<BadgeItem[] | undefined>(undefined);
     const [loading, setLoading] = useState<boolean>(false);
     const [realSavings, setRealSavings] = useState<number | undefined>(undefined);
 
     const menuData = useMemo(() => {
-        const isVerified = !!profileData?.verified;
-        logger.info({
-            module: 'use-profile-page',
-            operate: 'compute-dynamic-menu',
-            params: { isVerified },
-            result: 'success',
-            requestId
+        const carSub = carData?.brand
+            ? `${carData.brand}${carData.color ? ` ${carData.color}` : ''}`
+            : '未绑定车辆';
+
+        return getMenuData({
+            verified: !!profileData?.verified,
+            carSub,
+            paymentSub: paymentMethodSub,
         });
-        return getMenuData(isVerified);
-    }, [profileData?.verified, requestId]);
+    }, [profileData?.verified, carData, paymentMethodSub]);
 
     const fetchData = useCallback(async () => {
-        const currentMockMode = useEnvStore.getState().isMockMode;
-        if (currentMockMode) return;
+        if (useEnvStore.getState().isMockMode) {
+            return;
+        }
 
         setLoading(true);
         logger.info({
             module: 'use-profile-page',
             operate: 'fetch-profile-data-start',
-            params: { isMockMode: currentMockMode },
-            requestId
+            requestId,
         });
 
         try {
-            const [infoRes, carRes, badgeRes] = await Promise.all([
+            const [infoRes, carRes, badgeRes, paymentRes] = await Promise.all([
                 profileApi.getInfo(requestId),
                 profileApi.getCar(requestId),
-                profileApi.getBadges(requestId)
+                profileApi.getBadges(requestId),
+                getPaymentMethods(requestId),
             ]);
 
-            if (infoRes.code === 200) {
+            if (isApiSuccess(infoRes)) {
                 const d = infoRes.data;
                 setProfileData({
                     name: d.name,
@@ -102,18 +112,32 @@ export const useProfilePage = (requestId: string) => {
                     memberSince: d.memberSince,
                     verified: d.isVerified,
                     trips: d.trips,
-                    rating: d.rating
+                    rating: d.rating,
                 });
                 setRealSavings(d.accumulatedSavings);
             }
 
-            if (carRes.code === 200) {
+            if (isApiSuccess(carRes)) {
                 const c = carRes.data;
-                setCarData({ brand: c.brand, color: c.color, carPlate: c.carPlate });
+                setCarData({
+                    vehicleId: c.vehicleId,
+                    brand: c.brand,
+                    color: c.color,
+                    carPlate: c.carPlate,
+                });
             }
 
-            if (badgeRes.code === 200) {
+            if (isApiSuccess(badgeRes)) {
                 setBadges(badgeRes.data.list);
+            }
+
+            if (isApiSuccess(paymentRes) && paymentRes.data?.length) {
+                const defaultMethod = paymentRes.data.find((m) => m.isDefault) ?? paymentRes.data[0];
+                setPaymentMethodSub(
+                    defaultMethod.sub
+                        ? `${defaultMethod.name} ${defaultMethod.sub}`
+                        : defaultMethod.name
+                );
             }
         } catch (error) {
             logger.error({
@@ -121,7 +145,7 @@ export const useProfilePage = (requestId: string) => {
                 operate: 'fetch-profile-data-error',
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'API_AGGREGATION_ERROR',
-                requestId
+                requestId,
             });
             Alert.alert("同步失败", "无法连接到服务器");
         } finally {
@@ -131,29 +155,31 @@ export const useProfilePage = (requestId: string) => {
 
     useEffect(() => {
         fetchData();
-    }, [fetchData]);
+    }, [fetchData, isMockMode]);
 
     const displaySavings = useMemo(() => {
-        const currentMockMode = useEnvStore.getState().isMockMode;
-        if (!currentMockMode && realSavings !== undefined) {
+        if (!useEnvStore.getState().isMockMode && realSavings !== undefined) {
             return realSavings;
         }
         const trips = profileData?.trips ?? 0;
-        const SAVINGS_PER_TRIP = 22;
-        return trips * SAVINGS_PER_TRIP;
-    }, [profileData?.trips, realSavings]);
+        return trips * 22;
+    }, [profileData?.trips, realSavings, isMockMode]);
 
     const handleMenuClick = useCallback(async (item: IMenuItem) => {
         logger.info({
             module: 'use-profile-page',
             operate: 'menu-click',
             params: { label: item.label },
-            requestId
+            requestId,
         });
 
         try {
             if (item.label === "退出登录") {
-                await profileApi.logout(requestId);
+                const logoutRes = await profileApi.logout(requestId);
+                if (!isApiSuccess(logoutRes)) {
+                    Alert.alert("退出失败", logoutRes.message || "请稍后重试");
+                    return;
+                }
                 await logout();
                 router.replace(ROUTES.AUTH.LOGIN as Href);
             } else if (item.path) {
@@ -166,7 +192,7 @@ export const useProfilePage = (requestId: string) => {
                 params: { label: item.label },
                 error: error instanceof Error ? error.message : String(error),
                 errorType: 'NAVIGATION_OR_AUTH_ERROR',
-                requestId
+                requestId,
             });
             Alert.alert("操作失败", "系统响应异常");
         }
@@ -174,28 +200,22 @@ export const useProfilePage = (requestId: string) => {
 
     const handleEditAvatar = useCallback(() => {
         logger.info({ module: 'use-profile-page', operate: 'edit-avatar-trigger', requestId });
+        Alert.alert("提示", "头像上传功能开发中");
     }, [requestId]);
 
     const handleEditCar = useCallback(() => {
         logger.info({
             module: 'use-profile-page',
             operate: 'edit-car-trigger',
-            requestId
+            params: { vehicleId: carData?.vehicleId ?? 'v1' },
+            requestId,
         });
 
-        try {
-            router.push(ROUTES.PROFILE.EDIT_VEHICLE_INFORMATION);
-        } catch (error) {
-            logger.error({
-                module: 'use-profile-page',
-                operate: 'handle-edit-car-error',
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'NAVIGATION_ERROR',
-                requestId
-            });
-            Alert.alert("操作失败", "无法跳转到车辆编辑页面");
-        }
-    }, [router, requestId]);
+        router.push({
+            pathname: ROUTES.PROFILE.EDIT_VEHICLE_INFORMATION,
+            params: { id: carData?.vehicleId ?? 'v1' },
+        });
+    }, [router, requestId, carData?.vehicleId]);
 
     return {
         profileData,
@@ -206,6 +226,6 @@ export const useProfilePage = (requestId: string) => {
         menuData,
         handleMenuClick,
         handleEditAvatar,
-        handleEditCar
+        handleEditCar,
     };
 };

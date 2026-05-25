@@ -43,11 +43,11 @@ export default function EditLocationPage() {
             {/* 2. KeyboardAvoidingView 应该是内容的容器 */}
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={{ flex: 1 }}
+                style={styles.keyboardAvoiding}
             >
                 <ScrollView
                     style={styles.content}
-                    contentContainerStyle={{ flexGrow: 1 }}
+                    contentContainerStyle={styles.scrollGrow}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >

@@ -20,7 +20,7 @@ export const MOCK_VEHICLES: VehicleInfo[] = [
         isDefault: true,
         status: "verified", // 已认证车辆
         tags: ["准新车", "禁烟", "新能源"],
-        image: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?q=80&w=1000&auto=format&fit=crop",
+        image: "",
     },
     {
         id: "v2",
@@ -32,7 +32,7 @@ export const MOCK_VEHICLES: VehicleInfo[] = [
         isDefault: false,
         status: "pending", // 审核中状态模拟
         tags: ["自动驾驶", "超长续航"],
-        image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=1000&auto=format&fit=crop",
+        image: "",
     },
     {
         id: "v3",
@@ -44,6 +44,6 @@ export const MOCK_VEHICLES: VehicleInfo[] = [
         isDefault: false,
         status: "rejected", // 认证驳回状态模拟
         tags: ["豪华款"],
-        image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?q=80&w=1000&auto=format&fit=crop",
+        image: "",
     }
 ];

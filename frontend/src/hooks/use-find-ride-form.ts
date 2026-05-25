@@ -8,6 +8,7 @@ import { Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { fetchRides, RideListResponse, RideSearchQuery } from "@/api/find-ride-api";
 import logger from '@/utils/logger';
+import { isApiSuccess } from '@/utils/api-response';
 
 interface SearchParams {
     from?: string;
@@ -52,7 +53,7 @@ export const useFindRideForm = (requestId: string) => {
             // [显式传递] 将 requestId 透传至 API 层
             const res = await fetchRides(searchParams, requestId);
 
-            if (res.code === 200) {
+            if (isApiSuccess(res)) {
                 setRides(res.data.list);
                 // 记录标准化成功日志
                 logger.info({

@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getReceiptDetail, ReceiptDetail } from "@/api/receipt-detail-api";
 import logger from '@/utils/logger';
+import { isApiSuccess } from '@/utils/api-response';
 
 interface UseReceiptDetailReturn {
     loading: boolean;
@@ -36,12 +37,16 @@ export const useReceiptDetail = (
 
     // 获取数据逻辑
     const handleFetchDetail = useCallback(async () => {
+        if (!detailId) {
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
 
-        // 此时 result 类型为 ApiResponse<ReceiptDetail>
         const result = await getReceiptDetail(detailId, requestId);
 
-        if (result.success && result.data) {
+        if (isApiSuccess(result) && result.data) {
             setReceiptData(result.data);
 
             logger.info({

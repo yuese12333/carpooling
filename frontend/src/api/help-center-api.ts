@@ -5,8 +5,8 @@
 
 import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
-import { COLORS } from "@/pages/style";
 import logger from '@/utils/logger';
+import { HELP_CENTER_MOCK_BG } from '@/api/help-center-mock-colors';
 import type { ApiResponse } from '@/api/api.d';
 import { syncRequestId } from '@/utils/sync-request-id';
 
@@ -29,10 +29,10 @@ export interface HotQuestion {
 
 // --- Mock 数据 (仅用于内部开发调试) ---
 const MOCK_CATEGORIES: HelpCategory[] = [
-    { id: '1', title: '行程相关', iconName: 'MapPin', bg: COLORS.primaryLight },
-    { id: '2', title: '支付费用', iconName: 'CreditCard', bg: COLORS.bgOrangeLight },
-    { id: '3', title: '账号信息', iconName: 'User', bg: COLORS.yellowBadge },
-    { id: '4', title: '安全中心', iconName: 'ShieldCheck', bg: COLORS.errorLight },
+    { id: '1', title: '行程相关', iconName: 'MapPin', bg: HELP_CENTER_MOCK_BG.primaryLight },
+    { id: '2', title: '支付费用', iconName: 'CreditCard', bg: HELP_CENTER_MOCK_BG.bgOrangeLight },
+    { id: '3', title: '账号信息', iconName: 'User', bg: HELP_CENTER_MOCK_BG.yellowBadge },
+    { id: '4', title: '安全中心', iconName: 'ShieldCheck', bg: HELP_CENTER_MOCK_BG.errorLight },
 ];
 
 const MOCK_QUESTIONS: HotQuestion[] = [

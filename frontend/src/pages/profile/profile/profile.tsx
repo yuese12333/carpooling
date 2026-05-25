@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useMemo } from "react";
-import { ScrollView, StatusBar, Text } from "react-native";
+import { View, ScrollView, StatusBar, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useProfilePage } from "@/hooks/use-profile-page";
 import logger, { generateRequestId } from "@/utils/logger";
@@ -79,16 +79,9 @@ export default function ProfilePage() {
           />
         )}
 
-        <ScrollView
-          style={styles.mainContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* 2. 成就勋章墙 */}
-          <AchievementWall
-            badges={badges || badgeData}
-          />
+        <View style={styles.mainContent}>
+          <AchievementWall badges={badges || badgeData} />
 
-          {/* 3. 车辆信息卡片 */}
           {carData && (
             <VehicleCard
               brand={carData.brand || '--'}
@@ -98,14 +91,10 @@ export default function ProfilePage() {
             />
           )}
 
-          {/* 4. 功能菜单组 */}
-          <MenuSection
-            menuData={menuData}
-            onItemClick={handleMenuClick}
-          />
+          <MenuSection menuData={menuData} onItemClick={handleMenuClick} />
 
           <Text style={styles.versionText}>拼车出行 {APP_VERSION}</Text>
-        </ScrollView>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

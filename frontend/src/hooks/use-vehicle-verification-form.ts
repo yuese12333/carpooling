@@ -4,94 +4,75 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
     getVehicleVerificationDetail,
     VehicleVerificationDetail
 } from "@/api/vehicle-verification-api";
 import logger from '@/utils/logger';
+import { isApiSuccess } from '@/utils/api-response';
 
-/**
- * 车辆认证详情业务逻辑 Hook
- * @param {string} requestId - 由页面级 useMemo 生成的唯一链路追踪 ID
- * @returns {object} 暴露给 UI 层的状态与操作接口
- */
 export const useVehicleVerificationDetail = (requestId: string) => {
     const router = useRouter();
+    const params = useLocalSearchParams<{ vehicleId?: string }>();
+    const vehicleId = Array.isArray(params.vehicleId) ? params.vehicleId[0] : params.vehicleId;
 
-    // --- 状态管理 ---
     const [loading, setLoading] = useState<boolean>(true);
-    // 规范要求：避免使用 null，统一使用 undefined
     const [detail, setDetail] = useState<VehicleVerificationDetail | undefined>(undefined);
 
-    // --- 事件处理 ---
     const handleBack = useCallback(() => {
         router.back();
     }, [router]);
 
-    /**
-     * 执行数据加载流程
-     * 包含完整的异常捕获与结构化日志记录
-     */
     const loadData = useCallback(async () => {
         const moduleName = 'VehicleVerificationHook';
         const operationName = 'loadData';
 
         try {
             setLoading(true);
+            const res = await getVehicleVerificationDetail(requestId, vehicleId);
 
-            // 执行 API 调用，显式透传 requestId
-            const res = await getVehicleVerificationDetail(requestId);
-
-            if (res.success) {
+            if (isApiSuccess(res)) {
                 setDetail(res.data);
                 logger.info({
                     module: moduleName,
                     operate: operationName,
-                    params: { requestId },
+                    params: { vehicleId },
                     result: 'Data loaded successfully',
-                    requestId
+                    requestId,
                 });
             } else {
-                // 处理业务逻辑级别的失败
                 logger.error({
                     module: moduleName,
                     operate: operationName,
-                    params: { requestId },
+                    params: { vehicleId },
                     error: res.message,
                     errorType: 'BUSINESS_ERROR',
-                    requestId
+                    requestId,
                 });
             }
         } catch (error: unknown) {
-            // 捕获非预期的运行时错误
-            const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-
             logger.error({
                 module: moduleName,
                 operate: operationName,
-                params: { requestId },
-                error: errorMsg,
+                params: { vehicleId },
+                error: error instanceof Error ? error.message : String(error),
                 errorType: 'RUNTIME_EXCEPTION',
-                requestId
+                requestId,
             });
         } finally {
             setLoading(false);
         }
-    }, [requestId]);
+    }, [requestId, vehicleId]);
 
-    // --- 业务逻辑副作用 ---
     useEffect(() => {
-        if (requestId) {
-            loadData();
-        }
-    }, [requestId, loadData]);
+        loadData();
+    }, [loadData]);
 
-    // 暴露给页面的接口
     return {
         loading,
         detail,
         handleBack,
-        refreshData: loadData // 暴露刷新方法，供 UI 下拉刷新或重试使用
+        refreshData: loadData,
     };
 };

@@ -69,22 +69,21 @@ const MOCK_VEHICLE_DETAIL: VehicleVerificationDetail = {
  * @returns {Promise<ApiResponse<VehicleVerificationDetail>>} 认证详情响应
  */
 export const getVehicleVerificationDetail = async (
-    requestId: string
+    requestId: string,
+    vehicleId?: string
 ): Promise<ApiResponse<VehicleVerificationDetail>> => {
     syncRequestId(requestId);
     const isMockMode = useEnvStore.getState().isMockMode;
     const moduleName = 'VehicleVerification';
     const operationName = 'getVehicleVerificationDetail';
 
-    // 1. Mock 逻辑分支
     if (isMockMode) {
-        // 保持模拟延迟
         await mockDelay(MOCK_DELAY_MS.SHORT);
 
         logger.info({
             module: moduleName,
             operate: operationName,
-            params: { isMockMode },
+            params: { vehicleId: vehicleId ?? 'default', isMockMode },
             requestId,
             result: 'Mock data returned successfully'
         });
@@ -100,6 +99,7 @@ export const getVehicleVerificationDetail = async (
     // 此时底层 request 会 Resolve 标准对象，若遇到 HTTP 错误或逻辑错误，底层已处理日志
     const result = await request.get<any, ApiResponse<VehicleVerificationDetail>>(
         '/v1/vehicle/verification/detail',
+        { params: { vehicleId } },
     );
 
     // 3. 条件化日志记录

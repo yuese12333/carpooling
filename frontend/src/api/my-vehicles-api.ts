@@ -63,7 +63,12 @@ export const getVehicleListApi = async (requestId: string): Promise<ApiResponse<
  */
 export const setDefaultVehicleApi = async (id: string, requestId: string): Promise<ApiResponse> => {
     syncRequestId(requestId);
-    // --- 生产请求逻辑 ---
+    const isMockMode = useEnvStore.getState().isMockMode;
+
+    if (isMockMode) {
+        return { success: true, code: 200, message: 'Mock Success', data: null };
+    }
+
     const result = await request.post<any, ApiResponse>(`/v1/vehicles/${id}/set-default`);
 
     // 条件化日志记录：仅在业务成功时记录
@@ -88,7 +93,12 @@ export const setDefaultVehicleApi = async (id: string, requestId: string): Promi
  */
 export const deleteVehicleApi = async (id: string, requestId: string): Promise<ApiResponse> => {
     syncRequestId(requestId);
-    // --- 生产请求逻辑 ---
+    const isMockMode = useEnvStore.getState().isMockMode;
+
+    if (isMockMode) {
+        return { success: true, code: 200, message: 'Mock Success', data: null };
+    }
+
     const result = await request.post<any, ApiResponse>('/v1/vehicles/delete', { id });
 
     // 条件化日志记录：仅在业务成功时记录

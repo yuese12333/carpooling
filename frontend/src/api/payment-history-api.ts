@@ -49,11 +49,9 @@ const MOCK_STATS: MonthlyStats = {
  */
 export const getPaymentHistory = async (
     params: { page?: number; type?: string; status?: string[] },
-    requestId?: string
+    requestId: string
 ): Promise<ApiResponse<PaymentRecord[]>> => {
-    if (requestId) {
-        syncRequestId(requestId);
-    }
+    syncRequestId(requestId);
     const moduleName = 'PaymentAPI';
     const operateName = 'getPaymentHistory';
     const isMockMode = useEnvStore.getState().isMockMode;
@@ -101,11 +99,9 @@ export const getPaymentHistory = async (
  * @returns Promise<ApiResponse<MonthlyStats>>
  */
 export const getMonthlyStats = async (
-    requestId?: string
+    requestId: string
 ): Promise<ApiResponse<MonthlyStats>> => {
-    if (requestId) {
-        syncRequestId(requestId);
-    }
+    syncRequestId(requestId);
     const moduleName = 'PaymentAPI';
     const operateName = 'getMonthlyStats';
     const isMockMode = useEnvStore.getState().isMockMode;

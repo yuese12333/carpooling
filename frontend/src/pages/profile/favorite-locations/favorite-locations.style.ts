@@ -150,6 +150,9 @@ const styles = StyleSheet.create({
         marginTop: 12,
         color: COLORS.textMuted,
     },
+    loadingText: {
+        color: COLORS.textMuted,
+    },
     footer: {
         position: 'absolute',
         bottom: 0,
