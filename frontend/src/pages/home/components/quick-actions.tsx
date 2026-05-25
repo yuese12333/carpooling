@@ -13,6 +13,7 @@ import { View, Text, TouchableOpacity, GestureResponderEvent } from "react-nativ
 import { Href } from 'expo-router';
 import logger from '@/utils/logger';
 import styles from "../home.style";
+import { COLORS } from '@/pages/style';
 import { ROUTES } from '@/router/paths';
 
 /**
@@ -124,7 +125,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
                     icon="🧭"
                     label="导航"
                     sublabel="实时路线"
-                    backgroundColor={colors.orange || '#fff7ed'}
+                    backgroundColor={colors.orange ?? COLORS.bgOrangeLight}
                     onPress={() => handleActionPress('navigation', ROUTES.RIDE.NAVIGATION as Href)}
                 />
             </View>
