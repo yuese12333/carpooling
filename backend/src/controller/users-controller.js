@@ -8,31 +8,44 @@ const {
   buildFailureResponse,
 } = require('../utils/response');
 const { logger, maskSensitive } = require('../utils/logger');
-const { initAuthUsersSchema, registerUser } = require('../service/users-service');
+const { checkCoreSchema, initCoreSchema, registerUser } = require('../service/users-service');
 
-async function initAuthUsersSchemaController(req, res) {
+async function initCoreSchemaController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
 
   try {
-    const data = await initAuthUsersSchema(requestId);
+    const action = req.schemaInitContext?.action || 'check';
+    const data = action === 'apply'
+      ? await initCoreSchema(requestId)
+      : await checkCoreSchema(requestId);
+
+    if (action === 'apply' && req.schemaInitContext?.markApplied) {
+      req.schemaInitContext.markApplied();
+    }
+
     logger.info({
       module: 'users-controller',
-      operate: 'init-auth-users-schema',
+      operate: 'init-core-schema',
       requestId,
-      result: 'Prisma schema status checked',
+      params: {
+        action,
+        tableCount: data.tableCount,
+        missingCount: data.missingCount,
+      },
+      result: action === 'apply' ? 'Core schema initialized' : 'Core schema checked',
     });
-    return res.json(buildSuccessResponse(data, requestId));
+    return res.json(buildSuccessResponse({ action, ...data }, requestId));
   } catch (error) {
     logger.error({
       module: 'users-controller',
-      operate: 'init-auth-users-schema',
+      operate: 'init-core-schema',
       requestId,
       error: error.message,
       errorType: 'DatabaseSchemaInitError',
     });
     return res
       .status(500)
-      .json(buildFailureResponse(500, 'Prisma迁移模式下的数据库状态检查失败', null, requestId));
+      .json(buildFailureResponse(500, '数据库状态检查失败', null, requestId));
   }
 }
 
@@ -140,6 +153,6 @@ async function createUserController(req, res) {
 }
 
 module.exports = {
-  initAuthUsersSchemaController,
+  initCoreSchemaController,
   createUserController,
 };

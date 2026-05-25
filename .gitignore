@@ -34,3 +34,5 @@ web-build/
 # 后端上传文件（仅保留目录结构）
 backend/uploads/*
 !backend/uploads/.gitkeep
+
+.claude

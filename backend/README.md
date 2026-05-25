@@ -67,10 +67,15 @@ cp .env.example .env
 {
   "code": 200,
   "message": "操作成功",
-  "data": { "initialized": true },
+  "data": {
+    "initialized": true,
+    "managedBy": "prisma-migrate"
+  },
   "requestId": "RN-xxx"
 }
 ```
+
+访问限制：仅内网或管理员 token 可调用。管理员调用头：`x-schema-init-token: <SCHEMA_INIT_TOKEN>`。
 
 **`POST /api/users/create`**  
 
@@ -183,6 +188,7 @@ npm run prisma:migrate:status
 | `DB_CONNECTION_LIMIT` | 连接池上限，默认 `10` |
 | `NODE_ENV` | 如 `production`；影响日志级别等 |
 | `ALLOW_RETURN_VERIFY_CODE` | 仅 `NODE_ENV=production` 时读取；`true` 时在发送验证码成功响应中带回 `verifyCode`（**仅联调，生产勿开**） |
+| `SCHEMA_INIT_TOKEN` | 管理员执行 `init-schema` 的凭证（`action=apply` 必填） |
 
 敏感配置可向内网负责人索取；完整字段表以 **`.env.example`** 为准。
 
@@ -226,7 +232,7 @@ backend/
 │   ├── router/          # sms-router.js, users-router.js, auth-router.js
 │   ├── controller/      # sms-controller.js, users-controller.js, auth-controller.js
 │   ├── service/         # aliyun-sms-service.js, users-service.js, auth-service.js
-│   ├── dao/             # user-dao.js
+│   ├── dao/             # user-dao.js, schema-dao.js
 │   ├── utils/           # response.js, logger.js, jwt-utils.js, password-utils.js
 │   ├── middleware/      # 预留
 │   ├── constants/       # 预留

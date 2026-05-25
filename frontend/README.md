@@ -70,7 +70,7 @@ echo "registry=https://registry.npmmirror.com" > .npmrc
 | 变量 | 说明 | 示例 |
 |------|------|------|
 | `EXPO_PUBLIC_API_URL` | 后端 API 根地址（不含 `/api` 后缀，不以 `/` 结尾） | `http://localhost:3000` |
-| `EXPO_PUBLIC_AMAP_API_KEY` | 高德地图 Android SDK Key | `8f73ea04...` |
+| `EXPO_PUBLIC_AMAP_API_KEY` | 高德地图 SDK Key（Android + iOS 共用） | `8f73ea04...` |
 | `EXPO_PUBLIC_AMAP_KEY_NAME` | 高德控制台 Key 名称 | `carpooling` |
 
 所有 API 请求通过 `src/utils/request.ts` 统一发出，`baseURL` 自动拼接为 `${EXPO_PUBLIC_API_URL}/api`。**不要**在各 API 文件中自行创建 axios 实例或硬编码 URL。
@@ -116,7 +116,7 @@ npx expo start
 
 - 路由 **`/map-test`**：验证高德 2D JAR、清单 Key、**定位**（`AmapLocation`）、**POI 搜索**（`AmapSearch`）与原生地图视图是否生效（源码见 `src/map-test.tsx`、`src/pages/map-test-page.tsx`）。
 - **必须使用** `npx expo run:android` 安装到模拟器/真机；**Expo Go 不包含本项目的原生地图视图**，打开该页会提示未找到原生模块。
-- 在 **`frontend/.env`** 配置 **`EXPO_PUBLIC_AMAP_API_KEY`**（构建时由 Gradle 读入；完整接入见 **`docs/高德地图Android_SDK接入与开发说明.md`**）。
+- 在 **`frontend/.env`** 配置 **`EXPO_PUBLIC_AMAP_API_KEY`**（Android 构建时由 Gradle 读入；iOS 构建时由 `app.config.js` 注入到 `Info.plist`）。
 - 搜索 SDK（`AMap_Search_*.jar`）与 **Volley**（`Volley.jar`）与 2D 地图官方 Demo 一致，放在 `android/app/libs/`，由 `fileTree` 引入。
 - Android **登录页底部**提供「高德地图 SDK 测试页」入口。
 - **业务开发与三 SDK 接入**：见仓库 **`docs/高德地图Android_SDK接入与开发说明.md`**。

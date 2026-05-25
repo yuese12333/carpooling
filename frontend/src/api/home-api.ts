@@ -7,6 +7,8 @@ import { mockRides, currentUser as mockUser } from "../store/mock-data";
 import { useEnvStore } from '../store/env-store'; // 仅用于获取 isMockMode
 import request from '../utils/request';
 import logger from '@/utils/logger';
+import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 // --- 类型定义 ---
 
@@ -42,13 +44,6 @@ export interface HomeStats {
     positiveRate: number;
 }
 
-/** 通用 API 响应包裹结构 */
-interface ApiResponse<T> {
-    code: number;
-    data: T;
-    message: string;
-}
-
 // --- 接口实现 ---
 
 export const HomeService = {
@@ -56,32 +51,39 @@ export const HomeService = {
      * 获取当前登录用户信息
      * @param {string} requestId - 显式注入的链路 ID
      */
-    getUserInfo: async (requestId: string): Promise<UserInfo> => {
+    getUserInfo: async (requestId: string): Promise<ApiResponse<UserInfo>> => {
+        syncRequestId(requestId);
         const isMock = useEnvStore.getState().isMockMode;
 
-        try {
-            if (isMock) {
-                return {
+        if (isMock) {
+            return {
+                success: true,
+                code: 200,
+                message: 'Mock Success',
+                data: {
                     name: mockUser.name,
                     avatar: mockUser.avatar,
                     level: 1,
                     verifiedStatus: true
-                };
-            }
-            const res = await request.get<ApiResponse<UserInfo>>('/home/user-info');
-            return res.data.data;
-        } catch (error) {
-            logger.error({
-                module: 'HomeService',
-                operate: 'getUserInfo',
-                params: { requestId }, // 记录触发参数
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_ERROR',
-                requestId: requestId // 显式绑定
-            });
-            throw error;
+                }
+            };
         }
+
+        // 线性调用：底层 request 已处理异常并返回标准的 ApiResponse 对象
+        const result = await request.get<any, ApiResponse<UserInfo>>('/home/user-info');
+
+        // 仅在业务成功时记录日志
+        if (result.success) {
+            logger.info({
+                module: 'HomeService',
+                operate: 'getUserInfo_Success',
+                params: { requestId },
+                result: 'User info fetched',
+                requestId: requestId
+            });
+        }
+
+        return result;
     },
 
     /**
@@ -90,99 +92,118 @@ export const HomeService = {
      * @param {number} lng - 经度
      * @param {string} requestId - 显式注入的链路 ID
      */
-    getRecommendRides: async (lat: number, lng: number, requestId: string): Promise<RideItem[]> => {
+    getRecommendRides: async (lat: number, lng: number, requestId: string): Promise<ApiResponse<RideItem[]>> => {
+        syncRequestId(requestId);
         const isMock = useEnvStore.getState().isMockMode;
 
-        try {
-            if (isMock) {
-                return mockRides.map(r => ({
-                    id: String(r.id),
-                    from: r.from,
-                    to: r.to,
-                    time: r.time,
-                    price: r.price,
-                    seatsLeft: r.seatsLeft,
-                    driver: {
-                        name: r.driver.name,
-                        avatar: r.driver.avatar,
-                        rating: r.driver.rating,
-                        trips: r.driver.trips,
-                        verified: r.driver.verified
-                    }
-                }));
-            }
-            const res = await request.get<ApiResponse<{ list: RideItem[] }>>('/rides/recommend', {
-                params: { latitude: lat, longitude: lng, limit: 3 },
-            });
-            return res.data.data.list;
-        } catch (error) {
-            logger.error({
+        if (isMock) {
+            const mockData = mockRides.map(r => ({
+                id: String(r.id),
+                from: r.from,
+                to: r.to,
+                time: r.time,
+                price: r.price,
+                seatsLeft: r.seatsLeft,
+                driver: {
+                    name: r.driver.name,
+                    avatar: r.driver.avatar,
+                    rating: r.driver.rating,
+                    trips: r.driver.trips,
+                    verified: r.driver.verified
+                }
+            }));
+            return {
+                success: true,
+                code: 200,
+                message: 'Mock Success',
+                data: mockData
+            };
+        }
+
+        const result = await request.get<any, ApiResponse<{ list: RideItem[] }>>('/rides/recommend', {
+            params: { latitude: lat, longitude: lng, limit: 3 },
+        });
+
+        // 转换数据结构以匹配 ApiResponse<RideItem[]>
+        const formattedResult: ApiResponse<RideItem[]> = {
+            ...result,
+            data: result.data?.list ?? []
+        };
+
+        if (formattedResult.success) {
+            logger.info({
                 module: 'HomeService',
-                operate: 'getRecommendRides',
+                operate: 'getRecommendRides_Success',
                 params: { lat, lng },
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_ERROR',
+                result: `Fetched ${formattedResult.data?.length} rides`,
                 requestId: requestId
             });
-            throw error;
         }
+
+        return formattedResult;
     },
 
     /**
      * 获取全站今日统计数据
      * @param {string} requestId - 显式注入的链路 ID
      */
-    getStatistics: async (requestId: string): Promise<HomeStats> => {
+    getStatistics: async (requestId: string): Promise<ApiResponse<HomeStats>> => {
+        syncRequestId(requestId);
         const isMock = useEnvStore.getState().isMockMode;
 
-        try {
-            if (isMock) {
-                return { todayRidesCount: 12847, totalUsers: 48000, positiveRate: 98 };
-            }
-            const res = await request.get<ApiResponse<HomeStats>>('/home/statistics');
-            const d = res.data.data;
+        if (isMock) {
             return {
-                todayRidesCount: d.todayRidesCount,
-                totalUsers: d.totalUsers,
-                positiveRate: d.positiveRate
+                success: true,
+                code: 200,
+                message: 'Mock Success',
+                data: { todayRidesCount: 12847, totalUsers: 48000, positiveRate: 98 }
             };
-        } catch (error) {
-            logger.error({
+        }
+
+        const result = await request.get<any, ApiResponse<HomeStats>>('/home/statistics');
+
+        if (result.success) {
+            logger.info({
                 module: 'HomeService',
-                operate: 'getStatistics',
+                operate: 'getStatistics_Success',
                 params: { requestId },
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_ERROR',
+                result: 'Statistics updated',
                 requestId: requestId
             });
-            throw error;
         }
+
+        return result;
     },
 
     /**
      * 获取用户未读通知状态
      * @param {string} requestId - 显式注入的链路 ID
      */
-    getUnreadStatus: async (requestId: string): Promise<boolean> => {
+    getUnreadStatus: async (requestId: string): Promise<ApiResponse<{ hasUnread: boolean }>> => {
+        syncRequestId(requestId);
         const isMock = useEnvStore.getState().isMockMode;
 
-        try {
-            if (isMock) return true;
-            const res = await request.get<ApiResponse<{ hasUnread: boolean }>>('/notifications/unread-status');
-            return res.data.data.hasUnread;
-        } catch (error) {
-            logger.error({
+        if (isMock) {
+            return {
+                success: true,
+                code: 200,
+                message: 'Mock Success',
+                data: { hasUnread: true }
+            };
+        }
+
+        const result = await request.get<any, ApiResponse<{ hasUnread: boolean }>>('/notifications/unread-status');
+
+        if (result.success) {
+            logger.info({
                 module: 'HomeService',
-                operate: 'getUnreadStatus',
+                operate: 'getUnreadStatus_Success',
                 params: { requestId },
-                result: undefined,
-                error: error instanceof Error ? error.message : String(error),
-                errorType: 'API_ERROR',
+                result: `Unread status: ${result.data?.hasUnread}`,
                 requestId: requestId
             });
-            throw error;
         }
+
+        return result;
     }
 };

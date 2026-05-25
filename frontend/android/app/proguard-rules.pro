@@ -11,9 +11,12 @@
 -keep class com.swmansion.reanimated.** { *; }
 -keep class com.facebook.react.turbomodule.** { *; }
 
-# 高德地图 2D SDK（Release 混淆时避免裁剪反射类）
+# 高德 3D 地图 + 导航 + 定位 SDK（Release 混淆时避免裁剪反射类）
 -keep class com.amap.api.** { *; }
 -keep class com.autonavi.** { *; }
 -dontwarn com.amap.api.**
+# 导航语音（Msc.jar）
+-keep class com.iflytek.** { *; }
+-dontwarn com.iflytek.**
 
 # Add any project specific keep options here:

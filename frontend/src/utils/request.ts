@@ -8,6 +8,7 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import { useEnvStore } from '../store/env-store';
 import logger from './logger';
+import type { ApiResponse } from '@/api/api.d';
 
 /**
  * 封装后的 Axios 实例
@@ -21,18 +22,31 @@ const request: AxiosInstance = axios.create({
 });
 
 /**
+ * 判断响应体是否为业务失败（HTTP 200 但 code/success 表示失败）
+ */
+const isBusinessFailure = (body: ApiResponse): boolean => {
+    if (typeof body.code === 'number' && body.code !== 200) {
+        return true;
+    }
+    return body.success === false;
+};
+
+/**
  * 请求拦截器
  * 职责：从状态管理中提取 currentRequestId 并注入 Header。
  */
 request.interceptors.request.use(
     (config) => {
-        const { currentRequestId } = useEnvStore.getState();
+        const { currentRequestId, token } = useEnvStore.getState();
+
+        if (typeof token === 'string' && token.trim()) {
+            config.headers = config.headers || {};
+            (config.headers as Record<string, string>)['Authorization'] = `Bearer ${token.trim()}`;
+        }
 
         if (currentRequestId) {
-            // 严格遵循规范：禁止手动拼接 URL，统一注入 Header
             config.headers['X-Request-Id'] = currentRequestId;
         } else {
-            // 链路追踪 ID 缺失预警
             logger.warn({
                 module: 'http-client',
                 operate: 'request_intercept',
@@ -44,32 +58,43 @@ request.interceptors.request.use(
 
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
 /**
  * 响应拦截器
- * 职责：统一处理异常，并按照 [errorType] 规范记录日志。
+ * 职责：解包 response.data 为 ApiResponse；记录 HTTP 与业务层失败日志。
+ * 业务失败仍 resolve 标准 ApiResponse，由调用方按 success/code 处理。
  */
 request.interceptors.response.use(
     (response) => {
-        return response;
+        const body = response.data as ApiResponse;
+        const { currentRequestId } = useEnvStore.getState();
+
+        if (body && typeof body === 'object' && !Array.isArray(body)) {
+            if (isBusinessFailure(body)) {
+                logger.warn({
+                    module: 'http-client',
+                    operate: 'business_response',
+                    requestId: currentRequestId || 'unknown',
+                    params: { url: response.config?.url },
+                    result: body.message ?? 'business_failed',
+                    errorType: typeof body.code === 'number' ? `BIZ_${body.code}` : 'BIZ_FAIL',
+                });
+            }
+        }
+
+        return body;
     },
     (error: AxiosError) => {
         const { currentRequestId } = useEnvStore.getState();
-        const errorData = {
+        logger.error({
             module: 'http-client',
             operate: 'api_response',
             requestId: currentRequestId || 'unknown',
             error: error.message,
-            // 严格字段匹配：区分网络错误与业务错误
             errorType: error.response ? `HTTP_${error.response.status}` : 'NETWORK_TIMEOUT'
-        };
-
-        // 记录结构化错误日志
-        logger.error(errorData);
+        });
 
         return Promise.reject(error);
     }

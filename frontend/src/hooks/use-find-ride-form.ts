@@ -8,6 +8,7 @@ import { Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { fetchRides, RideListResponse, RideSearchQuery } from "@/api/find-ride-api";
 import logger from '@/utils/logger';
+import { isApiSuccess } from '@/utils/api-response';
 
 interface SearchParams {
     from?: string;
@@ -16,10 +17,10 @@ interface SearchParams {
 
 /**
  * 找拼车页面业务逻辑自定义 Hook
- * @param {string | undefined} requestId - [规范注入] 从 Page 层显式透传的业务链路 ID
- * @returns {object} 包含搜索状态、受控组件 Setter 及业务处理函数
+ * @param requestId 从 Page 层显式透传的业务链路 ID
+ * @returns 包含搜索状态、受控组件 Setter 及业务处理函数
  */
-export const useFindRideForm = (requestId: string | undefined) => {
+export const useFindRideForm = (requestId: string) => {
     const router = useRouter();
     const params = useLocalSearchParams() as unknown as SearchParams;
 
@@ -52,7 +53,7 @@ export const useFindRideForm = (requestId: string | undefined) => {
             // [显式传递] 将 requestId 透传至 API 层
             const res = await fetchRides(searchParams, requestId);
 
-            if (res.code === 200) {
+            if (isApiSuccess(res)) {
                 setRides(res.data.list);
                 // 记录标准化成功日志
                 logger.info({

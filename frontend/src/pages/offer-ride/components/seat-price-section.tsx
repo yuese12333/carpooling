@@ -7,7 +7,8 @@ import React from 'react';
 import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { Users, DollarSign } from 'lucide-react-native';
 import { Card } from "@/components/card";
-import styles, { COLORS } from "../offer-ride.style";
+import styles from "../offer-ride.style";
+import { COLORS } from "@/pages/style"
 import logger from '@/utils/logger';
 
 /**
@@ -127,7 +128,7 @@ export const SeatPriceSection: React.FC<SeatPriceSectionProps> = ({
                         </TouchableOpacity>
 
                         <View style={styles.counterDisplay}>
-                            <Users size={14} color={COLORS.textTertiary} style={styles.counterIcon} />
+                            <Users size={14} color={COLORS.textMuted} style={styles.counterIcon} />
                             <Text style={styles.counterValue}>{seats}</Text>
                         </View>
 
@@ -153,7 +154,7 @@ export const SeatPriceSection: React.FC<SeatPriceSectionProps> = ({
                             onChangeText={handlePriceChange}
                             style={styles.priceInput}
                             placeholder="0"
-                            placeholderTextColor={COLORS.textTertiary}
+                            placeholderTextColor={COLORS.textMuted}
                         />
                         <Text style={styles.priceUnit}>元/人</Text>
                     </View>
