@@ -8,7 +8,7 @@
 |------|------|
 | **frontend/** | 移动端前端（React Native + Expo），见 [frontend/README.md](frontend/README.md) |
 | **backend/** | 后端 API（Node.js + Express），部署到公网服务器供前端调用，见 [backend/README.md](backend/README.md) |
-| **docx/** | 项目各类文档存放目录 |
+| **docs/** | 项目各类文档存放目录，索引见 [docs/README.md](docs/README.md) |
 
 - 前端：进入 `frontend` 后执行 `npm install`、`npx expo start`。
 - 后端：进入 `backend` 后执行 `npm install`、`npm start` 或 `npm run dev`。

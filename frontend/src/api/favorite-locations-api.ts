@@ -78,7 +78,7 @@ export const getLocationsApi = async (
 
     // --- 生产请求逻辑 ---
     // 移除 try-catch，底层 request 已处理 HTTP 异常并 Resolve ApiResponse
-    const result = await request.get<any, ApiResponse<LocationItem[]>>('/v1/locations', {
+    const result = await request.get<any, ApiResponse<LocationItem[]>>('/locations', {
         params: { query },
     });
 
@@ -122,7 +122,7 @@ export const deleteLocationApi = async (
     }
 
     // --- 生产请求逻辑 ---
-    const result = await request.post<any, ApiResponse<null>>('/v1/locations/delete', { id });
+    const result = await request.post<any, ApiResponse<null>>(`/locations/${id}/delete`);
 
     // 仅在业务成功时记录日志
     if (result.success) {

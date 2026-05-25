@@ -80,7 +80,7 @@ export const profileApi = {
             };
         }
 
-        const response = await request.get<any, ApiResponse<UserInfo>>('/profile/info', {
+        const response = await request.get<any, ApiResponse<UserInfo>>('/users/me', {
             params: { userId: userId || undefined },
         });
 
@@ -108,7 +108,7 @@ export const profileApi = {
             };
         }
 
-        const response = await request.get<any, ApiResponse<CarDetail>>('/profile/car', {
+        const response = await request.get<any, ApiResponse<CarDetail>>('/users/me/car', {
             params: { userId: userId || undefined },
         });
 
@@ -136,7 +136,7 @@ export const profileApi = {
             };
         }
 
-        const response = await request.get<any, ApiResponse<{ list: BadgeItem[] }>>('/profile/badges', {
+        const response = await request.get<any, ApiResponse<{ list: BadgeItem[] }>>('/users/me/badges', {
             params: { userId: userId || undefined },
         });
 
@@ -165,7 +165,7 @@ export const profileApi = {
             };
         }
 
-        const response = await request.post<any, ApiResponse<{ success: boolean }>>('/profile/logout', {});
+        const response = await request.post<any, ApiResponse<{ success: boolean }>>('/auth/logout', {});
 
         if (response.success) {
             logger.info({

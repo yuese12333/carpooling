@@ -86,7 +86,7 @@ export async function fetchAdminUsersList(query: AdminUserListQuery): Promise<Ap
       };
     }
 
-    const res = await request.get<ApiResponse<AdminUserListResponse>>('/admin/users/list', {
+    const res = await request.get<ApiResponse<AdminUserListResponse>>('/admin/users', {
       params: {
         page: query.page ?? 1,
         pageSize: query.pageSize ?? 10,
@@ -125,7 +125,7 @@ export async function updateAdminUserStatus(params: { targetUserId: string; stat
       };
     }
 
-    const res = await request.post<ApiResponse<{ targetUserId: string; status: AdminUserStatus }>>('/admin/users/update-status', params);
+    const res = await request.post<ApiResponse<{ targetUserId: string; status: AdminUserStatus }>>('/admin/users/status', params);
     return res;
   } catch (error: any) {
     logger.error({
@@ -155,7 +155,7 @@ export async function updateAdminUserRole(params: { targetUserId: string; role: 
       };
     }
 
-    const res = await request.post<ApiResponse<{ targetUserId: string; role: AdminUserRole }>>('/admin/users/update-role', params);
+    const res = await request.post<ApiResponse<{ targetUserId: string; role: AdminUserRole }>>('/admin/users/role', params);
     return res;
   } catch (error: any) {
     logger.error({

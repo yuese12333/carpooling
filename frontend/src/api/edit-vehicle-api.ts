@@ -108,7 +108,7 @@ export const getVehicleDetail = async (
     }
 
     // 发起请求，底层 request 会自动处理 HTTP 错误并 Resolve 结果
-    const result = await request.get<any, ApiResponse<VehicleInfo>>(`/v1/vehicles/${vehicleId}`);
+    const result = await request.get<any, ApiResponse<VehicleInfo>>(`/vehicles/${vehicleId}`);
 
     // 仅在业务成功时记录成功日志
     if (result.success) {
@@ -130,6 +130,7 @@ export const getVehicleDetail = async (
  * @param requestId 链路追踪 ID
  */
 export const updateVehicleInfo = async (
+    vehicleId: string,
     data: VehicleInfo,
     requestId: string
 ): Promise<ApiResponse<undefined>> => {
@@ -141,20 +142,20 @@ export const updateVehicleInfo = async (
         logger.info({
             module: MODULE_NAME,
             operate: 'updateVehicleInfo_MOCK',
-            params: { ...data },
+            params: { vehicleId, ...data },
             result: 'Mock 修改成功',
             requestId
         });
         return { success: true, message: "Mock 修改成功", data: undefined };
     }
 
-    const result = await request.post<any, ApiResponse<undefined>>('/v1/vehicles/update', data);
+    const result = await request.post<any, ApiResponse<undefined>>(`/vehicles/${vehicleId}/update`, data);
 
     if (result.success) {
         logger.info({
             module: MODULE_NAME,
             operate: 'updateVehicleInfo_Success',
-            params: { ...data },
+            params: { vehicleId, ...data },
             result: '修改成功',
             requestId
         });
@@ -190,7 +191,7 @@ export const uploadVehiclePhoto = async (
         };
     }
 
-    const result = await request.post<any, ApiResponse<{ url: string }>>('/v1/common/upload', formData, {
+    const result = await request.post<any, ApiResponse<{ url: string }>>('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     });
 

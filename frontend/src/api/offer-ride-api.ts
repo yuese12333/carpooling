@@ -103,7 +103,7 @@ export const publishRide = async (params: PublishRideParams, requestId: string):
     }
 
     // 线性请求
-    const result = await request.post<any, ApiResponse<{ rideId: string }>>('/rides/publish', params);
+    const result = await request.post<any, ApiResponse<{ rideId: string }>>('/rides', params);
 
     // 条件化日志记录：仅在业务成功时记录
     if (result.success) {

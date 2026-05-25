@@ -12,8 +12,8 @@ const {
 
 const router = express.Router();
 
-router.post('/send-verify-code', sendVerifyCodeController);
-router.post('/check-verify-code', checkVerifyCodeController);
+router.post('/send', sendVerifyCodeController);
+router.post('/verify', checkVerifyCodeController);
 
 module.exports = router;
 

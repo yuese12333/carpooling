@@ -89,7 +89,7 @@ export const fetchNotifications = async (
 
     // --- 线性请求逻辑 ---
     // 底层 request.ts 已统一处理 HTTP 错误并返回 Resolve 后的 ApiResponse
-    const result = await request.get<any, ApiResponse<NotificationItem[]>>('/v1/notifications', {
+    const result = await request.get<any, ApiResponse<NotificationItem[]>>('/notifications', {
         params: { category },
     });
 
@@ -135,7 +135,7 @@ export const clearNotifications = async (
     }
 
     // --- 线性请求逻辑 ---
-    const result = await request.post<any, ApiResponse<null>>('/v1/notifications/clear', { category });
+    const result = await request.post<any, ApiResponse<null>>('/notifications/clear', { category });
 
     // 条件化日志记录：仅在业务成功时记录
     if (result.success) {

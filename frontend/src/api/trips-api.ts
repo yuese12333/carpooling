@@ -74,7 +74,7 @@ export const tripsApi = {
         requestId: string
     ): Promise<ApiResponse<TripListData>> => {
         syncRequestId(requestId);
-        const result = await request.get<any, ApiResponse<TripListData>>('/trips/list', {
+        const result = await request.get<any, ApiResponse<TripListData>>('/trips', {
             params,
         });
 
@@ -101,9 +101,9 @@ export const tripsApi = {
      */
     cancelTrip: async (tripId: string, requestId: string, reason?: string): Promise<ApiResponse<null>> => {
         syncRequestId(requestId);
-        const params = { tripId, reason: reason ?? undefined };
+        const params = { reason: reason ?? undefined };
 
-        const result = await request.post<any, ApiResponse<null>>('/trips/cancel', params);
+        const result = await request.post<any, ApiResponse<null>>(`/trips/${tripId}/cancel`, params);
 
         if (result.success) {
             logger.info({
@@ -126,7 +126,8 @@ export const tripsApi = {
      */
     rateTrip: async (data: RateTripParams, requestId: string): Promise<ApiResponse<null>> => {
         syncRequestId(requestId);
-        const result = await request.post<any, ApiResponse<null>>('/trips/rate', data);
+        const { tripId, ...rateBody } = data;
+        const result = await request.post<any, ApiResponse<null>>(`/trips/${tripId}/rate`, rateBody);
 
         if (result.success) {
             logger.info({
@@ -174,9 +175,7 @@ export const tripsApi = {
      */
     getContact: async (tripId: string, requestId: string): Promise<ApiResponse<any>> => {
         syncRequestId(requestId);
-        const result = await request.get<any, ApiResponse<any>>('/trips/contact', {
-            params: { tripId },
-        });
+        const result = await request.get<any, ApiResponse<any>>(`/trips/${tripId}/contact`);
 
         if (result.success) {
             logger.info({

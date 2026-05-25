@@ -78,7 +78,7 @@ export const getReceiptDetail = async (id: string, requestId: string): Promise<A
 
     // 2. 真实接口请求
     // 底层 request.ts 无论成功失败都会 Resolve 标准的 ApiResponse 对象
-    const response = await request.get<any, ApiResponse<ReceiptDetail>>(`/receipt/${id}`);
+    const response = await request.get<any, ApiResponse<ReceiptDetail>>(`/receipts/${id}`);
 
     // 3. 条件化日志记录
     // 仅在业务成功时记录成功日志，底层已自动记录错误日志，此处不再使用 Try-Catch 捕获

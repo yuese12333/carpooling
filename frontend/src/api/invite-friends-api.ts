@@ -72,7 +72,7 @@ export const getInviteInfo = async (requestId: string): Promise<ApiResponse<Invi
 
     // --- 线性请求逻辑 ---
     // 底层 request 始终返回 ApiResponse，不再需要 try-catch
-    const result = await request.get<any, ApiResponse<InviteInfoResponse>>('/v1/user/invite-info');
+    const result = await request.get<any, ApiResponse<InviteInfoResponse>>('/users/me/invite');
 
     // 条件化日志记录：仅在业务成功时记录
     if (result.success) {
@@ -116,7 +116,7 @@ export const trackShareAction = async (platform: string, requestId: string): Pro
     }
 
     // --- 线性请求逻辑 ---
-    const result = await request.post<any, ApiResponse<null>>('/v1/user/track-share', { platform });
+    const result = await request.post<any, ApiResponse<null>>('/users/me/track-share', { platform });
 
     // 条件化日志记录：仅在业务成功时记录
     if (result.success) {

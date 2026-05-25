@@ -213,7 +213,7 @@ export const sendSmsCode = async (
 
     // 与 Postman / docs/短信验证接口联调文档.md 发码请求体一致，原样传给后端转发阿里云
     const result = await request.post<any, ApiResponse<{ success: boolean }>>(
-        '/sms/send-verify-code',
+        '/sms/send',
         {
             phoneNumber,
             signName: '云渚科技验证平台',
@@ -250,7 +250,7 @@ export const verifySmsCode = async (
     if (isMock) {
         return { success: true, message: 'mock', data: { isValid: true, tempToken: "mock_token" } };
     }
-    const result = await request.post<any, ApiResponse<VerifyCodeData>>('/sms/check-verify-code', {
+    const result = await request.post<any, ApiResponse<VerifyCodeData>>('/sms/verify', {
         phoneNumber,
         verifyCode,
     });
