@@ -7,6 +7,8 @@ import { Alert, TextInput } from "react-native";
 import { useRouter } from 'expo-router';
 import { passwordApi } from '../api/password-api';
 import logger, { maskSensitive } from "@/utils/logger";
+import { isApiSuccess } from '@/utils/api-response';
+import { syncRequestId } from '@/utils/sync-request-id';
 import {
     validatePhoneNumber,
     validatePassword,
@@ -23,6 +25,10 @@ type Step = 1 | 2 | 3 | 4;
  */
 export const useForgetPasswordForm = (requestId: string) => {
     const router = useRouter();
+
+    useEffect(() => {
+        syncRequestId(requestId);
+    }, [requestId]);
 
     // --- 状态管理 ---
     const [step, setStep] = useState<Step>(1);
@@ -81,13 +87,12 @@ export const useForgetPasswordForm = (requestId: string) => {
         try {
             // 步骤 A: 校验手机号
             const checkRes = await passwordApi.checkPhoneStatus(phone);
-            if (checkRes.code !== 200 || !checkRes.data.isRegistered) {
+            if (!isApiSuccess(checkRes) || !checkRes.data.isRegistered) {
                 throw new Error("该手机号尚未注册");
             }
 
-            // 步骤 B: 发送验证码
             const smsRes = await passwordApi.sendSmsCode(phone);
-            if (smsRes.code === 200 && smsRes.data.success) {
+            if (isApiSuccess(smsRes) && smsRes.data.success) {
                 logger.info({
                     module: "Auth_ForgetPassword",
                     operate: "SEND_CODE_SUCCESS",
@@ -124,7 +129,7 @@ export const useForgetPasswordForm = (requestId: string) => {
         setLoading(true);
         try {
             const res = await passwordApi.verifyCode(phone, fullCode);
-            if (res.code === 200 && res.data.isValid) {
+            if (isApiSuccess(res) && res.data.isValid) {
                 setTempToken(res.data.tempToken);
                 setStep(3);
                 logger.info({
@@ -194,7 +199,7 @@ export const useForgetPasswordForm = (requestId: string) => {
         setLoading(true);
         try {
             const res = await passwordApi.resetPassword(tempToken, password);
-            if (res.code === 200) {
+            if (isApiSuccess(res)) {
                 logger.info({
                     module: "Auth_ForgetPassword",
                     operate: "RESET_PASSWORD_SUCCESS",

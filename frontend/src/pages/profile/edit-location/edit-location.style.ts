@@ -11,6 +11,12 @@ export default StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.bgLight,
     },
+    keyboardAvoiding: {
+        flex: 1,
+    },
+    scrollGrow: {
+        flexGrow: 1,
+    },
     navBar: {
         paddingTop: 12,
         ...LAYOUT_MIXINS.navBarBase,

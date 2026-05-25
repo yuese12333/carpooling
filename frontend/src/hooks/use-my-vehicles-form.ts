@@ -6,131 +6,132 @@
 import { useState, useEffect, useCallback } from "react";
 import { Alert } from "react-native";
 import { useRouter } from 'expo-router';
-import { getVehicleListApi, VehicleInfo } from "@/api/my-vehicles-api";
+import {
+    getVehicleListApi,
+    setDefaultVehicleApi,
+    deleteVehicleApi,
+    VehicleInfo,
+} from "@/api/my-vehicles-api";
 import { ROUTES } from '@/router/paths';
 import logger from '@/utils/logger';
+import { isApiSuccess } from '@/utils/api-response';
 
-/**
- * MyVehiclesPage 业务逻辑 Hook
- * @returns 车辆列表状态、交互处理器及刷新函数
- */
 export const useMyVehiclesForm = (requestId: string) => {
     const router = useRouter();
     const [vehicles, setVehicles] = useState<VehicleInfo[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
-    /**
-     * 加载车辆数据
-     * @description 调用 API 层获取数据，并进行结构化日志记录与异常处理
-     */
     const loadData = useCallback(async () => {
         setLoading(true);
-
-        // 记录操作开始日志
         logger.info({
             module: 'VehicleModule',
             operate: 'loadVehicleData_Start',
-            params: { requestId },
-            requestId
+            requestId,
         });
 
         try {
-            // 【显式传递】API 调用必须注入 requestId
             const res = await getVehicleListApi(requestId);
 
-            if (res.success) {
+            if (isApiSuccess(res)) {
                 setVehicles(res.data);
                 logger.info({
                     module: 'VehicleModule',
                     operate: 'loadVehicleData_Success',
                     result: `Loaded ${res.data.length} vehicles`,
-                    requestId
+                    requestId,
                 });
             } else {
                 Alert.alert("错误", res.message || "获取列表失败");
-                logger.error({
-                    module: 'VehicleModule',
-                    operate: 'loadVehicleData_BusinessFail',
-                    error: res.message,
-                    requestId
-                });
             }
-        } catch (error: any) {
-            // 严禁 console.log，统一使用结构化 logger
+        } catch (error: unknown) {
             Alert.alert("网络异常", "请检查网络连接或尝试重试");
             logger.error({
                 module: 'VehicleModule',
                 operate: 'loadVehicleData_Exception',
-                error: error?.message || 'Network Exception',
-                errorType: error?.code || 'FETCH_ERROR',
-                requestId
+                error: error instanceof Error ? error.message : String(error),
+                errorType: 'FETCH_ERROR',
+                requestId,
             });
         } finally {
             setLoading(false);
         }
     }, [requestId]);
 
-    // 初始化加载
     useEffect(() => {
         loadData();
     }, [loadData]);
 
-    /**
-     * 返回上一页
-     */
     const handleBack = () => {
-        logger.info({
-            module: 'VehicleModule',
-            operate: 'navigation_back',
-            requestId
-        });
         router.back();
     };
 
-    /**
-     * 添加车辆交互处理
-     */
     const handleAddVehicle = () => {
-        Alert.alert("提示", "添加车辆功能开发中");
-    };
-
-    /**
-     * 跳转至编辑车辆
-     * @param id 车辆唯一标识
-     */
-    const handleEdit = (id: string) => {
-        logger.info({
-            module: 'VehicleModule',
-            operate: 'navigation_to_edit',
-            params: { id },
-            requestId
-        });
         router.push({
             pathname: ROUTES.PROFILE.EDIT_VEHICLE_INFORMATION,
-            params: { id }
+            params: { id: 'new' },
         });
     };
 
-    /**
-     * 跳转至认证详情
-     */
-    const handleViewVerification = () => {
-        logger.info({
-            module: 'VehicleModule',
-            operate: 'navigation_to_verification',
-            requestId
+    const handleEdit = (id: string) => {
+        router.push({
+            pathname: ROUTES.PROFILE.EDIT_VEHICLE_INFORMATION,
+            params: { id },
         });
-        router.push(ROUTES.PROFILE.VEHICLE_VERIFICATION);
+    };
+
+    const handleViewVerification = (vehicleId: string) => {
+        router.push({
+            pathname: ROUTES.PROFILE.VEHICLE_VERIFICATION,
+            params: { vehicleId },
+        });
+    };
+
+    const handleSetDefault = async (id: string) => {
+        try {
+            const res = await setDefaultVehicleApi(id, requestId);
+            if (isApiSuccess(res)) {
+                setVehicles((prev) =>
+                    prev.map((v) => ({ ...v, isDefault: v.id === id }))
+                );
+            } else {
+                Alert.alert("操作失败", res.message || "无法设为默认车辆");
+            }
+        } catch {
+            Alert.alert("网络异常", "请稍后重试");
+        }
+    };
+
+    const handleDelete = (id: string) => {
+        Alert.alert("删除车辆", "确定要删除该车辆吗？", [
+            { text: "取消", style: "cancel" },
+            {
+                text: "删除",
+                style: "destructive",
+                onPress: async () => {
+                    try {
+                        const res = await deleteVehicleApi(id, requestId);
+                        if (isApiSuccess(res)) {
+                            setVehicles((prev) => prev.filter((v) => v.id !== id));
+                        } else {
+                            Alert.alert("删除失败", res.message || "请稍后重试");
+                        }
+                    } catch {
+                        Alert.alert("网络异常", "请稍后重试");
+                    }
+                },
+            },
+        ]);
     };
 
     return {
         vehicles,
         loading,
-        requestId, // 导出供子组件消费，符合显式传递原则
         handleBack,
         handleAddVehicle,
         handleEdit,
         handleViewVerification,
+        handleSetDefault,
+        handleDelete,
         refreshData: loadData,
     };
 };

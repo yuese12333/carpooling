@@ -34,36 +34,42 @@ export const usePaymentMethods = (requestId: string) => {
         const moduleName = 'PaymentMethodsHook';
         const operate = 'initPageData';
 
-        // 并发请求数据
-        const [balanceRes, methodsRes] = await Promise.all([
-            getAccountBalance(requestId),
-            getPaymentMethods(requestId)
-        ]);
+        try {
+            const [balanceRes, methodsRes] = await Promise.all([
+                getAccountBalance(requestId),
+                getPaymentMethods(requestId),
+            ]);
 
-        // 业务成功处理
-        if (balanceRes.success) {
-            setBalance(balanceRes.data);
-        }
+            if (balanceRes.success) {
+                setBalance(balanceRes.data);
+            }
 
-        if (methodsRes.success) {
-            setMethods(methodsRes.data);
-        }
+            if (methodsRes.success) {
+                setMethods(methodsRes.data);
+            }
 
-        // 仅在核心数据获取成功时记录业务日志（可选：可根据需求判断是全部成功还是部分成功）
-        if (balanceRes.success && methodsRes.success) {
-            logger.info({
+            if (balanceRes.success && methodsRes.success) {
+                logger.info({
+                    module: moduleName,
+                    operate,
+                    result: 'Data initialization completed',
+                    requestId,
+                });
+            } else {
+                Alert.alert("同步失败", "获取支付数据异常，请稍后重试");
+            }
+        } catch (error: unknown) {
+            logger.error({
                 module: moduleName,
                 operate,
-                params: { requestId },
-                result: 'Data initialization completed',
-                requestId
+                error: error instanceof Error ? error.message : String(error),
+                errorType: 'INIT_PAGE_ERROR',
+                requestId,
             });
-        } else if (!balanceRes.success || !methodsRes.success) {
-            // 业务层面的失败提示
-            Alert.alert("同步失败", "获取支付数据异常，请稍后重试");
+            Alert.alert("网络异常", "请检查网络后重试");
+        } finally {
+            setIsLoading(false);
         }
-
-        setIsLoading(false);
     }, [requestId]);
 
     // 监听环境切换或组件挂载

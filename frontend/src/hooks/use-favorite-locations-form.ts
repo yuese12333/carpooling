@@ -9,6 +9,7 @@ import { useRouter, Href } from 'expo-router';
 import { getLocationsApi, deleteLocationApi, LocationItem } from "@/api/favorite-locations-api";
 import { ROUTES } from "@/router/paths";
 import logger from '@/utils/logger';
+import { isApiSuccess } from '@/utils/api-response';
 
 /**
  * 模块常量定义
@@ -61,7 +62,7 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
             const response = await getLocationsApi(requestId, query);
 
             // ✅ 修复：只有当 success 为 true 时，才取 response.data 赋值给状态
-            if (response.success && Array.isArray(response.data)) {
+            if (isApiSuccess(response) && Array.isArray(response.data)) {
                 setLocations(response.data);
             } else {
                 setLocations([]); // 或者处理异常情况
@@ -132,10 +133,14 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
         const operateName = 'confirmDelete';
 
         try {
-            await deleteLocationApi(requestId, activeLocation.id);
+            const res = await deleteLocationApi(requestId, activeLocation.id);
 
-            // 更新本地状态避免全量刷新
-            setLocations(prev => prev.filter(loc => loc.id !== activeLocation.id));
+            if (!isApiSuccess(res)) {
+                Alert.alert("删除失败", res.message || "请稍后重试");
+                return;
+            }
+
+            setLocations((prev) => prev.filter((loc) => loc.id !== activeLocation.id));
             setIsDeleteDialogOpen(false);
 
             logger.info({
@@ -143,7 +148,7 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
                 operate: operateName,
                 params: { id: activeLocation.id },
                 result: 'Delete location success',
-                requestId
+                requestId,
             });
         } catch (error: any) {
             logger.error({

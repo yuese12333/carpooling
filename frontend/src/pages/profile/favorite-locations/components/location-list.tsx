@@ -38,7 +38,7 @@ export const LocationList = ({ data, loading, onEdit, onDelete }: LocationListPr
     const renderEmptyComponent = () => (
         <View style={styles.emptyState}>
             {loading ? (
-                <Text style={{ color: COLORS.textMuted }}>加载中...</Text>
+                <Text style={styles.loadingText}>加载中...</Text>
             ) : (
                 <>
                     <MapPin size={48} color={COLORS.border} />

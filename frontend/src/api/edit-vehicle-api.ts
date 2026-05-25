@@ -9,6 +9,7 @@ import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
 import { syncRequestId } from '@/utils/sync-request-id';
 import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
+import { MOCK_VEHICLES } from '@/store/mock-vehicle-data';
 
 // --- 类型定义 ---
 
@@ -42,6 +43,29 @@ const MOCK_VEHICLE_DATA: VehicleInfo = {
 
 const MODULE_NAME = 'edit-vehicle-api';
 
+const EMPTY_VEHICLE_FORM: VehicleInfo = {
+    brand: "",
+    model: "",
+    plate: "",
+    color: "",
+    seats: "5",
+    isNonSmoking: true,
+    hasAirConditioner: true,
+    isDefault: false,
+};
+
+const mapListItemToForm = (vehicle: (typeof MOCK_VEHICLES)[number]): VehicleInfo => ({
+    brand: vehicle.brand,
+    model: vehicle.model,
+    plate: vehicle.plate,
+    color: vehicle.color,
+    seats: String(vehicle.seats),
+    isNonSmoking: vehicle.tags.includes('禁烟'),
+    hasAirConditioner: true,
+    isDefault: vehicle.isDefault,
+    vehicleImageUrl: vehicle.image || '',
+});
+
 /** Mock 上传占位：空字符串由 UI 层展示本地占位图 */
 export const MOCK_ASSETS = {
     VEHICLE_DEFAULT: '',
@@ -63,14 +87,24 @@ export const getVehicleDetail = async (
     const isMock = useEnvStore.getState().isMockMode;
 
     if (isMock) {
+        if (vehicleId === 'new') {
+            return { success: true, message: "Mock 成功", data: { ...EMPTY_VEHICLE_FORM } };
+        }
+
+        const matched =
+            MOCK_VEHICLES.find((v) => v.id === vehicleId) ??
+            (vehicleId === 'current' ? MOCK_VEHICLES.find((v) => v.isDefault) : undefined);
+
+        const data = matched ? mapListItemToForm(matched) : MOCK_VEHICLE_DATA;
+
         logger.info({
             module: MODULE_NAME,
             operate: 'getVehicleDetail_MOCK',
             params: { vehicleId },
             result: 'Mock 成功',
-            requestId
+            requestId,
         });
-        return { success: true, message: "Mock 成功", data: MOCK_VEHICLE_DATA };
+        return { success: true, message: "Mock 成功", data };
     }
 
     // 发起请求，底层 request 会自动处理 HTTP 错误并 Resolve 结果

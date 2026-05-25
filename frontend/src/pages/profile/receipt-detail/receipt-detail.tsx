@@ -39,7 +39,8 @@ import styles, { COLORS } from "./receipt-detail.style";
 
 export default function ReceiptDetailPage() {
     const router = useRouter();
-    const { id = "PAY-001" } = useLocalSearchParams();
+    const { id } = useLocalSearchParams<{ id?: string }>();
+    const receiptId = Array.isArray(id) ? id[0] : id;
 
     /**
      * 1. 链路追踪初始化
@@ -59,7 +60,7 @@ export default function ReceiptDetailPage() {
         handleSendEmail,
         handleCopyOrderId,
         handleContactSupport
-    } = useReceiptDetail(id as string, requestId);
+    } = useReceiptDetail(receiptId ?? '', requestId);
 
     // 交互日志封装
     const trackAndExecute = (actionName: string, execution: () => void) => {

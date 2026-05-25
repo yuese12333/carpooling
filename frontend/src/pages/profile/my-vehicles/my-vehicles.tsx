@@ -12,7 +12,6 @@ import {
     Image,
     StatusBar,
 } from "react-native";
-// 统一使用 react-native-safe-area-context
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
     ChevronLeft,
@@ -31,26 +30,26 @@ import { Button } from "@/components/button";
 import { Separator } from "@/components/separator";
 
 import styles from "./my-vehicles.style";
-import { COLORS } from "@/pages/style"
+import { COLORS } from "@/pages/style";
 import { useMyVehiclesForm } from "@/hooks/use-my-vehicles-form";
 import { generateRequestId } from '@/utils/logger';
 
 export default function MyVehiclesPage() {
-    // 【核心规约】自生成机制：页面级 requestId 在生命周期内保持唯一且稳定
     const requestId = useMemo(() => generateRequestId(), []);
     const {
         vehicles,
         handleBack,
         handleAddVehicle,
         handleEdit,
-        handleViewVerification
+        handleViewVerification,
+        handleSetDefault,
+        handleDelete,
     } = useMyVehiclesForm(requestId);
 
     return (
         <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
             <StatusBar barStyle="dark-content" />
 
-            {/* 导航栏 */}
             <View style={styles.navbar}>
                 <TouchableOpacity onPress={handleBack} style={styles.navButton}>
                     <ChevronLeft size={24} color={COLORS.textMain} />
@@ -64,14 +63,17 @@ export default function MyVehiclesPage() {
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
-                // 【规范修复】防止键盘弹出时吞掉点击事件
                 keyboardShouldPersistTaps="handled"
             >
                 {vehicles.map((vehicle) => (
                     <View key={vehicle.id} style={styles.vehicleWrapper}>
                         <Card style={styles.vehicleCard}>
                             <View style={styles.imageContainer}>
-                                <Image source={{ uri: vehicle.image }} style={styles.carImage} />
+                                {vehicle.image ? (
+                                    <Image source={{ uri: vehicle.image }} style={styles.carImage} />
+                                ) : (
+                                    <View style={styles.carImagePlaceholder} />
+                                )}
                                 {vehicle.isDefault && (
                                     <View style={styles.defaultBadge}>
                                         <Text style={styles.defaultText}>当前使用</Text>
@@ -79,7 +81,7 @@ export default function MyVehiclesPage() {
                                 )}
                                 <View style={styles.statusBadgeOverlay}>
                                     <Badge variant="secondary" style={styles.statusBadge}>
-                                        <ShieldCheck size={12} color={COLORS.primary} style={{ marginRight: 4 }} />
+                                        <ShieldCheck size={12} color={COLORS.primary} style={styles.iconMarginSm} />
                                         <Text style={styles.statusText}>官方已认证</Text>
                                     </Badge>
                                 </View>
@@ -91,7 +93,6 @@ export default function MyVehiclesPage() {
                                         <Text style={styles.brandText}>{vehicle.brand} {vehicle.model}</Text>
                                         <Text style={styles.plateText}>{vehicle.plate}</Text>
                                     </View>
-                                    {/* 显式操作记录 */}
                                     <TouchableOpacity onPress={() => handleEdit(vehicle.id)}>
                                         <MoreVertical size={20} color={COLORS.textMuted} />
                                     </TouchableOpacity>
@@ -129,12 +130,26 @@ export default function MyVehiclesPage() {
                                     </View>
                                 </View>
 
+                                <View style={styles.secondaryActionRow}>
+                                    {!vehicle.isDefault && (
+                                        <TouchableOpacity onPress={() => handleSetDefault(vehicle.id)}>
+                                            <Text style={styles.textAction}>设为默认</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                    <TouchableOpacity
+                                        onPress={() => handleDelete(vehicle.id)}
+                                        style={styles.secondaryActionSpacer}
+                                    >
+                                        <Text style={styles.textActionDanger}>删除</Text>
+                                    </TouchableOpacity>
+                                </View>
+
                                 <View style={styles.actionRow}>
                                     <Button
                                         style={[styles.baseBtn, styles.detailBtn]}
-                                        onPress={handleViewVerification}
+                                        onPress={() => handleViewVerification(vehicle.id)}
                                     >
-                                        <Info size={16} style={{ marginRight: 8 }} color={COLORS.textMain} />
+                                        <Info size={16} color={COLORS.textMain} style={styles.iconMarginMd} />
                                         <Text style={styles.btnTextPrimary}>认证详情</Text>
                                     </Button>
 
@@ -142,7 +157,7 @@ export default function MyVehiclesPage() {
                                         style={[styles.baseBtn, styles.modifyBtn]}
                                         onPress={() => handleEdit(vehicle.id)}
                                     >
-                                        <CheckCircle2 size={16} style={{ marginRight: 8 }} color={COLORS.white} />
+                                        <CheckCircle2 size={16} color={COLORS.white} style={styles.iconMarginMd} />
                                         <Text style={styles.btnTextWhite}>修改信息</Text>
                                     </Button>
                                 </View>

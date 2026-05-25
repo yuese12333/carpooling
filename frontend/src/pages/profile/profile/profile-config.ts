@@ -39,15 +39,26 @@ export interface IMenuGroup {
     items: IMenuItem[];
 }
 
+/** 动态菜单副文案上下文 */
+export interface ProfileMenuContext {
+    verified: boolean;
+    carSub?: string;
+    paymentSub?: string;
+}
+
 /** * 静态菜单数据：定义个人中心功能入口 
  */
-export const getMenuData = (verified: boolean): IMenuGroup[] => [
+export const getMenuData = ({
+    verified,
+    carSub = '管理我的车辆',
+    paymentSub = '管理支付方式',
+}: ProfileMenuContext): IMenuGroup[] => [
     {
         group: "出行",
         items: [
-            { icon: Car, label: "我的车辆", sub: "大众帕萨特 白色", color: COLORS.info, bgColor: COLORS.bgBlueLight, path: ROUTES.PROFILE.MY_VEHICLES as Href },
+            { icon: Car, label: "我的车辆", sub: carSub, color: COLORS.info, bgColor: COLORS.bgBlueLight, path: ROUTES.PROFILE.MY_VEHICLES as Href },
             { icon: Map, label: "常用地点", sub: "管理常用出发地/目的地", color: COLORS.primaryDark, bgColor: COLORS.bgLight, path: ROUTES.PROFILE.FAVORITE_LOCATIONS as Href },
-            { icon: CreditCard, label: "支付方式", sub: "微信支付 已绑定", color: COLORS.accent, bgColor: COLORS.bgPurpleLight, path: ROUTES.PROFILE.PAYMENT_METHODS as Href },
+            { icon: CreditCard, label: "支付方式", sub: paymentSub, color: COLORS.accent, bgColor: COLORS.bgPurpleLight, path: ROUTES.PROFILE.PAYMENT_METHODS as Href },
         ],
     },
     {

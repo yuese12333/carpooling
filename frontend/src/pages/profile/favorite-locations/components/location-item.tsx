@@ -82,7 +82,7 @@ export const LocationItem = ({ item, onEdit, onDeleteRequest }: LocationItemProp
                             onPress={() => handleAction('delete')}
                         >
                             <Trash2 size={18} color={COLORS.danger} />
-                            <Text style={{ color: COLORS.danger }}>删除</Text>
+                            <Text style={styles.dangerText}>删除</Text>
                         </TouchableOpacity>
                     </PopoverContent>
                 </Popover>

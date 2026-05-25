@@ -48,6 +48,35 @@ export default StyleSheet.create({
         height: '100%',
         backgroundColor: COLORS.imagePlaceholder,
     },
+    carImagePlaceholder: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: COLORS.imagePlaceholder,
+    },
+    iconMarginSm: {
+        marginRight: 4,
+    },
+    iconMarginMd: {
+        marginRight: 8,
+    },
+    secondaryActionRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: SPACING.sm,
+    },
+    secondaryActionSpacer: {
+        marginLeft: SPACING.md,
+    },
+    textAction: {
+        fontSize: 13,
+        color: COLORS.primary,
+        fontWeight: '600',
+    },
+    textActionDanger: {
+        fontSize: 13,
+        color: COLORS.danger,
+        fontWeight: '600',
+    },
     defaultBadge: {
         position: 'absolute',
         top: SPACING.md - 4, // 12px
