@@ -13,6 +13,12 @@ const CheckSmsVerifyCodeRequest = Dypnsapi20170525Module.CheckSmsVerifyCodeReque
 
 let aliyunClient;
 
+function omitEmptyFields(payload) {
+  return Object.fromEntries(
+    Object.entries(payload).filter(([, value]) => value !== undefined && value !== null && value !== ''),
+  );
+}
+
 /**
  * 函数功能：懒加载创建阿里云短信 SDK 客户端
  * 入参：无
@@ -55,21 +61,23 @@ async function sendVerifyCode({
 }) {
   const client = getAliyunClient();
 
-  const request = new SendSmsVerifyCodeRequest({
-    phoneNumber,
-    signName,
-    templateCode,
-    templateParam,
-    schemeName,
-    validTime,
-    interval,
-    codeLength,
-    codeType,
-    duplicatePolicy,
-    outId,
-    returnVerifyCode,
-    smsUpExtendCode,
-  });
+  const request = new SendSmsVerifyCodeRequest(
+    omitEmptyFields({
+      phoneNumber,
+      signName,
+      templateCode,
+      templateParam,
+      schemeName,
+      validTime,
+      interval,
+      codeLength,
+      codeType,
+      duplicatePolicy,
+      outId,
+      returnVerifyCode,
+      smsUpExtendCode,
+    }),
+  );
 
   const response = await client.sendSmsVerifyCode(request);
   const responseBody = response?.body;
@@ -99,13 +107,15 @@ async function checkVerifyCode({
 }) {
   const client = getAliyunClient();
 
-  const request = new CheckSmsVerifyCodeRequest({
-    phoneNumber,
-    verifyCode,
-    schemeName,
-    caseAuthPolicy,
-    outId,
-  });
+  const request = new CheckSmsVerifyCodeRequest(
+    omitEmptyFields({
+      phoneNumber,
+      verifyCode,
+      schemeName,
+      caseAuthPolicy,
+      outId,
+    }),
+  );
 
   const response = await client.checkSmsVerifyCode(request);
   const responseBody = response?.body;

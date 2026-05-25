@@ -73,6 +73,8 @@ echo "registry=https://registry.npmmirror.com" > .npmrc
 | `EXPO_PUBLIC_AMAP_API_KEY` | 高德地图 SDK Key（Android + iOS 共用） | `8f73ea04...` |
 | `EXPO_PUBLIC_AMAP_KEY_NAME` | 高德控制台 Key 名称 | `carpooling` |
 
+短信发码前端只传 `phoneNumber`；后端 `.env` 仅需阿里云 `ALIBABA_CLOUD_ACCESS_KEY_ID/SECRET`（与控制台配置配合使用）。
+
 所有 API 请求通过 `src/utils/request.ts` 统一发出，`baseURL` 自动拼接为 `${EXPO_PUBLIC_API_URL}/api`。**不要**在各 API 文件中自行创建 axios 实例或硬编码 URL。
 
 切换开发内网与公网测试时，只需修改 `.env` 中的 `EXPO_PUBLIC_API_URL` 并重启 Expo 即可。

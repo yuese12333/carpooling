@@ -52,11 +52,16 @@ cp .env.example .env
 
 | # | 方法 | 路径 | 说明 |
 |---|------|------|------|
-| 1 | POST | `/api/sms/send-verify-code` | 发送短信验证码 |
-| 2 | POST | `/api/sms/check-verify-code` | 校验短信验证码 |
+| 1 | POST | `/api/sms/send-verify-code` | 发送短信验证码（阿里云直连） |
+| 2 | POST | `/api/sms/check-verify-code` | 校验短信验证码（阿里云直连） |
 | 3 | POST | `/api/users/init-schema` | Prisma 迁移模式下的连接/状态检查（兼容保留） |
-| 4 | POST | `/api/users/create` | 创建登录用户（写入 `auth_users`） |
+| 4 | POST | `/api/users/create` | **已废弃（410）**，请使用 `/api/auth/register` |
 | 5 | POST | `/api/auth/login/password` | 用户密码登录（返回 access/refresh token） |
+| 6 | GET | `/api/auth/register/check-nickname` | 注册前昵称可用性检测 |
+| 7 | POST | `/api/sms/check-verify-code` | 校验验证码；注册场景下同时签发 `tempToken` |
+| 8 | POST | `/api/auth/register` | 提交注册（须携带 `tempToken`） |
+
+注册流程、安全约束与联调示例见 [`docs/用户注册接口联调文档.md`](../docs/用户注册接口联调文档.md)。
 
 ### 用户接口补充
 
@@ -77,26 +82,21 @@ cp .env.example .env
 
 访问限制：仅内网或管理员 token 可调用。管理员调用头：`x-schema-init-token: <SCHEMA_INIT_TOKEN>`。
 
-**`POST /api/users/create`**  
+**`POST /api/users/create`（已废弃）**  
 
-请求体：
+自注册模块上线后，该接口固定返回 **410**，正文提示改用 `POST /api/auth/register`。请勿在新功能中调用。
 
-```json
-{
-  "phone": "13812341234",
-  "nickname": "张三",
-  "password": "your_password"
-}
-```
+### 用户注册（`/api/auth/register/*`）
 
-校验：`phone`（或 `phoneNumber`）为字符串、11 位数字且以 `1` 开头；`nickname`（或 `userName`）为字符串长度 1～50；`password` 长度 6～128。  
-HTTP **201** 创建成功，响应 `code` 仍为 200 包装体；手机号已存在时 **409**，`data.reason` 为 `PHONE_ALREADY_EXISTS`。
+须按顺序完成：**阿里云发码 → 阿里云验码并获 `tempToken` → 提交注册**。  
+接口明细、请求体与错误码见 [`docs/用户注册接口联调文档.md`](../docs/用户注册接口联调文档.md)。
 
-### Breaking change（调用方注意）
+要点：
 
-- `POST /api/users/create` 现要求必填 `password`，且长度需为 6～128。
-- 参数兼容：`phone`/`phoneNumber` 二选一，`nickname`/`userName` 二选一。
-- 注册成功后账号直接写入 `auth_users`，可立即用于 `/api/auth/login/password`。
+- 发码：`POST /api/sms/send-verify-code`（阿里云 SDK）。
+- 验码 + 临时令牌：`POST /api/sms/check-verify-code`（阿里云验码通过后写 `tempToken` 至 Redis）。
+- 登录/重置等场景的 Redis 自管短信仍走 `POST /api/auth/sms/send`，与注册发码分离。
+- 注册提交只认 `tempToken`；昵称最长 30 字符；密码 8～20 位且须同时包含字母与数字。
 
 ### 认证接口补充
 
@@ -115,13 +115,7 @@ HTTP **201** 创建成功，响应 `code` 仍为 200 包装体；手机号已存
 说明：`rememberMe=true` 时 token 有效期更长；成功返回 `token`、`refreshToken`、`userId`、`userName`、`avatarUrl`、`expireIn`。  
 失败场景：手机号或密码错误返回 **401**。
 
-> 注意：当前版本注册接口与登录接口共用 `auth_users` 表。调用 `/api/users/create` 创建的账号可直接用于 `/api/auth/login/password` 登录。
->
-> ```sql
-> INSERT INTO auth_users (user_id, phone, password_hash, user_name, avatar_url)
-> VALUES ('u_demo_1', '13812345678', SHA2('your_password', 256), '测试用户', '')
-> ON DUPLICATE KEY UPDATE user_id = user_id;
-> ```
+> 注意：注册与登录共用 `auth_users` 表。请通过 `POST /api/auth/register` 创建账号；注册成功返回的 `accessToken` / `refreshToken` 与密码登录令牌格式一致。
 
 ---
 
@@ -153,7 +147,7 @@ npm run prisma:migrate:status
 
 ### `auth_users` 表字段（注册/登录统一）
 
-> 说明：注册接口 `POST /api/users/create` 与登录接口 `POST /api/auth/login/password` 均使用 `auth_users` 表。
+> 说明：注册接口 `POST /api/auth/register` 与登录接口 `POST /api/auth/login/password` 均使用 `auth_users` 表。表结构由 **Prisma migration** 管理，不在运行时执行 DDL。
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -232,9 +226,9 @@ backend/
 │   ├── router/          # sms-router.js, users-router.js, auth-router.js
 │   ├── controller/      # sms-controller.js, users-controller.js, auth-controller.js
 │   ├── service/         # aliyun-sms-service.js, users-service.js, auth-service.js
-│   ├── dao/             # user-dao.js, schema-dao.js
-│   ├── utils/           # response.js, logger.js, jwt-utils.js, password-utils.js
-│   ├── middleware/      # 预留
+│   ├── dao/             # user-dao.js 等（表结构以 prisma/schema.prisma 为准）
+│   ├── utils/           # response.js, logger.js, jwt-utils.js, redis-utils.js 等
+│   ├── middleware/      # auth-middleware.js, admin-auth-middleware.js, schema-init-guard.js
 │   ├── constants/       # 预留
 │   └── index.js
 ├── scripts/build.js     # npm run build → dist/

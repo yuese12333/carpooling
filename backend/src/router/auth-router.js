@@ -16,8 +16,6 @@ const {
 	checkPhoneRiskController,
 	deviceScoreController,
 	oauthBindController,
-	registerPreVerifyController,
-	verifyRegisterCodeController,
 	registerUserController,
 	checkNicknameController,
 } = require('../controller/auth-controller');
@@ -36,9 +34,7 @@ router.post('/risk/check-phone', checkPhoneRiskController);
 router.post('/risk/device-score', deviceScoreController);
 router.post('/oauth/bind', oauthBindController);
 
-// 注册相关路由
-router.post('/register/pre-verify', registerPreVerifyController);
-router.post('/register/verify-code', verifyRegisterCodeController);
+// 注册相关路由（验码见 POST /api/sms/check-verify-code）
 router.post('/register', registerUserController);
 router.get('/register/check-nickname', checkNicknameController);
 

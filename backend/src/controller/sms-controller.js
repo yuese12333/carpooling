@@ -13,6 +13,8 @@ const {
   sendVerifyCode,
   checkVerifyCode,
 } = require('../service/aliyun-sms-service');
+const { issueRegisterTempToken } = require('../service/register-temp-token-service');
+const { validatePhone } = require('../constants/auth-constants');
 
 /**
  * 函数功能：处理“发送短信验证码”接口请求
@@ -40,21 +42,16 @@ async function sendVerifyCodeController(req, res) {
       smsUpExtendCode,
     } = req.body || {};
 
-    if (!phoneNumber || !signName || !templateCode || !templateParam) {
+    if (!phoneNumber) {
       logger.warn({
         module: 'sms-controller',
         operate: 'send-verify-code',
         params: maskSensitive({ phoneNumber }),
-        result: '缺少必要参数',
+        result: '缺少必要参数 phoneNumber',
         requestId,
       });
       return res.status(400).json(
-        buildFailureResponse(
-          400,
-          '缺少必要参数：phoneNumber、signName、templateCode、templateParam',
-          null,
-          requestId,
-        ),
+        buildFailureResponse(400, '缺少必要参数：phoneNumber', null, requestId),
       );
     }
 
@@ -70,7 +67,10 @@ async function sendVerifyCodeController(req, res) {
       codeType,
       duplicatePolicy,
       outId,
-      returnVerifyCode,
+      returnVerifyCode:
+        returnVerifyCode !== undefined
+          ? returnVerifyCode
+          : process.env.NODE_ENV !== 'production',
       smsUpExtendCode,
     });
 
@@ -146,17 +146,27 @@ async function checkVerifyCodeController(req, res) {
   try {
     const { phoneNumber, verifyCode, schemeName, caseAuthPolicy, outId } = req.body || {};
 
-    if (!phoneNumber || !verifyCode) {
+    const phoneValidation = validatePhone(phoneNumber);
+    if (!phoneValidation.valid) {
       logger.warn({
         module: 'sms-controller',
         operate: 'check-verify-code',
-        params: maskSensitive({ phoneNumber }),
-        result: '缺少必要参数',
+        params: maskSensitive({ phone: phoneNumber }),
+        result: phoneValidation.error,
         requestId,
       });
-      return res.status(400).json(
-        buildFailureResponse(400, '缺少必要参数：phoneNumber、verifyCode', null, requestId),
-      );
+      return res.status(400).json(buildFailureResponse(400, phoneValidation.error, null, requestId));
+    }
+
+    if (!verifyCode || typeof verifyCode !== 'string' || verifyCode.length !== 6) {
+      logger.warn({
+        module: 'sms-controller',
+        operate: 'check-verify-code',
+        params: maskSensitive({ phone: phoneNumber }),
+        result: '验证码必须为 6 位',
+        requestId,
+      });
+      return res.status(400).json(buildFailureResponse(400, '验证码必须为 6 位', null, requestId));
     }
 
     const data = await checkVerifyCode({
@@ -175,31 +185,39 @@ async function checkVerifyCodeController(req, res) {
         result: data?.aliyunMessage || '短信校验失败',
         requestId,
       });
-      return res.status(500).json(
-        buildFailureResponse(
-          500,
-          data?.aliyunMessage || '短信校验失败',
-          {
-            success: data?.success,
-            verifyResult: data?.verifyResult,
-            aliyunCode: data?.aliyunCode,
-            aliyunMessage: data?.aliyunMessage,
-            requestId: data?.requestId,
-          },
-          requestId,
-        ),
+      return res.status(400).json(
+        buildFailureResponse(400, data?.aliyunMessage || '验证码校验失败', {
+          success: data?.success,
+          verifyResult: data?.verifyResult,
+          aliyunCode: data?.aliyunCode,
+          aliyunMessage: data?.aliyunMessage,
+          requestId: data?.requestId,
+        }, requestId),
       );
     }
+
+    if (data.verifyResult && data.verifyResult !== 'PASS') {
+      logger.warn({
+        module: 'sms-controller',
+        operate: 'check-verify-code',
+        params: maskSensitive({ phoneNumber }),
+        result: '验证码错误',
+        requestId,
+      });
+      return res.status(400).json(buildFailureResponse(400, '验证码错误', null, requestId));
+    }
+
+    const tokenData = await issueRegisterTempToken({ phone: phoneNumber, requestId });
 
     logger.info({
       module: 'sms-controller',
       operate: 'check-verify-code',
       params: maskSensitive({ phoneNumber }),
-      result: 'Code verified successfully',
+      result: 'Code verified and tempToken issued',
       requestId,
     });
 
-    return res.json(buildSuccessResponse(data, requestId));
+    return res.json(buildSuccessResponse({ ...data, ...tokenData }, requestId));
   } catch (err) {
     const message =
       process.env.NODE_ENV === 'production'

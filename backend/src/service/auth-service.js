@@ -3,6 +3,7 @@
  * 关联业务：用户密码登录、三方登录、短信验证、风控检测
  * 说明：封装账号查询、密码校验、令牌签发和登录态更新
  */
+const { randomUUID } = require('crypto');
 const userDao = require('../dao/user-dao');
 const oauthDao = require('../dao/oauth-dao');
 const configDao = require('../dao/config-dao');
@@ -13,6 +14,7 @@ const jwtUtils = require('../utils/jwt-utils');
 const oauthUtils = require('../utils/oauth-utils');
 const smsUtils = require('../utils/sms-utils');
 const redisUtils = require('../utils/redis-utils');
+const { consumeRegisterTempToken } = require('./register-temp-token-service');
 const maskUtils = require('../utils/mask-utils');
 const captchaUtils = require('../utils/captcha-utils');
 const riskUtils = require('../utils/risk-utils');
@@ -35,6 +37,10 @@ const {
   OAUTH_BIND_EXPIRE,
   REDIS_KEY_PREFIX,
 } = require('../constants/auth-constants');
+
+function buildUserId() {
+  return `u_${randomUUID().replace(/-/g, '')}`;
+}
 
 /**
  * 函数功能：密码登录核心流程
@@ -514,113 +520,11 @@ async function oauthBind({ platform, accessToken, requestId }) {
 }
 
 /**
- * 函数功能：注册验证码同步预校验
- * 入参：phone/verifyCode/requestId
- * 出参：{ isValid, tempToken }
- */
-async function registerPreVerify({ phone, verifyCode, requestId }) {
-  logger.info({
-    module: 'auth-service',
-    operate: 'register-pre-verify',
-    params: maskSensitive({ phone }),
-    result: 'Start register pre-verify',
-    requestId,
-  });
-
-  const codeKey = `${REDIS_KEY_PREFIX.SMS_CODE}register:${phone}`;
-  const storedCode = await redisUtils.get(codeKey);
-
-  if (!storedCode) {
-    const error = new Error('验证码不存在或已过期');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (storedCode !== verifyCode) {
-    const error = new Error('验证码错误');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  // 生成临时令牌，有效期 10 分钟
-  const tempToken = jwtUtils.generateTempToken(
-    { phone, type: 'register' },
-    { expiresIn: 10 * 60 },
-  );
-
-  // 缓存临时令牌，用于后续注册提交验证
-  const tempKey = `register_temp:${phone}`;
-  await redisUtils.setExpire(tempKey, tempToken, 10 * 60);
-
-  logger.info({
-    module: 'auth-service',
-    operate: 'register-pre-verify',
-    params: maskSensitive({ phone }),
-    result: 'Pre-verify passed, tempToken generated',
-    requestId,
-  });
-
-  return {
-    isValid: true,
-    tempToken,
-  };
-}
-
-/**
- * 函数功能：校验验证码
- * 入参：phone/verifyCode/requestId
- * 出参：{ isValid, tempToken }
- */
-async function verifyRegisterCode({ phone, verifyCode, requestId }) {
-  logger.info({
-    module: 'auth-service',
-    operate: 'verify-register-code',
-    params: maskSensitive({ phone }),
-    result: 'Start verify register code',
-    requestId,
-  });
-
-  const codeKey = `${REDIS_KEY_PREFIX.SMS_CODE}register:${phone}`;
-  const storedCode = await redisUtils.get(codeKey);
-
-  if (!storedCode) {
-    const error = new Error('验证码不存在或已过期');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  if (storedCode !== verifyCode) {
-    const error = new Error('验证码错误');
-    error.statusCode = 400;
-    throw error;
-  }
-
-  // 生成临时校验令牌
-  const tempToken = jwtUtils.generateTempToken(
-    { phone, type: 'verify' },
-    { expiresIn: 10 * 60 },
-  );
-
-  logger.info({
-    module: 'auth-service',
-    operate: 'verify-register-code',
-    params: maskSensitive({ phone }),
-    result: 'Verify code passed, tempToken generated',
-    requestId,
-  });
-
-  return {
-    isValid: true,
-    tempToken,
-  };
-}
-
-/**
  * 函数功能：用户注册
- * 入参：nickname/phone/password/verifyCode/agreeProtocol/requestId
+ * 入参：nickname/phone/password/tempToken/agreeProtocol/requestId
  * 出参：{ userId, accessToken, userInfo }
  */
-async function registerUser({ nickname, phone, password, verifyCode, agreeProtocol, requestId }) {
+async function registerUser({ nickname, phone, password, tempToken, agreeProtocol, requestId }) {
   logger.info({
     module: 'auth-service',
     operate: 'register-user',
@@ -645,22 +549,12 @@ async function registerUser({ nickname, phone, password, verifyCode, agreeProtoc
     throw error;
   }
 
-  // 校验验证码
-  const codeKey = `${REDIS_KEY_PREFIX.SMS_CODE}register:${phone}`;
-  const storedCode = await redisUtils.get(codeKey);
-  if (!storedCode || storedCode !== verifyCode) {
-    const error = new Error('验证码错误或已过期');
-    error.statusCode = 400;
-    throw error;
-  }
+  await consumeRegisterTempToken({ phone, tempToken, requestId });
 
   // 对密码进行加盐哈希处理
   const passwordHash = await passwordUtils.hash(password);
 
-  // 生成用户 ID
-  const timestamp = Date.now().toString(36);
-  const randomPart = Math.random().toString(36).slice(2, 8);
-  const userId = `u_${timestamp}_${randomPart}`;
+  const userId = buildUserId();
 
   // 创建用户账号
   await userDao.createAuthUser(
@@ -680,6 +574,12 @@ async function registerUser({ nickname, phone, password, verifyCode, agreeProtoc
   const refreshToken = jwtUtils.generateRefreshToken(
     { ...tokenPayload, type: 'refresh' },
     { expiresIn: REFRESH_TOKEN_EXPIRE_DEFAULT },
+  );
+
+  await redisUtils.setExpire(
+    `${REDIS_KEY_PREFIX.REFRESH_TOKEN}${userId}`,
+    refreshToken,
+    REFRESH_TOKEN_EXPIRE_DEFAULT,
   );
 
   logger.info({
@@ -740,8 +640,6 @@ module.exports = {
   checkPhoneRisk,
   deviceScore,
   oauthBind,
-  registerPreVerify,
-  verifyRegisterCode,
   registerUser,
   checkNickname,
 };
