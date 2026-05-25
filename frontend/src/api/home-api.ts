@@ -8,6 +8,7 @@ import { useEnvStore } from '../store/env-store'; // 仅用于获取 isMockMode
 import request from '../utils/request';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 // --- 类型定义 ---
 
@@ -51,6 +52,7 @@ export const HomeService = {
      * @param {string} requestId - 显式注入的链路 ID
      */
     getUserInfo: async (requestId: string): Promise<ApiResponse<UserInfo>> => {
+        syncRequestId(requestId);
         const isMock = useEnvStore.getState().isMockMode;
 
         if (isMock) {
@@ -91,6 +93,7 @@ export const HomeService = {
      * @param {string} requestId - 显式注入的链路 ID
      */
     getRecommendRides: async (lat: number, lng: number, requestId: string): Promise<ApiResponse<RideItem[]>> => {
+        syncRequestId(requestId);
         const isMock = useEnvStore.getState().isMockMode;
 
         if (isMock) {
@@ -145,6 +148,7 @@ export const HomeService = {
      * @param {string} requestId - 显式注入的链路 ID
      */
     getStatistics: async (requestId: string): Promise<ApiResponse<HomeStats>> => {
+        syncRequestId(requestId);
         const isMock = useEnvStore.getState().isMockMode;
 
         if (isMock) {
@@ -176,6 +180,7 @@ export const HomeService = {
      * @param {string} requestId - 显式注入的链路 ID
      */
     getUnreadStatus: async (requestId: string): Promise<ApiResponse<{ hasUnread: boolean }>> => {
+        syncRequestId(requestId);
         const isMock = useEnvStore.getState().isMockMode;
 
         if (isMock) {

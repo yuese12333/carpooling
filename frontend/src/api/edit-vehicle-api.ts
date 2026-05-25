@@ -7,6 +7,8 @@ import request from "@/utils/request";
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
+import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 // --- 类型定义 ---
 
@@ -40,9 +42,10 @@ const MOCK_VEHICLE_DATA: VehicleInfo = {
 
 const MODULE_NAME = 'edit-vehicle-api';
 
+/** Mock 上传占位：空字符串由 UI 层展示本地占位图 */
 export const MOCK_ASSETS = {
-    VEHICLE_DEFAULT: "https://via.placeholder.com/600x400.png?text=No+Image",
-    USER_AVATAR: "https://via.placeholder.com/150",
+    VEHICLE_DEFAULT: '',
+    USER_AVATAR: '',
 };
 
 // --- 接口函数 ---
@@ -56,6 +59,7 @@ export const getVehicleDetail = async (
     vehicleId: string,
     requestId: string
 ): Promise<ApiResponse<VehicleInfo>> => {
+    syncRequestId(requestId);
     const isMock = useEnvStore.getState().isMockMode;
 
     if (isMock) {
@@ -95,10 +99,11 @@ export const updateVehicleInfo = async (
     data: VehicleInfo,
     requestId: string
 ): Promise<ApiResponse<undefined>> => {
+    syncRequestId(requestId);
     const isMock = useEnvStore.getState().isMockMode;
 
     if (isMock) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await mockDelay(MOCK_DELAY_MS.LONG);
         logger.info({
             module: MODULE_NAME,
             operate: 'updateVehicleInfo_MOCK',
@@ -109,7 +114,7 @@ export const updateVehicleInfo = async (
         return { success: true, message: "Mock 修改成功", data: undefined };
     }
 
-    const result = await request.put<any, ApiResponse<undefined>>('/v1/vehicles/update', data);
+    const result = await request.post<any, ApiResponse<undefined>>('/v1/vehicles/update', data);
 
     if (result.success) {
         logger.info({
@@ -133,6 +138,7 @@ export const uploadVehiclePhoto = async (
     formData: FormData,
     requestId: string
 ): Promise<ApiResponse<{ url: string }>> => {
+    syncRequestId(requestId);
     const isMock = useEnvStore.getState().isMockMode;
 
     if (isMock) {

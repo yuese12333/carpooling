@@ -8,6 +8,8 @@ import request from "@/utils/request";
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
+import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 /**
  * 凭证详情数据模型
@@ -50,13 +52,14 @@ const MOCK_RECEIPT: ReceiptDetail = {
  * @returns Promise<ApiResponse<ReceiptDetail>>
  */
 export const getReceiptDetail = async (id: string, requestId: string): Promise<ApiResponse<ReceiptDetail>> => {
+    syncRequestId(requestId);
     const isMockMode = useEnvStore.getState().isMockMode;
     const moduleName = 'ReceiptService';
     const operationName = 'getReceiptDetail';
 
     // 1. Mock 模式处理
     if (isMockMode) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await mockDelay(MOCK_DELAY_MS.SHORT);
 
         logger.info({
             module: moduleName,
@@ -75,7 +78,7 @@ export const getReceiptDetail = async (id: string, requestId: string): Promise<A
 
     // 2. 真实接口请求
     // 底层 request.ts 无论成功失败都会 Resolve 标准的 ApiResponse 对象
-    const response = await request.get<any, ApiResponse<ReceiptDetail>>(`/api/receipt/${id}`);
+    const response = await request.get<any, ApiResponse<ReceiptDetail>>(`/receipt/${id}`);
 
     // 3. 条件化日志记录
     // 仅在业务成功时记录成功日志，底层已自动记录错误日志，此处不再使用 Try-Catch 捕获

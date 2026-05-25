@@ -6,7 +6,7 @@
 import React, { useEffect, useMemo } from "react";
 import { ScrollView, StatusBar, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useProfilePage } from "@/hooks/use-profile-form"; // 确保引用重命名后的 Hook
+import { useProfilePage } from "@/hooks/use-profile-page";
 import logger, { generateRequestId } from "@/utils/logger";
 import styles from "./profile.style";
 import { badgeData } from "./profile-config";

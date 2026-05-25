@@ -1,6 +1,7 @@
 import { useEnvStore } from '@/store/env-store';
 import request from '@/utils/request';
 import logger from '@/utils/logger';
+import type { ApiResponse } from '@/api/api.d';
 
 export type AdminUserRole = 'user' | 'admin';
 export type AdminUserStatus = 'active' | 'disabled';
@@ -19,12 +20,6 @@ export interface AdminUserListResponse {
   total: number;
   page: number;
   pageSize: number;
-}
-
-interface ApiResponse<T> {
-  code: number;
-  message: string;
-  data: T;
 }
 
 export interface AdminUserListQuery {
@@ -101,7 +96,7 @@ export async function fetchAdminUsersList(query: AdminUserListQuery): Promise<Ap
         status: query.status,
       },
     });
-    return res.data;
+    return res;
   } catch (error: any) {
     logger.error({
       module: moduleName,
@@ -131,7 +126,7 @@ export async function updateAdminUserStatus(params: { targetUserId: string; stat
     }
 
     const res = await request.post<ApiResponse<{ targetUserId: string; status: AdminUserStatus }>>('/admin/users/update-status', params);
-    return res.data;
+    return res;
   } catch (error: any) {
     logger.error({
       module: moduleName,
@@ -161,7 +156,7 @@ export async function updateAdminUserRole(params: { targetUserId: string; role: 
     }
 
     const res = await request.post<ApiResponse<{ targetUserId: string; role: AdminUserRole }>>('/admin/users/update-role', params);
-    return res.data;
+    return res;
   } catch (error: any) {
     logger.error({
       module: moduleName,

@@ -7,6 +7,8 @@ import request from '@/utils/request';
 import logger from '@/utils/logger';
 import { useEnvStore } from '@/store/env-store';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
+import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 // --- 类型定义 ---
 
@@ -33,10 +35,6 @@ const MOCK_LOCATIONS: LocationItem[] = [
     { id: '3', type: 'other', label: '健身房', address: '上海市长宁区延安西路威尔士健身' },
 ];
 
-const syncRequestId = (id: string) => {
-    useEnvStore.getState().setCurrentRequestId(id);
-};
-
 /**
  * 获取地点列表
  * @param requestId - 由页面级使用 useMemo 生成并显式传递的链路 ID
@@ -53,7 +51,7 @@ export const getLocationsApi = async (
 
     // --- Mock 模式逻辑 ---
     if (isMockMode) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await mockDelay(MOCK_DELAY_MS.SHORT);
         const isQueryEmpty = !query || query.trim() === '';
         const filteredData = isQueryEmpty
             ? MOCK_LOCATIONS
@@ -65,7 +63,7 @@ export const getLocationsApi = async (
             module: MODULE_NAME,
             operate: operateName,
             params: { query },
-            result: JSON.stringify(filteredData),
+            result: `count: ${filteredData.length}`,
             requestId: requestId,
         });
 
@@ -80,20 +78,16 @@ export const getLocationsApi = async (
 
     // --- 生产请求逻辑 ---
     // 移除 try-catch，底层 request 已处理 HTTP 异常并 Resolve ApiResponse
-    const response = await request.get<any, any>('/v1/locations', {
+    const result = await request.get<any, ApiResponse<LocationItem[]>>('/v1/locations', {
         params: { query },
     });
 
-    // 适配拦截器返回 AxiosResponse 的情况
-    const result: ApiResponse<LocationItem[]> = response.data || response;
-
-    // 仅在业务成功时记录日志
     if (result.success) {
         logger.info({
             module: MODULE_NAME,
             operate: operateName,
             params: { query },
-            result: JSON.stringify(result.data),
+            result: `count: ${result.data?.length ?? 0}`,
             requestId: requestId,
         });
     }
@@ -128,8 +122,7 @@ export const deleteLocationApi = async (
     }
 
     // --- 生产请求逻辑 ---
-    const response = await request.delete<any, any>(`/v1/locations/${id}`);
-    const result: ApiResponse<null> = response.data || response;
+    const result = await request.post<any, ApiResponse<null>>('/v1/locations/delete', { id });
 
     // 仅在业务成功时记录日志
     if (result.success) {

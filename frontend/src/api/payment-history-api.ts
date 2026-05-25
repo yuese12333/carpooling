@@ -7,6 +7,7 @@ import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 /** 支付记录类型 */
 export interface PaymentRecord {
@@ -50,6 +51,9 @@ export const getPaymentHistory = async (
     params: { page?: number; type?: string; status?: string[] },
     requestId?: string
 ): Promise<ApiResponse<PaymentRecord[]>> => {
+    if (requestId) {
+        syncRequestId(requestId);
+    }
     const moduleName = 'PaymentAPI';
     const operateName = 'getPaymentHistory';
     const isMockMode = useEnvStore.getState().isMockMode;
@@ -99,6 +103,9 @@ export const getPaymentHistory = async (
 export const getMonthlyStats = async (
     requestId?: string
 ): Promise<ApiResponse<MonthlyStats>> => {
+    if (requestId) {
+        syncRequestId(requestId);
+    }
     const moduleName = 'PaymentAPI';
     const operateName = 'getMonthlyStats';
     const isMockMode = useEnvStore.getState().isMockMode;

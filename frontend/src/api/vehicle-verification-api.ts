@@ -8,6 +8,8 @@ import request from "@/utils/request";
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
+import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 // --- 类型定义 ---
 
@@ -59,10 +61,6 @@ const MOCK_VEHICLE_DETAIL: VehicleVerificationDetail = {
     ]
 };
 
-const syncRequestId = (id: string) => {
-    useEnvStore.getState().setCurrentRequestId(id);
-};
-
 // --- 请求函数 ---
 
 /**
@@ -81,7 +79,7 @@ export const getVehicleVerificationDetail = async (
     // 1. Mock 逻辑分支
     if (isMockMode) {
         // 保持模拟延迟
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await mockDelay(MOCK_DELAY_MS.SHORT);
 
         logger.info({
             module: moduleName,

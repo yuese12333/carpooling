@@ -16,10 +16,10 @@ interface SearchParams {
 
 /**
  * 找拼车页面业务逻辑自定义 Hook
- * @param {string | undefined} requestId - [规范注入] 从 Page 层显式透传的业务链路 ID
- * @returns {object} 包含搜索状态、受控组件 Setter 及业务处理函数
+ * @param requestId 从 Page 层显式透传的业务链路 ID
+ * @returns 包含搜索状态、受控组件 Setter 及业务处理函数
  */
-export const useFindRideForm = (requestId: string | undefined) => {
+export const useFindRideForm = (requestId: string) => {
     const router = useRouter();
     const params = useLocalSearchParams() as unknown as SearchParams;
 

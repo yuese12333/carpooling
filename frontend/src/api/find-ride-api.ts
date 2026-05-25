@@ -7,6 +7,7 @@ import logger from '@/utils/logger';
 import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 // --- 类型定义 (Type Definitions) ---
 
@@ -55,13 +56,14 @@ export const RIDE_FILTER_TAGS = [
 /**
  * 5.1 搜索行程列表
  * @param {RideSearchQuery} params - 搜索参数
- * @param {string | undefined} requestId - 链路追踪 ID
+ * @param requestId 页面级 useMemo 生成并显式注入的链路追踪 ID
  * @returns 格式化的 API 响应对象
  */
 export const fetchRides = async (
     params: RideSearchQuery,
-    requestId: string | undefined
+    requestId: string
 ): Promise<ApiResponse<RideListResponse>> => {
+    syncRequestId(requestId);
     const moduleName = 'api.ride';
     const operation = 'fetchRides';
 
@@ -105,6 +107,7 @@ export const fetchRides = async (
  * @returns 包含排序与标签的元数据
  */
 export const fetchSearchMetadata = async (requestId: string): Promise<ApiResponse<SearchMetadataResponse>> => {
+    syncRequestId(requestId);
     const moduleName = 'api.ride';
     const operation = 'fetchSearchMetadata';
 

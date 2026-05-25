@@ -10,6 +10,7 @@ import logger from '../utils/logger';
 import { useEnvStore } from '../store/env-store';
 import type { ApiResponse } from '@/api/api.d';
 import request from '@/utils/request';
+import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 /** 账号密码登录请求载荷 */
 export interface LoginRequest {
@@ -78,11 +79,6 @@ export interface VerifyCodeData {
 
 // --- 内部常量与 Mock 数据 ---
 
-const MOCK_DELAY = {
-    CONFIG: 500,
-    LOGIN: 1500,
-};
-
 const MOCK_CONFIG: PageConfig = {
     title: "Mock 欢迎回来",
     subtitle: "当前处于测试模式，请放心使用",
@@ -101,8 +97,8 @@ const MOCK_LOGIN_SUCCESS: LoginData = {
 // --- 私有工具函数 ---
 
 /**
- * 获取当前上下文中的 RequestId
- * 用于 API 层日志记录，确保链路一致性
+ * 获取当前上下文中的 RequestId（由页面层 setCurrentRequestId 写入 store）
+ * 用于 API 层日志记录，确保与 X-Request-Id Header 一致
  */
 const getContextRequestId = (): string => useEnvStore.getState().currentRequestId;
 
@@ -110,17 +106,16 @@ const getContextRequestId = (): string => useEnvStore.getState().currentRequestI
 
 /**
  * 获取登录页动态 UI 配置
- * @param {boolean} isMockMode - 是否启用 Mock 模式
- * @param {string} requestId - 全链路追踪 ID
- * @returns {Promise<ApiResponse<PageConfig>>} 返回页面配置数据
+ * @param isMockMode 是否启用 Mock 模式
+ * @remarks 调用前须由页面层 setCurrentRequestId，日志与 Header 共用 store 中的 requestId
+ * @returns 返回页面配置数据
  */
 export const fetchLoginConfig = async (
     isMockMode: boolean,
 ): Promise<ApiResponse<PageConfig>> => {
     if (isMockMode) {
-        return new Promise((resolve) => {
-            setTimeout(() => resolve({ success: true, message: 'mock', data: MOCK_CONFIG }), MOCK_DELAY.CONFIG);
-        });
+        await mockDelay(MOCK_DELAY_MS.CONFIG);
+        return { success: true, message: 'mock', data: MOCK_CONFIG };
     }
 
     const result = await request.get<any, ApiResponse<PageConfig>>('/auth/login/config', {
@@ -140,24 +135,22 @@ export const fetchLoginConfig = async (
 
 /**
  * 执行账号密码登录请求
- * @param {LoginRequest} payload - 登录请求参数
- * @param {boolean} isMockMode - 是否启用 Mock 模式
- * @param {string} requestId - 全链路追踪 ID
- * @returns {Promise<ApiResponse<LoginData>>}
- * @throws {Error}
+ * @param payload 登录请求参数
+ * @param isMockMode 是否启用 Mock 模式
+ * @remarks 调用前须由页面层 setCurrentRequestId
+ * @returns 登录结果
  */
 export const loginByPassword = async (
     payload: LoginRequest,
     isMockMode: boolean,
 ): Promise<ApiResponse<LoginData>> => {
     if (isMockMode) {
-        return new Promise((resolve) => {
-            setTimeout(() => resolve({
-                success: true,
-                message: 'mock success',
-                data: MOCK_LOGIN_SUCCESS
-            }), MOCK_DELAY.LOGIN);
-        });
+        await mockDelay(MOCK_DELAY_MS.LOGIN);
+        return {
+            success: true,
+            message: 'mock success',
+            data: MOCK_LOGIN_SUCCESS
+        };
     }
 
     const result = await request.post<any, ApiResponse<LoginData>>('/auth/login/password', payload);

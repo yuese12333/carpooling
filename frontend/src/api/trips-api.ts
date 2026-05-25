@@ -7,6 +7,7 @@
 import request from '@/utils/request';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 // --- 类型定义 ---
 
@@ -72,6 +73,7 @@ export const tripsApi = {
         },
         requestId: string
     ): Promise<ApiResponse<TripListData>> => {
+        syncRequestId(requestId);
         const result = await request.get<any, ApiResponse<TripListData>>('/trips/list', {
             params,
         });
@@ -98,6 +100,7 @@ export const tripsApi = {
      * @returns {Promise<ApiResponse<null>>}
      */
     cancelTrip: async (tripId: string, requestId: string, reason?: string): Promise<ApiResponse<null>> => {
+        syncRequestId(requestId);
         const params = { tripId, reason: reason ?? undefined };
 
         const result = await request.post<any, ApiResponse<null>>('/trips/cancel', params);
@@ -122,6 +125,7 @@ export const tripsApi = {
      * @returns {Promise<ApiResponse<null>>}
      */
     rateTrip: async (data: RateTripParams, requestId: string): Promise<ApiResponse<null>> => {
+        syncRequestId(requestId);
         const result = await request.post<any, ApiResponse<null>>('/trips/rate', data);
 
         if (result.success) {
@@ -144,6 +148,7 @@ export const tripsApi = {
      * @returns {Promise<ApiResponse<any>>}
      */
     getRebookTemplate: async (tripId: string, requestId: string): Promise<ApiResponse<any>> => {
+        syncRequestId(requestId);
         const result = await request.get<any, ApiResponse<any>>('/trips/template', {
             params: { tripId },
         });
@@ -168,6 +173,7 @@ export const tripsApi = {
      * @returns {Promise<ApiResponse<any>>}
      */
     getContact: async (tripId: string, requestId: string): Promise<ApiResponse<any>> => {
+        syncRequestId(requestId);
         const result = await request.get<any, ApiResponse<any>>('/trips/contact', {
             params: { tripId },
         });

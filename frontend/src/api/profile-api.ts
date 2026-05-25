@@ -7,6 +7,7 @@ import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 /**
  * 用户基础信息接口数据定义
@@ -47,14 +48,6 @@ export interface BadgeItem {
  * @returns boolean
  */
 const getIsMock = (): boolean => useEnvStore.getState().isMockMode;
-
-/**
- * 更新全局链路追踪 ID
- * 遵循 PR #410/#432 规范：由 API 层同步 store，拦截器统一消费
- */
-const syncRequestId = (id: string) => {
-    useEnvStore.getState().setCurrentRequestId(id);
-};
 
 export const profileApi = {
     /**

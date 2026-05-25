@@ -7,6 +7,7 @@ import request from "@/utils/request";
 import type { ApiResponse } from '@/api/api.d';
 import { useEnvStore } from "@/store/env-store";
 import logger from "@/utils/logger";
+import { syncRequestId } from "@/utils/sync-request-id";
 
 /**
  * 扩展支付方式对象结构，保留原始 UI 表现字段
@@ -24,10 +25,6 @@ export interface PaymentMethod {
 
 const MODULE_NAME = "PaymentMethodsAPI";
 
-const syncRequestId = (id: string) => {
-    useEnvStore.getState().setCurrentRequestId(id);
-};
-
 /**
  * 获取账户余额
  */
@@ -39,7 +36,7 @@ export const getAccountBalance = async (requestId: string): Promise<ApiResponse<
         return { success: true, message: "Mock Success", data: 1250.85 };
     }
 
-    const res = await request.get<any, ApiResponse<number>>("/api/v1/payment/balance", {
+    const res = await request.get<any, ApiResponse<number>>("/v1/payment/balance", {
         params: { requestId }
     });
 
@@ -65,7 +62,7 @@ export const getPaymentMethods = async (requestId: string): Promise<ApiResponse<
         return { success: true, message: "Mock Success", data: mockData };
     }
 
-    const res = await request.get<any, ApiResponse<PaymentMethod[]>>("/api/v1/payment/methods", {
+    const res = await request.get<any, ApiResponse<PaymentMethod[]>>("/v1/payment/methods", {
         params: { requestId }
     });
 
@@ -94,7 +91,7 @@ export const setDefaultPaymentMethod = async (
         return { success: true, message: "Mock Update Success", data: null };
     }
 
-    const res = await request.post<any, ApiResponse<null>>("/api/v1/payment/methods/default", {
+    const res = await request.post<any, ApiResponse<null>>("/v1/payment/methods/default", {
         methodId,
         requestId
     });

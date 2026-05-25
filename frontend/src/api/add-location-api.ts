@@ -7,6 +7,7 @@ import request from '@/utils/request';
 import logger from '@/utils/logger';
 import { useEnvStore } from '@/store/env-store';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 // --- 类型定义 ---
 
@@ -20,11 +21,6 @@ export interface LocationData {
 
 // --- 常量配置 ---
 const MODULE_NAME = 'location-api';
-
-const syncRequestId = (id: string) => {
-    useEnvStore.getState().setCurrentRequestId(id);
-};
-
 
 /**
  * 新增常用地点
@@ -67,7 +63,7 @@ export const saveFavoriteLocation = async (
             operate: 'saveFavoriteLocation',
             params: { ...data },
             // 根据规范：result 必须为 string，且避免使用 null
-            result: JSON.stringify(response.data ?? {}),
+            result: 'location_saved',
             requestId,
         });
     }

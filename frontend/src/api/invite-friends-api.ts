@@ -7,6 +7,8 @@ import request from "@/utils/request";
 import { useEnvStore } from '@/store/env-store';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import { syncRequestId } from '@/utils/sync-request-id';
+import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 // --- 类型定义 ---
 
@@ -38,10 +40,6 @@ const MOCK_INVITE_DATA: InviteInfoResponse = {
     }
 };
 
-const syncRequestId = (id: string) => {
-    useEnvStore.getState().setCurrentRequestId(id);
-};
-
 // --- 接口函数 ---
 
 /**
@@ -63,7 +61,7 @@ export const getInviteInfo = async (requestId: string): Promise<ApiResponse<Invi
             requestId
         });
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await mockDelay(MOCK_DELAY_MS.SHORT);
         return {
             success: true,
             code: 200,
