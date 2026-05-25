@@ -143,7 +143,7 @@ frontend/
 │   │   ├── profile/            # 个人中心及子页（车辆、支付、通知、帮助等）
 │   │   └── ride-navigation/    # 导航（高德原生 SDK，无 REST API）
 │   ├── hooks/                  # 页面业务 Hook
-│   ├── api/                    # 接口封装（路径规范见 docs/接口路径规范汇总.md）
+│   ├── api/                    # 接口封装（路径规范见 docs/接口汇总清单.md）
 │   ├── store/                  # env-store、AuthContext、mock 数据
 │   ├── router/paths.ts         # 路由常量
 │   └── utils/                  # logger、request、validator 等
@@ -158,5 +158,5 @@ frontend/
 - **Mock 模式**：`useEnvStore.isMockMode` 默认为 `true`；联调真实后端时在登录页关闭 Mock 并配置 `EXPO_PUBLIC_API_URL`。
 - **请求规范**：统一使用 `src/utils/request.ts`，禁止在 API 文件中自建 axios 或硬编码 URL。
 - **requestId**：由 Page 层生成并经 props 注入 Hook；详见 `docs/日志规范与埋点说明.md`。
-- **接口路径**：以 [`docs/接口路径规范汇总.md`](../docs/接口路径规范汇总.md) 为准。
+- **接口路径**：以 [`docs/接口汇总清单.md`](../docs/接口汇总清单.md) 为准。
 - **地图**：业务与原生接入见 [`docs/高德地图Android_SDK接入与开发说明.md`](../docs/高德地图Android_SDK接入与开发说明.md)。
