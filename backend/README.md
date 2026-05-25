@@ -82,7 +82,7 @@ cp .env.example .env
 | 管理 | POST | `/api/admin/users/status` | 管理员 JWT | 更新用户状态（active / disabled） |
 | 管理 | POST | `/api/admin/users/role` | 管理员 JWT | 更新用户角色（user / admin） |
 
-> 路径规范详见 [`docs/接口路径规范汇总.md`](../docs/接口路径规范汇总.md)。
+> 路径规范详见 [`docs/接口汇总清单.md`](../docs/接口汇总清单.md)。
 
 ### 前后端路径联调状态
 
@@ -356,4 +356,4 @@ backend/
 - **日志**：统一 `utils/logger.js`，敏感字段脱敏；异常需打日志并返回标准错误体。  
 - **提交信息**：`<type>(<scope>): <subject>`，见 `CONTRIBUTING.md` §4.2。
 
-更多命名、接口方法、日志级别、Git 与 PR 规则以 **[`CONTRIBUTING.md`](../CONTRIBUTING.md)** 为准；API 路径规范见 **[`docs/接口路径规范汇总.md`](../docs/接口路径规范汇总.md)**。
+更多命名、接口方法、日志级别、Git 与 PR 规则以 **[`CONTRIBUTING.md`](../CONTRIBUTING.md)** 为准；API 路径规范见 **[`docs/接口汇总清单.md`](../docs/接口汇总清单.md)**。
