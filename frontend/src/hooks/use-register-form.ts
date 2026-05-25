@@ -85,17 +85,18 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
 
         setIsLoading(true);
         try {
-            const success = await sendSmsCode(formData.phoneNumber, isMockMode);
+            const sendRes = await sendSmsCode(formData.phoneNumber, isMockMode);
+            const sent = Boolean(sendRes.success && sendRes.data?.success);
 
             logger.info({
                 module: 'register-hook',
                 operate: 'sendSmsCode',
                 params: { phoneNumber: formData.phoneNumber },
-                result: success ? 'SUCCESS' : 'FAILED',
+                result: sent ? 'SUCCESS' : 'FAILED',
                 requestId
             });
 
-            if (success) {
+            if (sent) {
                 setCountdown(COUNTDOWN_INITIAL);
                 timerRef.current = setInterval(() => {
                     setCountdown(c => {
@@ -106,6 +107,11 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
                         return c - 1;
                     });
                 }, 1000);
+            } else {
+                setFieldErrors(prev => ({
+                    ...prev,
+                    general: sendRes.message || '验证码发送失败，请稍后重试',
+                }));
             }
         } catch (error: any) {
             logger.error({

@@ -38,8 +38,13 @@ async function incrWithExpire(key, seconds) {
   return next;
 }
 
+async function del(key) {
+  store.delete(key);
+}
+
 module.exports = {
   setExpire,
   get,
+  del,
   incrWithExpire,
 };

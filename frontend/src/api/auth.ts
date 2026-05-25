@@ -210,7 +210,18 @@ export const sendSmsCode = async (
     if (isMock) {
         return { success: true, message: 'mock', data: { success: true } };
     }
-    const result = await request.post<any, ApiResponse<{ success: boolean }>>('/sms/send-verify-code', { phoneNumber });
+
+    // 与 Postman / docs/短信验证接口联调文档.md 发码请求体一致，原样传给后端转发阿里云
+    const result = await request.post<any, ApiResponse<{ success: boolean }>>(
+        '/sms/send-verify-code',
+        {
+            phoneNumber,
+            signName: '云渚科技验证平台',
+            templateCode: '100001',
+            templateParam: '{"code":"##code##","min":"5"}',
+            returnVerifyCode: true,
+        },
+    );
 
     if (result.success) {
         logger.info({
@@ -239,9 +250,9 @@ export const verifySmsCode = async (
     if (isMock) {
         return { success: true, message: 'mock', data: { isValid: true, tempToken: "mock_token" } };
     }
-    const result = await request.post<any, ApiResponse<VerifyCodeData>>('/auth/register/verify-code', {
+    const result = await request.post<any, ApiResponse<VerifyCodeData>>('/sms/check-verify-code', {
         phoneNumber,
-        verifyCode
+        verifyCode,
     });
 
     if (result.success) {

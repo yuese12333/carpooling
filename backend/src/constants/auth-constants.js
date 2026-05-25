@@ -54,6 +54,10 @@ const MAX_AUTH_CODE_LENGTH = 2048;
 const MAX_SESSION_ID_LENGTH = 128;
 const MAX_VERIFY_ID_LENGTH = 128;
 const MAX_ACCESS_TOKEN_LENGTH = 2048;
+const MAX_NICKNAME_LENGTH = 30;
+
+// ============ 注册临时令牌 ============
+const REGISTER_TEMP_EXPIRE = 10 * 60; // 10 分钟
 
 // ============ Redis Key 前缀 ============
 const REDIS_KEY_PREFIX = {
@@ -63,6 +67,8 @@ const REDIS_KEY_PREFIX = {
   CAPTCHA: 'captcha:', // 图形验证码
   CHALLENGE: 'challenge:', // 行为验证
   OAUTH_BIND: 'oauth_bind:', // OAuth 绑定
+  REGISTER_TEMP: 'register_temp:', // 注册预校验临时令牌
+  REFRESH_TOKEN: 'refresh_token:', // 刷新令牌（用于撤销登录态）
 };
 
 // ============ 校验函数 ============
@@ -128,6 +134,8 @@ module.exports = {
   MAX_SESSION_ID_LENGTH,
   MAX_VERIFY_ID_LENGTH,
   MAX_ACCESS_TOKEN_LENGTH,
+  MAX_NICKNAME_LENGTH,
+  REGISTER_TEMP_EXPIRE,
   // Redis Key 前缀
   REDIS_KEY_PREFIX,
   // 校验函数
