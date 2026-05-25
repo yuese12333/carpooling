@@ -119,7 +119,7 @@ export default function HomePage() {
           onSetTo={setToLocation}
           onSearch={() => handleSearch()}
           onNavigateToProfile={() => navigateTo(ROUTES.PROFILE_MAIN)}
-          onNavigateToNotifications={() => navigateTo(ROUTES.RIDE.NAVIGATION)}
+          onNavigateToNotifications={() => navigateTo(ROUTES.PROFILE.NOTIFICATION)}
         />
 
         {/* 快捷操作区 */}
@@ -129,7 +129,8 @@ export default function HomePage() {
           colors={{
             blue: COLORS.bgBlueLight,
             green: COLORS.bgGreenLight,
-            purple: COLORS.bgPurpleLight
+            purple: COLORS.bgPurpleLight,
+            orange: COLORS.bgOrangeLight,
           }}
         />
 
