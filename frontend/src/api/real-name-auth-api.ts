@@ -56,7 +56,7 @@ export const getRealNameStatus = async (requestId: string): Promise<ApiResponse<
     }
 
     // --- 真实请求处理 ---
-    const result = await request.get<any, ApiResponse<RealNameInfo>>('/user/auth/status');
+    const result = await request.get<any, ApiResponse<RealNameInfo>>('/users/me/auth-status');
 
     // 仅在业务成功时记录日志，失败日志已由底层处理
     if (result.success) {
@@ -118,7 +118,7 @@ export const submitRealNameAuth = async (
     }
 
     // --- 真实请求处理 ---
-    const result = await request.post<any, ApiResponse<RealNameInfo>>('/user/auth/verify', params);
+    const result = await request.post<any, ApiResponse<RealNameInfo>>('/users/me/auth/verify', params);
 
     // 仅在业务成功时记录成功日志
     if (result.success) {

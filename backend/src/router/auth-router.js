@@ -30,11 +30,15 @@ router.get('/login/config', getLoginConfigController);
 router.get('/demo-accounts', getDemoAccountsController);
 router.get('/captcha/image', getCaptchaImageController);
 router.post('/risk/behavior-verify', behaviorVerifyController);
-router.post('/risk/check-phone', checkPhoneRiskController);
+router.post('/check-phone', checkPhoneRiskController);
 router.post('/risk/device-score', deviceScoreController);
+router.post('/password/sms', (req, res) => {
+	req.body = { ...(req.body || {}), type: 'reset_pwd' };
+	return sendAuthSmsController(req, res);
+});
 router.post('/oauth/bind', oauthBindController);
 
-// 注册相关路由（验码见 POST /api/sms/check-verify-code）
+// 注册相关路由（验码见 POST /api/sms/verify）
 router.post('/register', registerUserController);
 router.get('/register/check-nickname', checkNicknameController);
 

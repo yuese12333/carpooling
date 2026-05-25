@@ -75,7 +75,7 @@ export const getPaymentHistory = async (
 
     // --- 线性请求逻辑 ---
     // 底层 request 已自动 Resolve 标准 ApiResponse，无需 try-catch
-    const result = await request.get<any, ApiResponse<PaymentRecord[]>>('/payment/history', {
+    const result = await request.get<any, ApiResponse<PaymentRecord[]>>('/payments/history', {
         params: { page: params.page, limit: 10 }
     });
 
@@ -124,7 +124,7 @@ export const getMonthlyStats = async (
     }
 
     // --- 线性请求逻辑 ---
-    const result = await request.get<any, ApiResponse<MonthlyStats>>('/payment/stats/monthly');
+    const result = await request.get<any, ApiResponse<MonthlyStats>>('/payments/stats/monthly');
 
     // 仅在业务成功时记录日志
     if (result.success) {

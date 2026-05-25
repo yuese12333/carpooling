@@ -54,7 +54,7 @@ export const saveFavoriteLocation = async (
     }
 
     // 统一使用 @/utils/request，并显式传递泛型与 RequestId
-    const response = await request.post<any, ApiResponse>('/user/locations', data);
+    const response = await request.post<any, ApiResponse>('/locations', data);
 
     // 记录操作成功的结构化日志
     if (response.success) {

@@ -11,9 +11,9 @@ const {
 
 const router = express.Router();
 
-router.get('/users/list', authMiddleware, adminAuthMiddleware, listAdminUsersController);
-router.post('/users/update-status', authMiddleware, adminAuthMiddleware, updateAdminUserStatusController);
-router.post('/users/update-role', authMiddleware, adminAuthMiddleware, updateAdminUserRoleController);
+router.get('/users', authMiddleware, adminAuthMiddleware, listAdminUsersController);
+router.post('/users/status', authMiddleware, adminAuthMiddleware, updateAdminUserStatusController);
+router.post('/users/role', authMiddleware, adminAuthMiddleware, updateAdminUserRoleController);
 
 module.exports = router;
 

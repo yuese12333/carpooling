@@ -104,7 +104,7 @@ export const useEditVehicleForm = (requestId: string) => {
         });
 
         try {
-            const res = await updateVehicleInfo(formData, requestId);
+            const res = await updateVehicleInfo(vehicleId, formData, requestId);
 
             if (isApiSuccess(res)) {
                 logger.info({

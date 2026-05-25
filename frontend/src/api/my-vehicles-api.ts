@@ -40,7 +40,7 @@ export const getVehicleListApi = async (requestId: string): Promise<ApiResponse<
 
     // --- 生产请求逻辑 ---
     // 底层 request 已统一 Resolve 标准 ApiResponse 对象，此处采用线性调用
-    const result = await request.get<any, ApiResponse<VehicleInfo[]>>('/v1/vehicles');
+    const result = await request.get<any, ApiResponse<VehicleInfo[]>>('/vehicles');
 
     // 条件化日志记录：仅在业务成功时记录
     if (result.success) {
@@ -69,7 +69,7 @@ export const setDefaultVehicleApi = async (id: string, requestId: string): Promi
         return { success: true, code: 200, message: 'Mock Success', data: null };
     }
 
-    const result = await request.post<any, ApiResponse>(`/v1/vehicles/${id}/set-default`);
+    const result = await request.post<any, ApiResponse>(`/vehicles/${id}/default`);
 
     // 条件化日志记录：仅在业务成功时记录
     if (result.success) {
@@ -99,7 +99,7 @@ export const deleteVehicleApi = async (id: string, requestId: string): Promise<A
         return { success: true, code: 200, message: 'Mock Success', data: null };
     }
 
-    const result = await request.post<any, ApiResponse>('/v1/vehicles/delete', { id });
+    const result = await request.post<any, ApiResponse>(`/vehicles/${id}/delete`);
 
     // 条件化日志记录：仅在业务成功时记录
     if (result.success) {

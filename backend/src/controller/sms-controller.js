@@ -45,7 +45,7 @@ async function sendVerifyCodeController(req, res) {
     if (!phoneNumber) {
       logger.warn({
         module: 'sms-controller',
-        operate: 'send-verify-code',
+        operate: 'sms-send',
         params: maskSensitive({ phoneNumber }),
         result: '缺少必要参数 phoneNumber',
         requestId,
@@ -78,7 +78,7 @@ async function sendVerifyCodeController(req, res) {
     if (!data?.success) {
       logger.warn({
         module: 'sms-controller',
-        operate: 'send-verify-code',
+        operate: 'sms-send',
         params: maskSensitive({ phoneNumber }),
         result: data?.aliyunMessage || '短信发送失败',
         requestId,
@@ -110,7 +110,7 @@ async function sendVerifyCodeController(req, res) {
 
     logger.info({
       module: 'sms-controller',
-      operate: 'send-verify-code',
+      operate: 'sms-send',
       params: maskSensitive({ phoneNumber }),
       result: 'SMS sent successfully',
       requestId,
@@ -124,7 +124,7 @@ async function sendVerifyCodeController(req, res) {
         : err?.message || '短信发送失败';
     logger.error({
       module: 'sms-controller',
-      operate: 'send-verify-code',
+      operate: 'sms-send',
       params: maskSensitive({ phoneNumber: req.body?.phoneNumber }),
       error: message,
       errorType: err?.name || 'SmsServiceError',
@@ -150,7 +150,7 @@ async function checkVerifyCodeController(req, res) {
     if (!phoneValidation.valid) {
       logger.warn({
         module: 'sms-controller',
-        operate: 'check-verify-code',
+        operate: 'sms-verify',
         params: maskSensitive({ phone: phoneNumber }),
         result: phoneValidation.error,
         requestId,
@@ -161,7 +161,7 @@ async function checkVerifyCodeController(req, res) {
     if (!verifyCode || typeof verifyCode !== 'string' || verifyCode.length !== 6) {
       logger.warn({
         module: 'sms-controller',
-        operate: 'check-verify-code',
+        operate: 'sms-verify',
         params: maskSensitive({ phone: phoneNumber }),
         result: '验证码必须为 6 位',
         requestId,
@@ -180,7 +180,7 @@ async function checkVerifyCodeController(req, res) {
     if (!data?.success) {
       logger.warn({
         module: 'sms-controller',
-        operate: 'check-verify-code',
+        operate: 'sms-verify',
         params: maskSensitive({ phoneNumber }),
         result: data?.aliyunMessage || '短信校验失败',
         requestId,
@@ -199,7 +199,7 @@ async function checkVerifyCodeController(req, res) {
     if (data.verifyResult && data.verifyResult !== 'PASS') {
       logger.warn({
         module: 'sms-controller',
-        operate: 'check-verify-code',
+        operate: 'sms-verify',
         params: maskSensitive({ phoneNumber }),
         result: '验证码错误',
         requestId,
@@ -211,7 +211,7 @@ async function checkVerifyCodeController(req, res) {
 
     logger.info({
       module: 'sms-controller',
-      operate: 'check-verify-code',
+      operate: 'sms-verify',
       params: maskSensitive({ phoneNumber }),
       result: 'Code verified and tempToken issued',
       requestId,
@@ -225,7 +225,7 @@ async function checkVerifyCodeController(req, res) {
         : err?.message || '短信校验失败';
     logger.error({
       module: 'sms-controller',
-      operate: 'check-verify-code',
+      operate: 'sms-verify',
       params: maskSensitive({ phoneNumber: req.body?.phoneNumber }),
       error: message,
       errorType: err?.name || 'SmsServiceError',

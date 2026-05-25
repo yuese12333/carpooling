@@ -61,7 +61,10 @@ export const updateLocationApi = async (
 
     // --- 线性请求逻辑 ---
     // 底层 request.ts 已处理异常并返回标准的 ApiResponse 对象
-    const result = await request.post<any, ApiResponse<undefined>>('/user/locations/update', params);
+    const result = await request.post<any, ApiResponse<undefined>>(`/locations/${params.id}/update`, {
+        label: params.label,
+        address: params.address,
+    });
 
     // 仅在业务成功时记录日志
     if (result.success) {
@@ -107,7 +110,7 @@ export const getLocationDetailApi = async (
     }
 
     // --- 线性请求逻辑 ---
-    const result = await request.get<any, ApiResponse<LocationDetail>>(`/user/locations/${id}`);
+    const result = await request.get<any, ApiResponse<LocationDetail>>(`/locations/${id}`);
 
     // 仅在业务成功时记录日志
     if (result.success) {

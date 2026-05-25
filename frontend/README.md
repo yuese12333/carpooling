@@ -129,39 +129,34 @@ npx expo start
 
 ```
 frontend/
-├── components/             # 全局公共组件（与 src/ 同级，避免被 Expo Router 扫描为路由）
-│   ├── button.tsx
-│   ├── input.tsx
-│   ├── card.tsx
-│   └── ...
-├── config/                 # 环境配置（与 src/ 同级）
-│   └── api.ts              # 保留兼容，实际 baseURL 由 src/utils/request.ts 读取环境变量
-├── src/                    # Expo Router 路由根目录
-│   ├── pages/              # 业务页面（按模块拆分）
-│   │   ├── index.tsx       # 应用入口，重定向至登录页并初始化链路追踪
-│   │   ├── _layout.tsx     # 根布局（AuthProvider、Stack 路由、PortalHost）
-│   │   ├── auth/           # 认证模块（login / register / forget-password）
-│   │   ├── home/           # 首页
-│   │   ├── find-ride/      # 找拼车
-│   │   ├── offer-ride/     # 发布行程
-│   │   └── trips/          # 我的行程
-│   ├── hooks/              # 自定义 Hook（各页面业务逻辑）
-│   ├── api/                # API 接口封装（各模块对应一个文件）
-│   ├── store/              # 全局状态（Zustand env-store、AuthContext）
-│   ├── router/             # 路由常量（paths.ts）
-│   └── utils/              # 工具类（logger、request、validator 等）
-├── assets/                 # 静态资源（图标、图片）
-├── .env                    # 本地环境变量（不提交 Git）
-├── .env.example            # 环境变量模板
-├── app.json                # Expo 配置
-├── package.json
-└── tsconfig.json
+├── components/                 # 全局公共组件（与 src/ 同级，避免被 Expo Router 扫描为路由）
+├── config/                     # 环境配置（与 src/ 同级）；api.ts 为遗留，实际请求见 src/utils/request.ts
+├── src/
+│   ├── pages/                  # Expo Router 页面
+│   │   ├── index.tsx           # 入口，重定向与 requestId 初始化
+│   │   ├── routes/             # 对外路由（home / find-ride / offer-ride / trips / admin / auth 等）
+│   │   ├── auth/               # 登录、注册、忘记密码
+│   │   ├── home/               # 首页
+│   │   ├── find-ride/          # 找拼车
+│   │   ├── offer-ride/         # 发布行程
+│   │   ├── trips/              # 我的行程
+│   │   ├── profile/            # 个人中心及子页（车辆、支付、通知、帮助等）
+│   │   └── ride-navigation/    # 导航（高德原生 SDK，无 REST API）
+│   ├── hooks/                  # 页面业务 Hook
+│   ├── api/                    # 接口封装（路径规范见 docs/接口路径规范汇总.md）
+│   ├── store/                  # env-store、AuthContext、mock 数据
+│   ├── router/paths.ts         # 路由常量
+│   └── utils/                  # logger、request、validator 等
+├── android/                    # 原生工程（含高德 SDK）
+├── assets/
+├── .env / .env.example
+└── package.json
 ```
 
 ## 开发说明
 
-（待补充）
-
-## 许可证
-
-（待补充）
+- **Mock 模式**：`useEnvStore.isMockMode` 默认为 `true`；联调真实后端时在登录页关闭 Mock 并配置 `EXPO_PUBLIC_API_URL`。
+- **请求规范**：统一使用 `src/utils/request.ts`，禁止在 API 文件中自建 axios 或硬编码 URL。
+- **requestId**：由 Page 层生成并经 props 注入 Hook；详见 `docs/日志规范与埋点说明.md`。
+- **接口路径**：以 [`docs/接口路径规范汇总.md`](../docs/接口路径规范汇总.md) 为准。
+- **地图**：业务与原生接入见 [`docs/高德地图Android_SDK接入与开发说明.md`](../docs/高德地图Android_SDK接入与开发说明.md)。

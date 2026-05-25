@@ -98,7 +98,7 @@ export const getVehicleVerificationDetail = async (
     // 2. 真实请求分支 (线性 await，彻底剔除 try-catch)
     // 此时底层 request 会 Resolve 标准对象，若遇到 HTTP 错误或逻辑错误，底层已处理日志
     const result = await request.get<any, ApiResponse<VehicleVerificationDetail>>(
-        '/v1/vehicle/verification/detail',
+        '/vehicles/verification',
         { params: { vehicleId } },
     );
 

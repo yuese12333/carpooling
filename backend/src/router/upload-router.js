@@ -97,8 +97,6 @@ function handleSingleFileUpload(req, res) {
   });
 }
 
-router.post('/file', handleSingleFileUpload);
-// 兼容旧路径，后续前端切换完成后可移除
-router.post('/upload', handleSingleFileUpload);
+router.post('/', handleSingleFileUpload);
 
 module.exports = router;
