@@ -75,7 +75,7 @@ export default function AdminUsersPage() {
       <View style={styles.header}>
         <Text style={styles.title}>用户管理</Text>
         <Text style={styles.subtitle}>
-          总数：{state.total}（{state.loading ? '加载中' : '已就绪'}）
+          总数：{state.total}（{state.loading ? '加载中' : state.updating ? '更新中' : '已就绪'}）
         </Text>
       </View>
 
@@ -112,7 +112,7 @@ export default function AdminUsersPage() {
         </TouchableOpacity>
       </View>
 
-      {state.loading ? (
+      {state.loading && state.list.length === 0 ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator color={COLORS.primary} />
         </View>
@@ -124,6 +124,7 @@ export default function AdminUsersPage() {
         <FlatList
           data={state.list}
           keyExtractor={(item) => item.userId}
+          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
           renderItem={({ item }) => {
             const nextStatus = item.status === 'active' ? 'disabled' : 'active';
             const nextRole = item.role === 'admin' ? 'user' : 'admin';

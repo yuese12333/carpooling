@@ -3,7 +3,7 @@
  * @description 邀请好友页面的业务逻辑 Hook，处理数据初始化、分享追踪及剪贴板交互。
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Share, Alert } from "react-native";
 import * as Clipboard from 'expo-clipboard';
 import { getInviteInfo, trackShareAction, InviteStats } from "@/api/invite-friends-api";
@@ -24,9 +24,17 @@ export const useInviteFriendsForm = (requestId: string) => {
     /**
      * 从 API 获取邀请相关数据
      */
-    const fetchInviteData = useCallback(async () => {
+    const hasContentRef = useRef(false);
+    useEffect(() => {
+        hasContentRef.current = Boolean(inviteCode);
+    }, [inviteCode]);
+
+    const fetchInviteData = useCallback(async (options?: { silent?: boolean }) => {
+        const silent = options?.silent ?? false;
         try {
-            setLoading(true);
+            if (!silent) {
+                setLoading(true);
+            }
             // 获取完整的 ApiResponse 对象
             const response = await getInviteInfo(requestId);
 

@@ -94,11 +94,11 @@ cp .env.example .env
 | ✅ 已联调 | `POST /sms/send` | 同左 | `auth.ts` | 见 [短信联调文档](../docs/短信验证接口联调文档.md) |
 | ✅ 已联调 | `POST /sms/verify` | 同左 | `auth.ts` | 注册验码 + `tempToken` |
 | ✅ 已联调 | `POST /auth/register` | 同左 | `auth.ts` | 注册提交 |
-| ⏳ 待联调 | `GET /auth/login/config` | 同左 | `auth.ts` | 路径已对齐 |
-| ⏳ 待联调 | `POST /auth/login/password` | 同左 | `auth.ts` | 路径已对齐 |
-| ⏳ 待联调 | `GET /admin/users` | 同左 | `admin-api.ts` | 需管理员 JWT |
-| ⏳ 待联调 | `POST /admin/users/status` | 同左 | `admin-api.ts` | 需管理员 JWT |
-| ⏳ 待联调 | `POST /admin/users/role` | 同左 | `admin-api.ts` | 需管理员 JWT |
+| ✅ 已联调 | `GET /auth/login/config` | 同左 | `auth.ts` | 见 [登录联调文档](../docs/登录接口联调文档.md) |
+| ✅ 已联调 | `POST /auth/login/password` | 同左 | `auth.ts` | 见 [登录联调文档](../docs/登录接口联调文档.md) |
+| ✅ 已联调 | `GET /admin/users` | 同左 | `admin-api.ts` | 需管理员 JWT |
+| ✅ 已联调 | `POST /admin/users/status` | 同左 | `admin-api.ts` | 需管理员 JWT |
+| ✅ 已联调 | `POST /admin/users/role` | 同左 | `admin-api.ts` | 需管理员 JWT |
 | ⏳ 待联调 | `POST /auth/check-phone` | 同左 | `password-api.ts` | 路径已对齐 |
 | ⏳ 待联调 | `POST /auth/password/sms` | 同左 | `password-api.ts` | 路径已对齐 |
 | ❌ 后端缺失 | `POST /auth/password/verify-code` | — | `password-api.ts` | 忘记密码验码 |

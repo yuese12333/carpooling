@@ -3,7 +3,7 @@
  * @description 行程列表业务逻辑 Hook。负责行程数据的获取、状态过滤、角色筛选及日志链路追踪。
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Alert } from "react-native";
 import { useRouter } from 'expo-router';
 import logger from '@/utils/logger';
@@ -114,9 +114,17 @@ export const useTripsForm = ({ requestId }: UseTripsFormProps) => {
      * @description 获取行程列表数据
      * 显式使用注入的 requestId 进行链路透传
      */
-    const fetchTrips = useCallback(async () => {
+    const listLengthRef = useRef(0);
+    useEffect(() => {
+        listLengthRef.current = rawTrips.length;
+    }, [rawTrips.length]);
+
+    const fetchTrips = useCallback(async (options?: { silent?: boolean }) => {
         const isMockMode = useEnvStore.getState().isMockMode;
-        setLoading(true);
+        const silent = options?.silent ?? false;
+        if (!silent) {
+            setLoading(true);
+        }
 
         let dataList: RawTripItem[] = [];
 
@@ -168,7 +176,7 @@ export const useTripsForm = ({ requestId }: UseTripsFormProps) => {
     }, [activeRole, requestId]);
 
     useEffect(() => {
-        fetchTrips();
+        fetchTrips({ silent: listLengthRef.current > 0 });
     }, [fetchTrips]);
 
     /**
@@ -225,6 +233,7 @@ export const useTripsForm = ({ requestId }: UseTripsFormProps) => {
             activeTab,
             activeRole,
             loading,
+            isListInitialLoading: loading && rawTrips.length === 0,
             filteredTrips,
             isMockMode: useEnvStore.getState().isMockMode
         },

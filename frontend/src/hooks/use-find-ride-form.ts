@@ -3,7 +3,7 @@
  * @description 找拼车页面的业务逻辑 Hook。
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { fetchRides, RideListResponse, RideSearchQuery } from "@/api/find-ride-api";
@@ -37,11 +37,19 @@ export const useFindRideForm = (requestId: string) => {
      * 内部逻辑：加载数据
      * 修复点：移除了 getState() 的隐式调用，改为消费参数中的 requestId
      */
-    const loadData = useCallback(async () => {
+    const listLengthRef = useRef(0);
+    useEffect(() => {
+        listLengthRef.current = rides.length;
+    }, [rides.length]);
+
+    const loadData = useCallback(async (options?: { silent?: boolean }) => {
         const moduleName = 'hook.ride';
         const operation = 'loadData';
 
-        setLoading(true);
+        const silent = options?.silent ?? false;
+        if (!silent) {
+            setLoading(true);
+        }
         const searchParams: RideSearchQuery = {
             from: searchFrom,
             to: searchTo,
@@ -96,7 +104,7 @@ export const useFindRideForm = (requestId: string) => {
 
     // --- 副作用 ---
     useEffect(() => {
-        loadData();
+        loadData({ silent: listLengthRef.current > 0 });
     }, [loadData]);
 
     // --- 计算属性 ---
@@ -126,7 +134,7 @@ export const useFindRideForm = (requestId: string) => {
         });
 
         router.setParams({ from: searchFrom, to: searchTo });
-        await loadData();
+        await loadData({ silent: listLengthRef.current > 0 });
     };
 
     /**

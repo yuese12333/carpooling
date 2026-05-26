@@ -9,6 +9,7 @@ import axios, { type AxiosInstance, type AxiosError } from 'axios';
 import { useEnvStore } from '../store/env-store';
 import logger from './logger';
 import type { ApiResponse } from '@/api/api.d';
+import { getApiErrorMessage, isLoginPasswordUrl } from '@/utils/api-response';
 
 /**
  * 封装后的 Axios 实例
@@ -88,13 +89,40 @@ request.interceptors.response.use(
     },
     (error: AxiosError) => {
         const { currentRequestId } = useEnvStore.getState();
-        logger.error({
+        const url = error.config?.url || '';
+        const status = error.response?.status;
+        const body = error.response?.data as ApiResponse | undefined;
+        const detail = body && typeof body === 'object'
+            ? getApiErrorMessage(body, error.message)
+            : error.message;
+        const errorType = error.response ? `HTTP_${status}` : 'NETWORK_TIMEOUT';
+
+        const logPayload = {
             module: 'http-client',
             operate: 'api_response',
             requestId: currentRequestId || 'unknown',
-            error: error.message,
-            errorType: error.response ? `HTTP_${error.response.status}` : 'NETWORK_TIMEOUT'
-        });
+            params: { url, status: status ?? 'network' },
+            errorType,
+        };
+
+        // 4xx 业务拒绝 / 鉴权：预期内用 warn；5xx 与网络异常用 error
+        const isClientBusinessReject = status === 400;
+        const isLoginCredentialFailure =
+            isLoginPasswordUrl(url) && (status === 401 || status === 400);
+        const shouldWarn =
+            isClientBusinessReject || isLoginCredentialFailure || status === 401;
+
+        if (shouldWarn) {
+            logger.warn({
+                ...logPayload,
+                result: detail || (status === 401 ? '未授权或 token 失效' : '业务拒绝'),
+            });
+        } else {
+            logger.error({
+                ...logPayload,
+                error: detail,
+            });
+        }
 
         return Promise.reject(error);
     }

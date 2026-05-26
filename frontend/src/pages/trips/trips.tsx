@@ -39,7 +39,7 @@ export default function TripsPage() {
    * [规范修复] 参数化消费：显式传递 requestId 至业务 Hook
    */
   const { state, actions } = useTripsForm({ requestId });
-  const { activeTab, activeRole, loading, filteredTrips, isMockMode } = state;
+  const { activeTab, activeRole, isListInitialLoading, filteredTrips, isMockMode } = state;
 
   /**
    * [规范修复] 页面进入日志 - 严格遵循统一日志结构
@@ -106,7 +106,7 @@ export default function TripsPage() {
         />
 
         <ScrollView contentContainerStyle={styles.scrollContentContainer} showsVerticalScrollIndicator={false}>
-          {loading ? (
+          {isListInitialLoading ? (
             <View className="py-20">
               <ActivityIndicator color={COLORS.primary} />
             </View>

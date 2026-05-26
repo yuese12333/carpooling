@@ -3,7 +3,7 @@
  * @description 支付方式页面的业务逻辑 Hook，负责状态管理、乐观更新及结构化链路追踪。
  */
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { Alert } from "react-native";
 import { useRouter } from 'expo-router';
 import { useEnvStore } from '@/store/env-store';
@@ -29,8 +29,16 @@ export const usePaymentMethods = (requestId: string) => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // 3. 初始化数据加载
-    const initPageData = useCallback(async () => {
-        setIsLoading(true);
+    const hasMethodsRef = useRef(false);
+    useEffect(() => {
+        hasMethodsRef.current = methods.length > 0;
+    }, [methods.length]);
+
+    const initPageData = useCallback(async (options?: { silent?: boolean }) => {
+        const silent = options?.silent ?? false;
+        if (!silent) {
+            setIsLoading(true);
+        }
         const moduleName = 'PaymentMethodsHook';
         const operate = 'initPageData';
 
@@ -74,7 +82,7 @@ export const usePaymentMethods = (requestId: string) => {
 
     // 监听环境切换或组件挂载
     useEffect(() => {
-        initPageData();
+        initPageData({ silent: hasMethodsRef.current });
     }, [initPageData, isMockMode]);
 
     // 4. 业务处理函数

@@ -26,7 +26,9 @@ import styles from './login.style';
 import { COLORS } from '@/pages/style';
 
 // 工具类
-import logger from '../../../utils/logger';
+import logger, { generateRequestId } from '../../../utils/logger';
+import { isApiSuccess } from '@/utils/api-response';
+import { syncRequestId } from '@/utils/sync-request-id';
 
 // 状态管理与 Hook
 import { useLoginForm } from '../../../hooks/use-login-form';
@@ -64,9 +66,12 @@ export default function LoginPage(): JSX.Element {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  //1. 从全局环境状态仓库获取当前的 Mock 模式状态、切换函数以及当前 RequestId
-  const { isMockMode, toggleMockMode, currentRequestId } = useEnvStore();
-  const requestId = currentRequestId;
+  const { isMockMode, toggleMockMode } = useEnvStore();
+  const requestId = useMemo(() => generateRequestId(), []);
+
+  useEffect(() => {
+    syncRequestId(requestId);
+  }, [requestId]);
 
   // 登录表单核心业务逻辑封装
   const { state, actions } = useLoginForm(isMockMode, requestId);
@@ -115,7 +120,7 @@ export default function LoginPage(): JSX.Element {
       const res = await fetchLoginConfig(isMockMode);
 
       // 2. 检查业务成功状态
-      if (res.success && res.data) {
+      if (isApiSuccess(res) && res.data) {
         // 适配点：提取真正的配置数据存储到状态中
         setPageConfig(res.data);
 

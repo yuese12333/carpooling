@@ -230,7 +230,7 @@ export default function PaymentHistoryPage() {
 
                 {/* 列表渲染区域 */}
                 <View style={styles.listContainer}>
-                    {loading ? (
+                    {loading && displayData.length === 0 ? (
                         <View style={styles.emptyState}>
                             <ActivityIndicator color={COLORS.primary} />
                             <Text style={{ marginTop: 8, color: COLORS.textMuted }}>正在获取流水...</Text>
