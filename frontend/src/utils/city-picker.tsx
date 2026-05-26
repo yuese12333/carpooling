@@ -14,7 +14,7 @@
  * @note 须放在 `frontend/utils/`（与 `src` 同级），勿放入 `src/`。Expo Router 在 `app.json` 中配置 `root: "src"`，
  *   `src` 下任意 `.tsx` 会被当作路由页面，导致缺少 default export 的告警。
  *
- * @see docs/高德地图Android_SDK接入与开发说明.md — §9.4 搜索
+ * @see docs/frontend/高德地图Android_SDK接入与开发说明.md — §9.4 搜索
  */
 
 import React, { useCallback, useMemo, useState } from 'react';
