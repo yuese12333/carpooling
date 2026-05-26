@@ -222,7 +222,7 @@ export const sendSmsCode = async (
         return { success: true, message: 'mock', data: { success: true } };
     }
 
-    // 与 Postman / docs/短信验证接口联调文档.md 发码请求体一致，原样传给后端转发阿里云
+    // 与 Postman / docs/api/短信验证接口联调文档.md 发码请求体一致，原样传给后端转发阿里云
     const result = await request.post<any, ApiResponse<{ success: boolean }>>(
         '/sms/send',
         {

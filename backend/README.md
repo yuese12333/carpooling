@@ -43,8 +43,8 @@ cp .env.example .env
 2. 启动：`npm start` 或 `npm run dev`（默认监听 `0.0.0.0:3000`；可通过 `PORT` 覆盖，本项目公网示例常用 `3005`）。  
 3. 探活：`curl http://localhost:3000/health` — 成功时返回 `status: ok` 与 `db_connected: true`；数据库不可用时 HTTP 500，正文为固定文案「数据库暂不可用」（不返回数据库内部错误信息）。  
 4. 初始化 Prisma Client：`npm run prisma:generate`  
-5. 若本地是首次接入已存在库，请按迁移文档执行 baseline（见 [`后端Prisma开发规范`](../docs/后端Prisma开发规范.md)）。
-6. 短信联调说明见 [`docs/短信验证接口联调文档.md`](../docs/短信验证接口联调文档.md)。
+5. 若本地是首次接入已存在库，请按迁移文档执行 baseline（见 [`后端Prisma开发规范`](../docs/backend/Prisma开发规范.md)）。
+6. 短信联调说明见 [`docs/api/短信验证接口联调文档.md`](../docs/api/短信验证接口联调文档.md)。
 
 ---
 
@@ -82,7 +82,7 @@ cp .env.example .env
 | 管理 | POST | `/api/admin/users/status` | 管理员 JWT | 更新用户状态（active / disabled） |
 | 管理 | POST | `/api/admin/users/role` | 管理员 JWT | 更新用户角色（user / admin） |
 
-> 路径规范详见 [`docs/接口汇总清单.md`](../docs/接口汇总清单.md)。
+> 路径规范详见 [`docs/接口汇总清单.md`](../docs/api/接口汇总清单.md)。
 
 ### 前后端路径联调状态
 
@@ -90,12 +90,12 @@ cp .env.example .env
 
 | 状态 | 前端路径 | 后端路径 | 前端模块 | 备注 |
 |------|----------|----------|----------|------|
-| ✅ 已联调 | `GET /auth/register/check-nickname` | 同左 | `auth.ts` | 见 [用户注册联调文档](../docs/用户注册接口联调文档.md) |
-| ✅ 已联调 | `POST /sms/send` | 同左 | `auth.ts` | 见 [短信联调文档](../docs/短信验证接口联调文档.md) |
+| ✅ 已联调 | `GET /auth/register/check-nickname` | 同左 | `auth.ts` | 见 [用户注册联调文档](../docs/api/用户注册接口联调文档.md) |
+| ✅ 已联调 | `POST /sms/send` | 同左 | `auth.ts` | 见 [短信联调文档](../docs/api/短信验证接口联调文档.md) |
 | ✅ 已联调 | `POST /sms/verify` | 同左 | `auth.ts` | 注册验码 + `tempToken` |
 | ✅ 已联调 | `POST /auth/register` | 同左 | `auth.ts` | 注册提交 |
-| ✅ 已联调 | `GET /auth/login/config` | 同左 | `auth.ts` | 见 [登录联调文档](../docs/登录接口联调文档.md) |
-| ✅ 已联调 | `POST /auth/login/password` | 同左 | `auth.ts` | 见 [登录联调文档](../docs/登录接口联调文档.md) |
+| ✅ 已联调 | `GET /auth/login/config` | 同左 | `auth.ts` | 见 [登录联调文档](../docs/api/登录接口联调文档.md) |
+| ✅ 已联调 | `POST /auth/login/password` | 同左 | `auth.ts` | 见 [登录联调文档](../docs/api/登录接口联调文档.md) |
 | ✅ 已联调 | `GET /admin/users` | 同左 | `admin-api.ts` | 需管理员 JWT |
 | ✅ 已联调 | `POST /admin/users/status` | 同左 | `admin-api.ts` | 需管理员 JWT |
 | ✅ 已联调 | `POST /admin/users/role` | 同左 | `admin-api.ts` | 需管理员 JWT |
@@ -103,7 +103,7 @@ cp .env.example .env
 | ⏳ 待联调 | `POST /auth/password/sms` | 同左 | `password-api.ts` | 路径已对齐 |
 | ❌ 后端缺失 | `POST /auth/password/verify-code` | — | `password-api.ts` | 忘记密码验码 |
 | ❌ 后端缺失 | `POST /auth/password/reset` | — | `password-api.ts` | 重置密码提交 |
-| ⏳ 待联调 | `POST /upload` | 同左 | `edit-vehicle-api.ts` | 见 [文件上传联调文档](../docs/文件上传接口联调文档.md) |
+| ⏳ 待联调 | `POST /upload` | 同左 | `edit-vehicle-api.ts` | 见 [文件上传联调文档](../docs/api/文件上传接口联调文档.md) |
 
 其余前端业务接口（首页、找车、行程、支付、通知、地点、车辆等）**后端尚未实现**，当前仅 Mock。
 
@@ -131,7 +131,7 @@ sequenceDiagram
 - 重置密码发码：`POST /api/auth/password/sms`（等价于 `POST /api/auth/sms/send` 且 `type=reset_pwd`）。
 - 注册提交只认 `tempToken`；昵称最长 30 字符；密码 8～20 位且须同时包含字母与数字。
 
-完整请求体与错误码见 [`docs/用户注册接口联调文档.md`](../docs/用户注册接口联调文档.md)。
+完整请求体与错误码见 [`docs/api/用户注册接口联调文档.md`](../docs/api/用户注册接口联调文档.md)。
 
 ### 登录
 
@@ -164,7 +164,7 @@ sequenceDiagram
 - 字段：`file`（单文件，JPG / PNG / WEBP，最大 5MB）
 - 成功 `data.url` 为可访问路径（配合 `GET /uploads/{filename}`）
 
-详见 [`docs/文件上传接口联调文档.md`](../docs/文件上传接口联调文档.md)。
+详见 [`docs/api/文件上传接口联调文档.md`](../docs/api/文件上传接口联调文档.md)。
 
 ### 管理后台
 
@@ -176,7 +176,7 @@ sequenceDiagram
 | POST | `/api/admin/users/status` | Body：`targetUserId`、`status`（`active` / `disabled`） |
 | POST | `/api/admin/users/role` | Body：`targetUserId`、`role`（`user` / `admin`） |
 
-管理员账号创建与 SQL 提升见 [`docs/管理员系统设计文档.md`](../docs/管理员系统设计文档.md)。
+管理员账号创建与 SQL 提升见 [`docs/system/管理员系统设计文档.md`](../docs/system/管理员系统设计文档.md)。
 
 ### 用户 / 运维
 
@@ -216,10 +216,10 @@ sequenceDiagram
 
 | 文档 | 覆盖接口 |
 |------|----------|
-| [`docs/短信验证接口联调文档.md`](../docs/短信验证接口联调文档.md) | `/api/sms/*` |
-| [`docs/用户注册接口联调文档.md`](../docs/用户注册接口联调文档.md) | 注册全流程 |
-| [`docs/文件上传接口联调文档.md`](../docs/文件上传接口联调文档.md) | `POST /api/upload` |
-| [`docs/管理员系统设计文档.md`](../docs/管理员系统设计文档.md) | `/api/admin/*` |
+| [`docs/api/短信验证接口联调文档.md`](../docs/api/短信验证接口联调文档.md) | `/api/sms/*` |
+| [`docs/api/用户注册接口联调文档.md`](../docs/api/用户注册接口联调文档.md) | 注册全流程 |
+| [`docs/api/文件上传接口联调文档.md`](../docs/api/文件上传接口联调文档.md) | `POST /api/upload` |
+| [`docs/system/管理员系统设计文档.md`](../docs/system/管理员系统设计文档.md) | `/api/admin/*` |
 
 ---
 
@@ -247,7 +247,7 @@ npm run prisma:migrate:deploy
 npm run prisma:migrate:status
 ```
 
-首次接入已存在的 `auth_users` 表，请执行 baseline 流程（见 [`后端Prisma开发规范`](../docs/后端Prisma开发规范.md)）。
+首次接入已存在的 `auth_users` 表，请执行 baseline 流程（见 [`后端Prisma开发规范`](../docs/backend/Prisma开发规范.md)）。
 
 ### `auth_users` 表字段（注册/登录统一）
 
@@ -311,7 +311,7 @@ npm run prisma:migrate:status
 
 ## 打包与部署
 
-测试环境部署在**腾讯云**时，推荐流程：本机 **`npm run build`** 生成 **`dist/`** → 上传至服务器目录 → 服务器 **`npm install --production`** → 配置环境变量 → **`npm start`** 或 PM2。详细步骤见 [`docs/后端打包与上传服务器流程.md`](../docs/后端打包与上传服务器流程.md)。
+测试环境部署在**腾讯云**时，推荐流程：本机 **`npm run build`** 生成 **`dist/`** → 上传至服务器目录 → 服务器 **`npm install --production`** → 配置环境变量 → **`npm start`** 或 PM2。详细步骤见 [`docs/后端打包与上传服务器流程.md`](../docs/backend/打包与上传服务器流程.md)。
 
 **dist 内容**：含 `src/`、`package.json`、`package-lock.json`；不含 `node_modules`、`.env`，需在目标机单独安装依赖并配置变量。
 
@@ -356,4 +356,4 @@ backend/
 - **日志**：统一 `utils/logger.js`，敏感字段脱敏；异常需打日志并返回标准错误体。  
 - **提交信息**：`<type>(<scope>): <subject>`，见 `CONTRIBUTING.md` §4.2。
 
-更多命名、接口方法、日志级别、Git 与 PR 规则以 **[`CONTRIBUTING.md`](../CONTRIBUTING.md)** 为准；API 路径规范见 **[`docs/接口汇总清单.md`](../docs/接口汇总清单.md)**。
+更多命名、接口方法、日志级别、Git 与 PR 规则以 **[`CONTRIBUTING.md`](../CONTRIBUTING.md)** 为准；API 路径规范见 **[`docs/接口汇总清单.md`](../docs/api/接口汇总清单.md)**。
