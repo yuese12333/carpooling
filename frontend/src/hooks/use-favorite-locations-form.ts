@@ -3,7 +3,7 @@
  * @description 常用地点管理业务逻辑 Hook，实现 CRUD 逻辑封装与标准化链路追踪
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Alert } from "react-native";
 import { useRouter, Href } from 'expo-router';
 import { getLocationsApi, deleteLocationApi, LocationItem } from "@/api/favorite-locations-api";
@@ -54,9 +54,17 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
      * 获取地点列表
      * @param query - 搜索关键字（可选）
      */
-    const fetchLocations = useCallback(async (query?: string) => {
+    const listLengthRef = useRef(0);
+    useEffect(() => {
+        listLengthRef.current = locations.length;
+    }, [locations.length]);
+
+    const fetchLocations = useCallback(async (query?: string, options?: { silent?: boolean }) => {
         const operateName = 'fetchLocations';
-        setLoading(true);
+        const silent = options?.silent ?? false;
+        if (!silent) {
+            setLoading(true);
+        }
 
         try {
             const response = await getLocationsApi(requestId, query);
@@ -93,7 +101,7 @@ export const useFavoriteLocationsForm = (requestId: string): UseFavoriteLocation
 
     // 监听搜索词变化
     useEffect(() => {
-        fetchLocations(searchQuery);
+        fetchLocations(searchQuery, { silent: listLengthRef.current > 0 });
     }, [searchQuery, fetchLocations]);
 
     /**

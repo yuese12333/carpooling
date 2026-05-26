@@ -37,7 +37,7 @@ export const LocationList = ({ data, loading, onEdit, onDelete }: LocationListPr
      */
     const renderEmptyComponent = () => (
         <View style={styles.emptyState}>
-            {loading ? (
+            {loading && data.length === 0 ? (
                 <Text style={styles.loadingText}>加载中...</Text>
             ) : (
                 <>

@@ -60,7 +60,7 @@ export default function InviteFriendsPage() {
         });
     }, [requestId]);
 
-    if (loading) {
+    if (loading && !inviteCode) {
         return (
             <View style={[commonStyles.safeAreaContainer, LAYOUT_MIXINS.center]}>
                 <ActivityIndicator size="large" color={COLORS.primary} />

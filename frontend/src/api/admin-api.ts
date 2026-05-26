@@ -2,6 +2,11 @@ import { useEnvStore } from '@/store/env-store';
 import request from '@/utils/request';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
+import {
+    getHttpErrorMessage,
+    isBusinessRejectHttpFailure,
+    toBusinessRejectError,
+} from '@/utils/api-response';
 
 export type AdminUserRole = 'user' | 'admin';
 export type AdminUserStatus = 'active' | 'disabled';
@@ -57,6 +62,39 @@ const MOCK_USERS: AdminUser[] = [
     createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
 ];
+
+const logAdminUpdateFailure = (
+    moduleName: string,
+    operation: string,
+    params: Record<string, unknown>,
+    error: unknown,
+): never => {
+    const requestId = useEnvStore.getState().currentRequestId;
+
+    if (isBusinessRejectHttpFailure(error)) {
+        const message = getHttpErrorMessage(error, '操作失败');
+        logger.warn({
+            module: moduleName,
+            operate: operation,
+            params,
+            requestId,
+            result: message,
+            errorType: 'ADMIN_BUSINESS_REJECT',
+        });
+        throw toBusinessRejectError(error, message);
+    }
+
+    logger.error({
+        module: moduleName,
+        operate: operation,
+        params,
+        result: undefined,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: 'API_UPDATE_ERROR',
+        requestId,
+    });
+    throw error;
+};
 
 export async function fetchAdminUsersList(query: AdminUserListQuery): Promise<ApiResponse<AdminUserListResponse>> {
   const moduleName = 'api.admin';
@@ -127,17 +165,8 @@ export async function updateAdminUserStatus(params: { targetUserId: string; stat
 
     const res = await request.post<ApiResponse<{ targetUserId: string; status: AdminUserStatus }>>('/admin/users/status', params);
     return res;
-  } catch (error: any) {
-    logger.error({
-      module: moduleName,
-      operate: operation,
-      params,
-      result: undefined,
-      error: error?.message || String(error),
-      errorType: 'API_UPDATE_ERROR',
-      requestId: useEnvStore.getState().currentRequestId,
-    });
-    throw error;
+  } catch (error: unknown) {
+    logAdminUpdateFailure(moduleName, operation, params, error);
   }
 }
 
@@ -157,17 +186,8 @@ export async function updateAdminUserRole(params: { targetUserId: string; role: 
 
     const res = await request.post<ApiResponse<{ targetUserId: string; role: AdminUserRole }>>('/admin/users/role', params);
     return res;
-  } catch (error: any) {
-    logger.error({
-      module: moduleName,
-      operate: operation,
-      params,
-      result: undefined,
-      error: error?.message || String(error),
-      errorType: 'API_UPDATE_ERROR',
-      requestId: useEnvStore.getState().currentRequestId,
-    });
-    throw error;
+  } catch (error: unknown) {
+    logAdminUpdateFailure(moduleName, operation, params, error);
   }
 }
 

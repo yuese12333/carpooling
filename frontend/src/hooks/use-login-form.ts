@@ -11,7 +11,8 @@ import { validatePhoneNumber, validatePassword } from '../utils/validator';
 import { useAuth } from '../store/auth-context';
 import { useEnvStore } from '../store/env-store';
 import logger, { maskSensitive } from '../utils/logger';
-import { ROUTES } from '@/router/paths'
+import { isAuthCredentialError } from '../utils/api-response';
+import { ROUTES } from '@/router/paths';
 
 /**
  * 登录表单业务逻辑封装钩子
@@ -82,14 +83,16 @@ export const useLoginForm = (isMockMode: boolean, requestId: string) => {
             // 更新 UI 错误展示
             setErrors(prev => ({ ...prev, submission: errorMessage }));
 
-            // 严格遵循规范：ERROR 级别结构化日志记录，补齐 errorType
-            logger.error({
-                module: 'use-login-form',
-                operate: 'submit_login',
-                requestId,
-                error: errorMessage,
-                errorType: 'AUTH_SUBMIT_FAILED'
-            });
+            // 凭据类失败已在 http-client / AuthContext 记录，此处不再重复打日志
+            if (!isAuthCredentialError(error)) {
+                logger.error({
+                    module: 'use-login-form',
+                    operate: 'submit_login',
+                    requestId,
+                    error: errorMessage,
+                    errorType: 'AUTH_SUBMIT_FAILED',
+                });
+            }
         } finally {
             setIsLoading(false);
         }

@@ -135,7 +135,7 @@ export default function NotificationPage() {
             </View>
 
             {/* 列表内容区 */}
-            {loading ? (
+            {loading && notifications.length === 0 ? (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator color={COLORS.primary} size="large" />
                 </View>
@@ -145,8 +145,8 @@ export default function NotificationPage() {
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
                     contentContainerStyle={styles.listContent}
-                    // 修复：防止键盘弹出时点击被吞
                     keyboardShouldPersistTaps="handled"
+                    maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
                     ItemSeparatorComponent={() => <View style={styles.separator} />}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>

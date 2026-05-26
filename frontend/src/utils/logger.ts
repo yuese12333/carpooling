@@ -128,10 +128,11 @@ function buildLogMessage(level: LogLevel, options: LoggerOptions): string {
 
   if (level === 'ERROR' || level === 'FATAL') {
     if (error) msg += ` [error: ${typeof error === 'object' ? JSON.stringify(error) : String(error)}]`;
-    if (errorType) msg += ` [errorType: ${errorType}]`;
-  } else {
-    if (result) msg += ` [result: ${result}]`;
+  } else if (result) {
+    msg += ` [result: ${result}]`;
   }
+
+  if (errorType) msg += ` [errorType: ${errorType}]`;
 
   return msg;
 }

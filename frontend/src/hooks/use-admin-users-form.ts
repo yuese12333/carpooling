@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import logger from '@/utils/logger';
 import { useEnvStore } from '@/store/env-store';
+import { isBusinessRejectError } from '@/utils/api-response';
 import {
   fetchAdminUsersList,
   updateAdminUserRole,
@@ -51,8 +52,20 @@ export const useAdminUsersForm = (requestId: string) => {
     };
   }, [state.page, state.pageSize, state.phone, state.userName, state.role, state.status]);
 
-  const fetchUsers = async () => {
-    setState((prev) => ({ ...prev, loading: true }));
+  const patchUserInList = (userId: string, patch: Partial<AdminUser>) => {
+    setState((prev) => ({
+      ...prev,
+      list: prev.list.map((user) =>
+        user.userId === userId ? { ...user, ...patch } : user,
+      ),
+    }));
+  };
+
+  const fetchUsers = async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      setState((prev) => ({ ...prev, loading: true }));
+    }
     try {
       const res = await fetchAdminUsersList(buildQuery);
       if (res.code === 200) {
@@ -68,19 +81,19 @@ export const useAdminUsersForm = (requestId: string) => {
 
       logger.info({
         module: 'use-admin-users-form',
-        operate: 'fetch_users_success',
+        operate: silent ? 'fetch_users_silent_success' : 'fetch_users_success',
         requestId,
         params: buildQuery,
         result: `total:${res.data.total}`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error({
         module: 'use-admin-users-form',
-        operate: 'fetch_users_failed',
+        operate: silent ? 'fetch_users_silent_failed' : 'fetch_users_failed',
         requestId,
         params: buildQuery,
         result: undefined,
-        error: error?.message || String(error),
+        error: error instanceof Error ? error.message : String(error),
         errorType: 'API_ERROR',
       });
       setState((prev) => ({ ...prev, loading: false }));
@@ -97,6 +110,8 @@ export const useAdminUsersForm = (requestId: string) => {
     setState((prev) => ({ ...prev, updating: true }));
     try {
       await updateAdminUserStatus({ targetUserId, status: nextStatus });
+      patchUserInList(targetUserId, { status: nextStatus });
+      await fetchUsers({ silent: true });
       logger.info({
         module: 'use-admin-users-form',
         operate: 'update_status_success',
@@ -104,26 +119,29 @@ export const useAdminUsersForm = (requestId: string) => {
         params: { targetUserId, status: nextStatus },
         result: 'success',
       });
-      await fetchUsers();
-    } catch (error: any) {
-      logger.error({
-        module: 'use-admin-users-form',
-        operate: 'update_status_failed',
-        requestId,
-        params: { targetUserId, status: nextStatus },
-        result: undefined,
-        error: error?.message || String(error),
-        errorType: 'API_ERROR',
-      });
+    } catch (error: unknown) {
+      if (!isBusinessRejectError(error)) {
+        logger.error({
+          module: 'use-admin-users-form',
+          operate: 'update_status_failed',
+          requestId,
+          params: { targetUserId, status: nextStatus },
+          result: undefined,
+          error: error instanceof Error ? error.message : String(error),
+          errorType: 'API_ERROR',
+        });
+      }
+    } finally {
       setState((prev) => ({ ...prev, updating: false }));
     }
-    setState((prev) => ({ ...prev, updating: false }));
   };
 
   const updateRole = async (targetUserId: string, nextRole: AdminUserRole) => {
     setState((prev) => ({ ...prev, updating: true }));
     try {
       await updateAdminUserRole({ targetUserId, role: nextRole });
+      patchUserInList(targetUserId, { role: nextRole });
+      await fetchUsers({ silent: true });
       logger.info({
         module: 'use-admin-users-form',
         operate: 'update_role_success',
@@ -131,20 +149,21 @@ export const useAdminUsersForm = (requestId: string) => {
         params: { targetUserId, role: nextRole },
         result: 'success',
       });
-      await fetchUsers();
-    } catch (error: any) {
-      logger.error({
-        module: 'use-admin-users-form',
-        operate: 'update_role_failed',
-        requestId,
-        params: { targetUserId, role: nextRole },
-        result: undefined,
-        error: error?.message || String(error),
-        errorType: 'API_ERROR',
-      });
+    } catch (error: unknown) {
+      if (!isBusinessRejectError(error)) {
+        logger.error({
+          module: 'use-admin-users-form',
+          operate: 'update_role_failed',
+          requestId,
+          params: { targetUserId, role: nextRole },
+          result: undefined,
+          error: error instanceof Error ? error.message : String(error),
+          errorType: 'API_ERROR',
+        });
+      }
+    } finally {
       setState((prev) => ({ ...prev, updating: false }));
     }
-    setState((prev) => ({ ...prev, updating: false }));
   };
 
   return {

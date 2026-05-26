@@ -3,7 +3,7 @@
  * @description 帮助中心页面业务逻辑 Hook，封装了搜索、分类加载及折叠面板交互逻辑。
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
     getHelpCategories,
     getHotQuestions,
@@ -30,12 +30,20 @@ export const useHelpCenterForm = (requestId: string) => {
      * 执行数据加载
      * @param {string} keyword - 搜索关键字
      */
-    const loadData = useCallback(async (keyword: string = "") => {
+    const hasContentRef = useRef(false);
+    useEffect(() => {
+        hasContentRef.current = categories.length > 0 || questions.length > 0;
+    }, [categories.length, questions.length]);
+
+    const loadData = useCallback(async (keyword: string = "", options?: { silent?: boolean }) => {
         const MODULE_NAME = 'HelpCenterHook';
         const OPERATE_NAME = 'loadData';
 
+        const silent = options?.silent ?? false;
         try {
-            setLoading(true);
+            if (!silent) {
+                setLoading(true);
+            }
 
             // 规范：显式传递 requestId 到 API 层
             const [catRes, quesRes] = await Promise.all([
@@ -78,18 +86,18 @@ export const useHelpCenterForm = (requestId: string) => {
 
     // 初始加载：仅在挂载时执行
     useEffect(() => {
-        loadData();
+        loadData("", { silent: hasContentRef.current });
     }, [loadData]);
 
     // 搜索防抖逻辑
     useEffect(() => {
         if (!searchQuery) {
-            loadData("");
+            loadData("", { silent: hasContentRef.current });
             return;
         }
 
         const timer = setTimeout(() => {
-            loadData(searchQuery);
+            loadData(searchQuery, { silent: hasContentRef.current });
         }, 500);
 
         return () => clearTimeout(timer);

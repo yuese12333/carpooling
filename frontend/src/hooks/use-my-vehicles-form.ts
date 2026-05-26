@@ -3,7 +3,7 @@
  * @description 车辆管理业务逻辑 Hook，集成 requestId 生命周期管理与标准化日志记录
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Alert } from "react-native";
 import { useRouter } from 'expo-router';
 import {
@@ -21,8 +21,16 @@ export const useMyVehiclesForm = (requestId: string) => {
     const [vehicles, setVehicles] = useState<VehicleInfo[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
-    const loadData = useCallback(async () => {
-        setLoading(true);
+    const listLengthRef = useRef(0);
+    useEffect(() => {
+        listLengthRef.current = vehicles.length;
+    }, [vehicles.length]);
+
+    const loadData = useCallback(async (options?: { silent?: boolean }) => {
+        const silent = options?.silent ?? false;
+        if (!silent) {
+            setLoading(true);
+        }
         logger.info({
             module: 'VehicleModule',
             operate: 'loadVehicleData_Start',
@@ -58,7 +66,7 @@ export const useMyVehiclesForm = (requestId: string) => {
     }, [requestId]);
 
     useEffect(() => {
-        loadData();
+        loadData({ silent: listLengthRef.current > 0 });
     }, [loadData]);
 
     const handleBack = () => {

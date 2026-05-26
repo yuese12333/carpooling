@@ -8,6 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import logger, { maskSensitive } from "@/utils/logger";
 import { useEnvStore } from "@/store/env-store";
 import { loginByPassword as loginByPasswordApi } from "@/api/auth";
+import { isAuthCredentialError } from "@/utils/api-response";
 
 /**
  * 用户信息接口定义
@@ -155,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const isMockMode = useEnvStore.getState().isMockMode;
         try {
             const data = await loginByPasswordApi(
-                { phone, password, rememberMe },
+                { phone, password, shouldRemember: rememberMe },
                 isMockMode
             );
 
@@ -193,14 +194,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 requestId,
             });
         } catch (error) {
-            logger.error({
+            const message = error instanceof Error ? error.message : "Login Failed";
+            const logBase = {
                 module: "AuthContext",
                 operate: "login",
                 params: { ...maskSensitive({ phone }), rememberMe: Boolean(rememberMe) },
-                error: error instanceof Error ? error.message : "Login Failed",
-                errorType: "AUTH_LOGIN_ERROR",
                 requestId,
-            });
+            };
+
+            if (isAuthCredentialError(error)) {
+                logger.warn({
+                    ...logBase,
+                    result: message,
+                    errorType: "AUTH_CREDENTIAL_FAIL",
+                });
+            } else {
+                logger.error({
+                    ...logBase,
+                    error: message,
+                    errorType: "AUTH_LOGIN_ERROR",
+                });
+            }
             throw error;
         }
     };

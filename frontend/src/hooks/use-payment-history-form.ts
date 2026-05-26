@@ -3,7 +3,7 @@
  * @description 支付历史逻辑封装 Hook。要求显式注入 requestId 以维持链路追踪。
  */
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
     getPaymentHistory,
     getMonthlyStats,
@@ -37,8 +37,16 @@ export const usePaymentHistory = (requestId: string) => {
     /**
      * 数据加载逻辑，包含完整的异常审计与追踪
      */
-    const fetchData = useCallback(async () => {
-        setLoading(true);
+    const listLengthRef = useRef(0);
+    useEffect(() => {
+        listLengthRef.current = historyList.length;
+    }, [historyList.length]);
+
+    const fetchData = useCallback(async (options?: { silent?: boolean }) => {
+        const silent = options?.silent ?? false;
+        if (!silent) {
+            setLoading(true);
+        }
         const moduleName = 'PaymentHistoryHook';
         const operateName = 'fetchData';
 
@@ -83,7 +91,7 @@ export const usePaymentHistory = (requestId: string) => {
 
     // 监听筛选条件与模式切换
     useEffect(() => {
-        fetchData();
+        fetchData({ silent: listLengthRef.current > 0 });
     }, [fetchData]);
 
     /**

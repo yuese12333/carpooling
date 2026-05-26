@@ -3,7 +3,7 @@
  * @description 通知页面业务逻辑 Hook，封装数据加载与清理逻辑，支持显式链路追踪
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchNotifications, clearNotifications, NotificationItem } from "@/api/notification-api";
 import logger from "@/utils/logger";
 
@@ -22,9 +22,17 @@ export const useNotification = (requestId: string) => {
     /**
      * 加载通知数据
      */
-    const loadData = useCallback(async () => {
+    const listLengthRef = useRef(0);
+    useEffect(() => {
+        listLengthRef.current = notifications.length;
+    }, [notifications.length]);
+
+    const loadData = useCallback(async (options?: { silent?: boolean }) => {
         const operate = 'loadData';
-        setLoading(true);
+        const silent = options?.silent ?? false;
+        if (!silent) {
+            setLoading(true);
+        }
 
         try {
             // 显式透传 requestId 至 API 层
@@ -59,7 +67,7 @@ export const useNotification = (requestId: string) => {
      * 监听 Tab 切换，自动重新加载数据
      */
     useEffect(() => {
-        loadData();
+        loadData({ silent: listLengthRef.current > 0 });
     }, [loadData]);
 
     /**

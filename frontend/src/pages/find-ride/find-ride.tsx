@@ -177,7 +177,11 @@ export default function FindRidePage() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.resultCount}>
-          {loading ? "正在搜索行程..." : `共找到 ${filteredRides.length} 个行程`}
+          {loading && filteredRides.length === 0
+            ? "正在搜索行程..."
+            : loading
+              ? "正在刷新..."
+              : `共找到 ${filteredRides.length} 个行程`}
         </Text>
 
         {filteredRides.map((ride) => (

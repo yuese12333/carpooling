@@ -11,6 +11,11 @@ import { useEnvStore } from '../store/env-store';
 import type { ApiResponse } from '@/api/api.d';
 import request from '@/utils/request';
 import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
+import {
+    isApiSuccess,
+    toLoginFailureError,
+    unwrapApiData,
+} from '@/utils/api-response';
 
 /** 账号密码登录请求载荷 */
 export interface LoginRequest {
@@ -122,7 +127,7 @@ export const fetchLoginConfig = async (
         params: { appVersion: '1.0.0', platform: Platform.OS }
     });
 
-    if (result.success) {
+    if (isApiSuccess(result)) {
         logger.info({
             module: 'auth-api',
             operate: 'fetchLoginConfig_SUCCESS',
@@ -143,28 +148,34 @@ export const fetchLoginConfig = async (
 export const loginByPassword = async (
     payload: LoginRequest,
     isMockMode: boolean,
-): Promise<ApiResponse<LoginData>> => {
+): Promise<LoginData> => {
     if (isMockMode) {
         await mockDelay(MOCK_DELAY_MS.LOGIN);
-        return {
-            success: true,
-            message: 'mock success',
-            data: MOCK_LOGIN_SUCCESS
-        };
+        return MOCK_LOGIN_SUCCESS;
     }
 
-    const result = await request.post<any, ApiResponse<LoginData>>('/auth/login/password', payload);
+    try {
+        const result = await request.post<any, ApiResponse<LoginData>>(
+            '/auth/login/password',
+            {
+                phone: payload.phone,
+                password: payload.password,
+                rememberMe: Boolean(payload.shouldRemember),
+            },
+        );
+        const data = unwrapApiData(result, '登录失败');
 
-    if (result.success) {
         logger.info({
             module: 'auth-api',
             operate: 'loginByPassword_SUCCESS',
-            params: { phone: payload.phone }, // 严禁记录 password
+            params: { phone: payload.phone },
             requestId: getContextRequestId()
         });
-    }
 
-    return result;
+        return data;
+    } catch (error) {
+        throw toLoginFailureError(error, '登录失败');
+    }
 };
 
 // --- 注册相关接口实现 ---
