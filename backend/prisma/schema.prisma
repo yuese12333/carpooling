@@ -18,20 +18,581 @@ model AuthUser {
   role                   String    @default("user") @db.VarChar(20)
   status                 String    @default("active") @db.VarChar(20)
   created_at             DateTime  @default(now()) @db.Timestamp(0)
-  updated_at             DateTime  @updatedAt      @db.Timestamp(0)
+  updated_at             DateTime  @updatedAt @db.Timestamp(0)
 
+  profile             UserProfile?
+  emergency_contacts  EmergencyContact[]
+  driver_credential   DriverCredential?
+  vehicles            Vehicle[]
+  ride_requests       RideRequest[]       @relation("RideRequestPassenger")
+  passenger_orders    RideOrder[]         @relation("RideOrderPassenger")
+  driver_orders       RideOrder[]         @relation("RideOrderDriver")
+  user_locations      UserLocation[]
+  badges              UserBadge[]
+  payment_methods     PaymentMethod[]
+  notifications       Notification[]
+  invite_codes        InviteCode[]
+  invite_records      InviteRecord[]      @relation("Invitee")
+  share_events        ShareEvent[]
+  rides               Ride[]
+  trip_participants   TripParticipant[]
+  real_name_auth      RealNameAuth?
+  violations          UserViolation[]
+  ratings_given       OrderRating[]       @relation("RatingFromUser")
+  ratings_received    OrderRating[]       @relation("RatingToUser")
+  preference_tags     UserPreferenceTag[]
+  carbon_account      CarbonAccount?
+  carbon_transactions CarbonTransaction[]
+
+  @@index([role], name: "idx_auth_users_role")
+  @@index([status], name: "idx_auth_users_status")
   @@map("auth_users")
 }
 
 model AdminAuditLog {
   id             BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
-  admin_user_id String   @db.VarChar(64)
+  admin_user_id  String   @db.VarChar(64)
   action         String   @db.VarChar(50)
-  target_user_id String  @db.VarChar(64)
+  target_user_id String   @db.VarChar(64)
   detail         Json?
   created_at     DateTime @default(now())
 
   @@index([admin_user_id], name: "idx_admin_audit_admin_user_id")
   @@index([target_user_id], name: "idx_admin_audit_target_user_id")
   @@map("admin_audit_logs")
+}
+
+model UserProfile {
+  user_id                String   @id @db.VarChar(64)
+  role_type              String   @default("passenger") @db.VarChar(16)
+  real_name              String?  @db.VarChar(50)
+  gender                 String?  @db.VarChar(16)
+  age                    Int?
+  nationality            String?  @db.VarChar(32)
+  accessibility_needs    Json?
+  social_mode            String   @default("efficiency") @db.VarChar(16)
+  credit_score           Int      @default(100)
+  total_completed_orders Int      @default(0)
+  rating_avg             Decimal  @default(5.00) @db.Decimal(3, 2)
+  accumulated_savings    Decimal  @default(0.00) @db.Decimal(10, 2)
+  level                  Int      @default(1)
+  created_at             DateTime @default(now()) @db.Timestamp(0)
+  updated_at             DateTime @updatedAt @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model RealNameAuth {
+  auth_id        String    @id @db.VarChar(64)
+  user_id        String    @unique @db.VarChar(64)
+  real_name      String    @db.VarChar(50)
+  id_type        String    @default("id_card") @db.VarChar(30)
+  id_number_hash String    @db.VarChar(255)
+  id_number_mask String    @db.VarChar(40)
+  verify_status  String    @default("verified") @db.VarChar(20)
+  verified_at    DateTime?
+  created_at     DateTime  @default(now()) @db.Timestamp(0)
+  updated_at     DateTime  @updatedAt @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([verify_status], name: "idx_real_name_auth_verify_status")
+  @@map("real_name_auths")
+}
+
+model EmergencyContact {
+  id            BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id       String   @db.VarChar(64)
+  contact_name  String   @db.VarChar(50)
+  contact_phone String   @db.VarChar(20)
+  relation_type String?  @db.VarChar(30)
+  is_primary    Boolean  @default(false)
+  created_at    DateTime @default(now()) @db.Timestamp(0)
+  updated_at    DateTime @updatedAt @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id], name: "idx_emergency_contacts_user_id")
+  @@map("emergency_contacts")
+}
+
+model DriverCredential {
+  id                        BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id                   String    @unique @db.VarChar(64)
+  driver_license_no         String    @unique @db.VarChar(64)
+  driver_license_image_url  String?   @db.VarChar(255)
+  vehicle_license_no        String    @unique @db.VarChar(64)
+  vehicle_license_image_url String?   @db.VarChar(255)
+  verify_status             String    @default("pending") @db.VarChar(20)
+  reject_reason             String?   @db.VarChar(255)
+  reviewed_by               String?   @db.VarChar(64)
+  reviewed_at               DateTime?
+  created_at                DateTime  @default(now()) @db.Timestamp(0)
+  updated_at                DateTime  @updatedAt @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("driver_credentials")
+}
+
+model Vehicle {
+  vehicle_id                String   @id @db.VarChar(64)
+  owner_user_id             String   @db.VarChar(64)
+  plate_number              String   @unique @db.VarChar(20)
+  brand                     String?  @db.VarChar(50)
+  model                     String?  @db.VarChar(50)
+  color                     String?  @db.VarChar(20)
+  seat_total                Int      @default(4)
+  has_accessibility_support Boolean  @default(false)
+  is_default                Boolean  @default(false)
+  is_non_smoking            Boolean  @default(true)
+  has_air_conditioner       Boolean  @default(true)
+  vehicle_status            String   @default("active") @db.VarChar(20)
+  verify_status             String   @default("pending") @db.VarChar(20)
+  image_url                 String?  @db.VarChar(255)
+  tags_json                 Json?
+  created_at                DateTime @default(now()) @db.Timestamp(0)
+  updated_at                DateTime @updatedAt @db.Timestamp(0)
+
+  owner       AuthUser    @relation(fields: [owner_user_id], references: [user_id], onDelete: Cascade)
+  ride_orders RideOrder[]
+  rides       Ride[]
+
+  @@index([owner_user_id], name: "idx_vehicles_owner_user_id")
+  @@index([verify_status], name: "idx_vehicles_verify_status")
+  @@map("vehicles")
+}
+
+model UserLocation {
+  location_id String   @id @db.VarChar(64)
+  user_id     String   @db.VarChar(64)
+  type        String   @default("other") @db.VarChar(20)
+  label       String   @db.VarChar(50)
+  address     String   @db.VarChar(255)
+  latitude    Decimal? @db.Decimal(10, 7)
+  longitude   Decimal? @db.Decimal(10, 7)
+  is_default  Boolean  @default(false)
+  is_deleted  Boolean  @default(false)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @updatedAt @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id], name: "idx_user_locations_user_id")
+  @@index([type], name: "idx_user_locations_type")
+  @@map("user_locations")
+}
+
+model Ride {
+  ride_id         String   @id @db.VarChar(64)
+  driver_id       String   @db.VarChar(64)
+  vehicle_id      String?  @db.VarChar(64)
+  from_text       String   @db.VarChar(255)
+  from_detail     String?  @db.VarChar(255)
+  from_lat        Decimal? @db.Decimal(10, 7)
+  from_lng        Decimal? @db.Decimal(10, 7)
+  to_text         String   @db.VarChar(255)
+  to_detail       String?  @db.VarChar(255)
+  to_lat          Decimal? @db.Decimal(10, 7)
+  to_lng          Decimal? @db.Decimal(10, 7)
+  depart_at       DateTime
+  seats_total     Int      @default(1)
+  seats_left      Int      @default(1)
+  price           Decimal  @default(0.00) @db.Decimal(10, 2)
+  duration_text   String?  @db.VarChar(30)
+  distance_text   String?  @db.VarChar(30)
+  stops_json      Json?
+  notes           String?  @db.Text
+  tags_json       Json?
+  recurring_rules Json?
+  ride_status     String   @default("open") @db.VarChar(20)
+  created_at      DateTime @default(now()) @db.Timestamp(0)
+  updated_at      DateTime @updatedAt @db.Timestamp(0)
+
+  driver       AuthUser          @relation(fields: [driver_id], references: [user_id], onDelete: Cascade)
+  vehicle      Vehicle?          @relation(fields: [vehicle_id], references: [vehicle_id], onDelete: SetNull)
+  participants TripParticipant[]
+
+  @@index([driver_id], name: "idx_rides_driver_id")
+  @@index([vehicle_id], name: "idx_rides_vehicle_id")
+  @@index([ride_status, depart_at], name: "idx_rides_status_depart_at")
+  @@map("rides")
+}
+
+model TripParticipant {
+  trip_id       String    @id @db.VarChar(64)
+  ride_id       String    @db.VarChar(64)
+  user_id       String    @db.VarChar(64)
+  role          String    @db.VarChar(20)
+  status        String    @default("upcoming") @db.VarChar(20)
+  booked_seats  Int       @default(1)
+  is_rated      Boolean   @default(false)
+  cancel_reason String?   @db.VarChar(255)
+  joined_at     DateTime  @default(now()) @db.Timestamp(0)
+  cancelled_at  DateTime?
+  created_at    DateTime  @default(now()) @db.Timestamp(0)
+  updated_at    DateTime  @updatedAt @db.Timestamp(0)
+
+  ride Ride     @relation(fields: [ride_id], references: [ride_id], onDelete: Cascade)
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([ride_id, user_id], name: "uk_trip_participants_ride_user")
+  @@index([user_id, status], name: "idx_trip_participants_user_status")
+  @@map("trip_participants")
+}
+
+model RideRequest {
+  request_id        String    @id @db.VarChar(64)
+  passenger_user_id String    @db.VarChar(64)
+  origin_text       String    @db.VarChar(255)
+  destination_text  String    @db.VarChar(255)
+  origin_lat        Decimal?  @db.Decimal(10, 7)
+  origin_lng        Decimal?  @db.Decimal(10, 7)
+  destination_lat   Decimal?  @db.Decimal(10, 7)
+  destination_lng   Decimal?  @db.Decimal(10, 7)
+  depart_at         DateTime
+  passenger_count   Int       @default(1)
+  request_status    String    @default("open") @db.VarChar(20)
+  expires_at        DateTime?
+  created_at        DateTime  @default(now()) @db.Timestamp(0)
+  updated_at        DateTime  @updatedAt @db.Timestamp(0)
+
+  passenger AuthUser    @relation("RideRequestPassenger", fields: [passenger_user_id], references: [user_id], onDelete: Cascade)
+  orders    RideOrder[]
+
+  @@index([passenger_user_id], name: "idx_ride_requests_passenger_user_id")
+  @@index([request_status], name: "idx_ride_requests_request_status")
+  @@index([depart_at], name: "idx_ride_requests_depart_at")
+  @@map("ride_requests")
+}
+
+model RideOrder {
+  order_id               String    @id @db.VarChar(64)
+  request_id             String    @db.VarChar(64)
+  passenger_user_id      String    @db.VarChar(64)
+  driver_user_id         String    @db.VarChar(64)
+  vehicle_id             String?   @db.VarChar(64)
+  order_status           String    @default("pending_accept") @db.VarChar(24)
+  route_overlap_rate     Decimal?  @db.Decimal(5, 2)
+  compliance_region_code String?   @db.VarChar(30)
+  max_daily_orders_limit Int?
+  cancellation_reason    String?   @db.VarChar(255)
+  started_at             DateTime?
+  completed_at           DateTime?
+  created_at             DateTime  @default(now()) @db.Timestamp(0)
+  updated_at             DateTime  @updatedAt @db.Timestamp(0)
+
+  request             RideRequest         @relation(fields: [request_id], references: [request_id], onDelete: Cascade)
+  passenger           AuthUser            @relation("RideOrderPassenger", fields: [passenger_user_id], references: [user_id], onDelete: Cascade)
+  driver              AuthUser            @relation("RideOrderDriver", fields: [driver_user_id], references: [user_id], onDelete: Cascade)
+  vehicle             Vehicle?            @relation(fields: [vehicle_id], references: [vehicle_id], onDelete: SetNull)
+  locations           TripLocation[]
+  safety_alerts       SafetyAlert[]
+  payment             OrderPayment?
+  violations          UserViolation[]
+  ratings             OrderRating[]
+  carbon_transactions CarbonTransaction[]
+
+  @@index([request_id], name: "idx_ride_orders_request_id")
+  @@index([passenger_user_id], name: "idx_ride_orders_passenger_user_id")
+  @@index([driver_user_id], name: "idx_ride_orders_driver_user_id")
+  @@index([order_status], name: "idx_ride_orders_order_status")
+  @@map("ride_orders")
+}
+
+model TripLocation {
+  id             BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  order_id       String   @db.VarChar(64)
+  latitude       Decimal  @db.Decimal(10, 7)
+  longitude      Decimal  @db.Decimal(10, 7)
+  deviation_flag Boolean  @default(false)
+  recorded_at    DateTime
+  created_at     DateTime @default(now()) @db.Timestamp(0)
+
+  order RideOrder @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+
+  @@index([order_id, recorded_at], name: "idx_trip_locations_order_id_recorded_at")
+  @@map("trip_locations")
+}
+
+model SafetyAlert {
+  alert_id      String    @id @db.VarChar(64)
+  order_id      String    @db.VarChar(64)
+  alert_type    String    @db.VarChar(30)
+  alert_level   String    @default("warn") @db.VarChar(20)
+  alert_message String    @db.VarChar(255)
+  alert_status  String    @default("triggered") @db.VarChar(20)
+  triggered_at  DateTime
+  resolved_at   DateTime?
+  created_at    DateTime  @default(now()) @db.Timestamp(0)
+  updated_at    DateTime  @updatedAt @db.Timestamp(0)
+
+  order RideOrder @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+
+  @@index([order_id], name: "idx_safety_alerts_order_id")
+  @@index([alert_status], name: "idx_safety_alerts_alert_status")
+  @@map("safety_alerts")
+}
+
+model PaymentMethod {
+  method_id    String   @id @db.VarChar(64)
+  user_id      String   @db.VarChar(64)
+  method_type  String   @db.VarChar(30)
+  display_name String   @db.VarChar(80)
+  bind_summary String?  @db.VarChar(80)
+  is_default   Boolean  @default(false)
+  status       String   @default("active") @db.VarChar(20)
+  extra_json   Json?
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @updatedAt @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id], name: "idx_payment_methods_user_id")
+  @@map("payment_methods")
+}
+
+model OrderPayment {
+  payment_id        String    @id @db.VarChar(64)
+  order_id          String    @unique @db.VarChar(64)
+  total_amount      Decimal   @default(0.00) @db.Decimal(10, 2)
+  toll_amount       Decimal   @default(0.00) @db.Decimal(10, 2)
+  passenger_payable Decimal   @default(0.00) @db.Decimal(10, 2)
+  driver_income     Decimal   @default(0.00) @db.Decimal(10, 2)
+  payment_status    String    @default("pending") @db.VarChar(20)
+  payment_method    String?   @db.VarChar(80)
+  transaction_id    String?   @db.VarChar(80)
+  paid_at           DateTime?
+  failure_reason    String?   @db.VarChar(255)
+  created_at        DateTime  @default(now()) @db.Timestamp(0)
+  updated_at        DateTime  @updatedAt @db.Timestamp(0)
+
+  order   RideOrder @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  receipt Receipt?
+
+  @@index([payment_status], name: "idx_order_payments_payment_status")
+  @@map("order_payments")
+}
+
+model Receipt {
+  receipt_id     String   @id @db.VarChar(64)
+  payment_id     String   @unique @db.VarChar(64)
+  merchant       String   @db.VarChar(100)
+  receipt_status String   @db.VarChar(30)
+  route_from     String?  @db.VarChar(255)
+  route_to       String?  @db.VarChar(255)
+  issued_at      DateTime @default(now()) @db.Timestamp(0)
+  created_at     DateTime @default(now()) @db.Timestamp(0)
+
+  payment OrderPayment @relation(fields: [payment_id], references: [payment_id], onDelete: Cascade)
+
+  @@map("receipts")
+}
+
+model Notification {
+  notification_id String    @id @db.VarChar(64)
+  user_id         String    @db.VarChar(64)
+  category        String    @db.VarChar(20)
+  title           String    @db.VarChar(100)
+  content         String    @db.Text
+  type            String    @default("success") @db.VarChar(20)
+  is_read         Boolean   @default(false)
+  read_at         DateTime?
+  created_at      DateTime  @default(now()) @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id, is_read], name: "idx_notifications_user_read")
+  @@index([category], name: "idx_notifications_category")
+  @@map("notifications")
+}
+
+model UserBadge {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id     String    @db.VarChar(64)
+  badge_code  String    @db.VarChar(50)
+  label       String    @db.VarChar(50)
+  emoji       String?   @db.VarChar(16)
+  unlocked    Boolean   @default(false)
+  unlocked_at DateTime?
+  created_at  DateTime  @default(now()) @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([user_id, badge_code], name: "uk_user_badges_user_badge")
+  @@map("user_badges")
+}
+
+model InviteCode {
+  invite_code String   @id @db.VarChar(20)
+  user_id     String   @db.VarChar(64)
+  status      String   @default("active") @db.VarChar(20)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @updatedAt @db.Timestamp(0)
+
+  user    AuthUser       @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  records InviteRecord[]
+
+  @@index([user_id], name: "idx_invite_codes_user_id")
+  @@map("invite_codes")
+}
+
+model InviteRecord {
+  id              BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  invite_code     String    @db.VarChar(20)
+  invitee_user_id String?   @db.VarChar(64)
+  reward_amount   Decimal   @default(0.00) @db.Decimal(10, 2)
+  reward_status   String    @default("pending") @db.VarChar(20)
+  created_at      DateTime  @default(now()) @db.Timestamp(0)
+  rewarded_at     DateTime?
+
+  code    InviteCode @relation(fields: [invite_code], references: [invite_code], onDelete: Cascade)
+  invitee AuthUser?  @relation("Invitee", fields: [invitee_user_id], references: [user_id], onDelete: SetNull)
+
+  @@index([invitee_user_id], name: "idx_invite_records_invitee_user_id")
+  @@map("invite_records")
+}
+
+model ShareEvent {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    String   @db.VarChar(64)
+  platform   String   @db.VarChar(30)
+  scene      String   @default("invite") @db.VarChar(30)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id, created_at], name: "idx_share_events_user_created_at")
+  @@map("share_events")
+}
+
+model HelpCategory {
+  category_id String   @id @db.VarChar(64)
+  title       String   @db.VarChar(60)
+  icon_name   String   @db.VarChar(60)
+  bg_color    String?  @db.VarChar(30)
+  sort_order  Int      @default(0)
+  status      String   @default("enabled") @db.VarChar(20)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @updatedAt @db.Timestamp(0)
+
+  questions HelpQuestion[]
+
+  @@index([status, sort_order], name: "idx_help_categories_status_sort")
+  @@map("help_categories")
+}
+
+model HelpQuestion {
+  question_id String   @id @db.VarChar(64)
+  category_id String?  @db.VarChar(64)
+  question    String   @db.VarChar(255)
+  answer      String   @db.Text
+  is_hot      Boolean  @default(false)
+  sort_order  Int      @default(0)
+  status      String   @default("enabled") @db.VarChar(20)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+  updated_at  DateTime @updatedAt @db.Timestamp(0)
+
+  category HelpCategory? @relation(fields: [category_id], references: [category_id], onDelete: SetNull)
+
+  @@index([category_id], name: "idx_help_questions_category_id")
+  @@index([is_hot, status], name: "idx_help_questions_hot_status")
+  @@map("help_questions")
+}
+
+model UserViolation {
+  id             BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id        String   @db.VarChar(64)
+  order_id       String?  @db.VarChar(64)
+  violation_type String   @db.VarChar(40)
+  penalty_points Int      @default(0)
+  penalty_amount Decimal  @default(0.00) @db.Decimal(10, 2)
+  description    String?  @db.VarChar(255)
+  created_at     DateTime @default(now()) @db.Timestamp(0)
+
+  user  AuthUser   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  order RideOrder? @relation(fields: [order_id], references: [order_id], onDelete: SetNull)
+
+  @@index([user_id], name: "idx_user_violations_user_id")
+  @@index([order_id], name: "idx_user_violations_order_id")
+  @@map("user_violations")
+}
+
+model OrderRating {
+  rating_id    String   @id @db.VarChar(64)
+  order_id     String   @db.VarChar(64)
+  from_user_id String   @db.VarChar(64)
+  to_user_id   String   @db.VarChar(64)
+  score        Int
+  comment_text String?  @db.VarChar(255)
+  tags_json    Json?
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+
+  order     RideOrder @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  from_user AuthUser  @relation("RatingFromUser", fields: [from_user_id], references: [user_id], onDelete: Cascade)
+  to_user   AuthUser  @relation("RatingToUser", fields: [to_user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([order_id, from_user_id, to_user_id], name: "uk_order_ratings_unique_pair")
+  @@index([to_user_id], name: "idx_order_ratings_to_user_id")
+  @@map("order_ratings")
+}
+
+model UserPreferenceTag {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id    String   @db.VarChar(64)
+  tag_type   String   @db.VarChar(30)
+  tag_value  String   @db.VarChar(30)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@unique([user_id, tag_type, tag_value], name: "uk_user_preference_tags_unique")
+  @@index([user_id], name: "idx_user_preference_tags_user_id")
+  @@map("user_preference_tags")
+}
+
+model ComplianceRegionRule {
+  rule_id                  String   @id @db.VarChar(64)
+  region_code              String   @unique @db.VarChar(30)
+  region_name              String   @db.VarChar(60)
+  daily_driver_order_limit Int      @default(2)
+  max_passenger_count      Int      @default(4)
+  rule_status              String   @default("enabled") @db.VarChar(20)
+  policy_json              Json?
+  updated_by               String?  @db.VarChar(64)
+  created_at               DateTime @default(now()) @db.Timestamp(0)
+  updated_at               DateTime @updatedAt @db.Timestamp(0)
+
+  @@map("compliance_region_rules")
+}
+
+model CarbonAccount {
+  user_id          String   @id @db.VarChar(64)
+  carbon_points    Int      @default(0)
+  total_reduced_kg Decimal  @default(0.00) @db.Decimal(10, 2)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+  updated_at       DateTime @updatedAt @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("carbon_accounts")
+}
+
+model CarbonTransaction {
+  id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id      String   @db.VarChar(64)
+  order_id     String?  @db.VarChar(64)
+  points_delta Int
+  reduced_kg   Decimal  @default(0.00) @db.Decimal(10, 2)
+  biz_type     String   @db.VarChar(30)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+
+  user  AuthUser   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  order RideOrder? @relation(fields: [order_id], references: [order_id], onDelete: SetNull)
+
+  @@index([user_id], name: "idx_carbon_transactions_user_id")
+  @@index([order_id], name: "idx_carbon_transactions_order_id")
+  @@map("carbon_transactions")
 }
