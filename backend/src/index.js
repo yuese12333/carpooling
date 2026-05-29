@@ -10,6 +10,11 @@ const uploadRouter = require('./router/upload-router');
 const authRouter = require('./router/auth-router');
 const usersRouter = require('./router/users-router');
 const adminRouter = require('./router/admin-router');
+const homeRouter = require('./router/home-router');
+const rideRouter = require('./router/ride-router');
+const tripRouter = require('./router/trip-router');
+const profileRouter = require('./router/profile-router');
+const commonRouter = require('./router/common-router');
 const prisma = require('./config/prisma');
 const { logger } = require('./utils/logger');
 const { createRequestId } = require('./utils/response');
@@ -63,6 +68,11 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/home', homeRouter);
+app.use('/api/rides', rideRouter);
+app.use('/api/trips', tripRouter);
+app.use('/api/profile', profileRouter);
+app.use('/api/common', commonRouter);
 
 app.listen(Number(PORT), HOST, async () => {
   const requestId = `startup-${Date.now()}`;

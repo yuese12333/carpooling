@@ -9,6 +9,8 @@ const {
 } = require('../utils/response');
 const { logger, maskSensitive } = require('../utils/logger');
 const { checkCoreSchema, initCoreSchema, registerUser } = require('../service/users-service');
+const profileService = require('../service/profile-service');
+const usersService = require('../service/users-service');
 
 async function initCoreSchemaController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
@@ -155,4 +157,68 @@ async function createUserController(req, res) {
 module.exports = {
   initCoreSchemaController,
   createUserController,
+  async getMeController(req, res) {
+    const requestId = req.headers['x-request-id'] || createRequestId();
+    const userId = req.user?.userId;
+
+    try {
+      if (!userId) {
+        return res.status(401).json(buildFailureResponse(401, '未授权访问', null, requestId));
+      }
+
+      const data = await profileService.getProfileInfo({ userId, requestId });
+      return res.json(buildSuccessResponse(data, requestId));
+    } catch (err) {
+      logger.error({
+        module: 'users-controller',
+        operate: 'get-me',
+        requestId,
+        error: err?.message || '获取当前用户失败',
+        errorType: err?.name || 'UnknownError',
+      });
+      const status = err?.statusCode || 500;
+      return res.status(status).json(buildFailureResponse(status, err?.message || '获取当前用户失败', null, requestId));
+    }
+  },
+  async getAuthStatusController(req, res) {
+    const requestId = req.headers['x-request-id'] || createRequestId();
+    const userId = req.user?.userId;
+    try {
+      if (!userId) return res.status(401).json(buildFailureResponse(401, '未授权访问', null, requestId));
+      const data = await usersService.getAuthStatus(userId, requestId);
+      return res.json(buildSuccessResponse(data, requestId));
+    } catch (err) {
+      logger.error({ module: 'users-controller', operate: 'get-auth-status', requestId, error: err?.message || 'get auth status failed' });
+      const status = err?.statusCode || 500;
+      return res.status(status).json(buildFailureResponse(status, err?.message || '获取认证状态失败', null, requestId));
+    }
+  },
+  async getInviteController(req, res) {
+    const requestId = req.headers['x-request-id'] || createRequestId();
+    const userId = req.user?.userId;
+    try {
+      if (!userId) return res.status(401).json(buildFailureResponse(401, '未授权访问', null, requestId));
+      const data = await usersService.getInviteInfo(userId, requestId);
+      return res.json(buildSuccessResponse(data, requestId));
+    } catch (err) {
+      logger.error({ module: 'users-controller', operate: 'get-invite', requestId, error: err?.message || 'get invite failed' });
+      const status = err?.statusCode || 500;
+      return res.status(status).json(buildFailureResponse(status, err?.message || '获取邀请信息失败', null, requestId));
+    }
+  },
+  async trackShareController(req, res) {
+    const requestId = req.headers['x-request-id'] || createRequestId();
+    const userId = req.user?.userId;
+    const { platform, scene } = req.body || {};
+    try {
+      if (!userId) return res.status(401).json(buildFailureResponse(401, '未授权访问', null, requestId));
+      if (!platform) return res.status(400).json(buildFailureResponse(400, 'platform 必填', null, requestId));
+      const data = await usersService.recordShareEvent(userId, platform, scene || 'invite', requestId);
+      return res.json(buildSuccessResponse(data, requestId));
+    } catch (err) {
+      logger.error({ module: 'users-controller', operate: 'track-share', requestId, error: err?.message || 'track share failed' });
+      const status = err?.statusCode || 500;
+      return res.status(status).json(buildFailureResponse(status, err?.message || '记录分享事件失败', null, requestId));
+    }
+  },
 };

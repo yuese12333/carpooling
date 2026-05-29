@@ -16,6 +16,7 @@ const {
   oauthBind,
   registerUser,
   checkNickname,
+  resetPassword,
 } = require('../service/auth-service');
 const {
   createRequestId,
@@ -335,6 +336,89 @@ async function behaviorVerifyController(req, res) {
   }
 }
 
+/**
+ * 密码重置：校验验证码并签发重置临时令牌
+ * POST /api/auth/password/verify-code
+ */
+async function passwordVerifyCodeController(req, res) {
+  const requestId = req.headers['x-request-id'] || createRequestId();
+  const { phoneNumber, verifyCode } = req.body || {};
+
+  try {
+    const phoneValidation = validatePhone(phoneNumber);
+    if (!phoneValidation.valid) {
+      return res.status(400).json(buildFailureResponse(400, phoneValidation.error, null, requestId));
+    }
+
+    if (!verifyCode || typeof verifyCode !== 'string' || verifyCode.length !== 6) {
+      return res.status(400).json(buildFailureResponse(400, '验证码必须为 6 位', null, requestId));
+    }
+
+    // 复用阿里云校验逻辑并签发 reset temp token
+    const { checkVerifyCode } = require('../service/aliyun-sms-service');
+    const { issueResetTempToken } = require('../service/reset-temp-token-service');
+
+    const data = await checkVerifyCode({ phoneNumber, verifyCode });
+    if (!data?.success || (data.verifyResult && data.verifyResult !== 'PASS')) {
+      return res.status(400).json(buildFailureResponse(400, '验证码错误', null, requestId));
+    }
+
+    const tokenData = await issueResetTempToken({ phone: phoneNumber, requestId });
+
+    return res.json(buildSuccessResponse(tokenData, requestId));
+  } catch (err) {
+    const message = process.env.NODE_ENV === 'production' ? '验证码校验失败' : err?.message || '验证码校验失败';
+    logger.error({
+      module: 'auth-controller',
+      operate: 'password-verify-code',
+      params: maskSensitive({ phoneNumber }),
+      requestId,
+      error: message,
+      errorType: err?.name || 'VerifyError',
+    });
+    return res.status(500).json(buildFailureResponse(500, message, null, requestId));
+  }
+}
+
+/**
+ * 密码重置提交
+ * POST /api/auth/password/reset
+ */
+async function resetPasswordController(req, res) {
+  const requestId = req.headers['x-request-id'] || createRequestId();
+  const { phoneNumber, newPassword, tempToken } = req.body || {};
+
+  try {
+    const phoneValidation = validatePhone(phoneNumber);
+    if (!phoneValidation.valid) {
+      return res.status(400).json(buildFailureResponse(400, phoneValidation.error, null, requestId));
+    }
+
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+      return res.status(400).json(buildFailureResponse(400, '密码长度必须至少为6位', null, requestId));
+    }
+
+    if (!tempToken || typeof tempToken !== 'string') {
+      return res.status(400).json(buildFailureResponse(400, 'tempToken 不能为空', null, requestId));
+    }
+
+    const result = await resetPassword({ phone: phoneNumber, newPassword, tempToken, requestId });
+    return res.json(buildSuccessResponse(result, requestId));
+  } catch (err) {
+    const status = err?.statusCode || 500;
+    const message = err?.message || '重置密码失败';
+    logger.error({
+      module: 'auth-controller',
+      operate: 'password-reset',
+      params: maskSensitive({ phoneNumber }),
+      requestId,
+      error: message,
+      errorType: err?.name || 'ResetError',
+    });
+    return res.status(status).json(buildFailureResponse(status, message, null, requestId));
+  }
+}
+
 async function checkPhoneRiskController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
   const { phone } = req.body || {};
@@ -630,4 +714,7 @@ module.exports = {
   oauthBindController,
   registerUserController,
   checkNicknameController,
+  // 密码重置相关
+  passwordVerifyCodeController,
+  resetPasswordController,
 };

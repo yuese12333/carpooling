@@ -7,12 +7,35 @@ const {
   createRequestId,
   buildFailureResponse,
 } = require('../utils/response');
-const { initCoreSchemaController } = require('../controller/users-controller');
+const { initCoreSchemaController, getMeController } = require('../controller/users-controller');
 const { schemaInitGuard } = require('../middleware/schema-init-guard');
+const authMiddleware = require('../middleware/auth-middleware');
 
 const router = express.Router();
 
 router.post('/init-schema', schemaInitGuard, initCoreSchemaController);
+
+/**
+ * 获取当前用户信息
+ * GET /api/users/me
+ */
+router.get('/me', authMiddleware, getMeController);
+
+/** GET /api/users/me/auth-status */
+router.get('/me/auth-status', authMiddleware, async (req, res, next) => {
+  // delegate to controller
+  return require('../controller/users-controller').getAuthStatusController(req, res, next);
+});
+
+/** GET /api/users/me/invite */
+router.get('/me/invite', authMiddleware, async (req, res, next) => {
+  return require('../controller/users-controller').getInviteController(req, res, next);
+});
+
+/** POST /api/users/me/track-share */
+router.post('/me/track-share', authMiddleware, async (req, res, next) => {
+  return require('../controller/users-controller').trackShareController(req, res, next);
+});
 
 /** @deprecated 请使用 POST /api/auth/register，避免绕过注册校验流程 */
 router.post('/create', (req, res) => {
