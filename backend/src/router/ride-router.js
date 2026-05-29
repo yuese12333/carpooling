@@ -49,6 +49,7 @@ router.get('/search-preferences', getSearchPreferencesController);
  * 6.1 发布拼车行程
  * 路径：POST /api/rides/publish
  */
+router.post('/', publishRideController);
 router.post('/publish', publishRideController);
 
 /**

@@ -5,7 +5,7 @@
  */
 const { logger } = require('../utils/logger');
 const { buildSuccessResponse, buildFailureResponse, createRequestId } = require('../utils/response');
-const { maskSensitive } = require('../utils/mask');
+const { maskSensitive } = require('../utils/mask-utils');
 const {
   getUserInfo,
   getRecommendRides,

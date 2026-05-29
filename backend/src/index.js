@@ -15,6 +15,9 @@ const rideRouter = require('./router/ride-router');
 const tripRouter = require('./router/trip-router');
 const profileRouter = require('./router/profile-router');
 const commonRouter = require('./router/common-router');
+const notificationRouter = require('./router/notification-router');
+const paymentsRouter = require('./router/payments-router');
+const helpRouter = require('./router/help-router');
 const prisma = require('./config/prisma');
 const { logger } = require('./utils/logger');
 const { createRequestId } = require('./utils/response');
@@ -73,6 +76,9 @@ app.use('/api/rides', rideRouter);
 app.use('/api/trips', tripRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/common', commonRouter);
+app.use('/api/notifications', notificationRouter);
+app.use('/api/payments', paymentsRouter);
+app.use('/api/help', helpRouter);
 
 app.listen(Number(PORT), HOST, async () => {
   const requestId = `startup-${Date.now()}`;

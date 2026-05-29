@@ -5,6 +5,16 @@
  */
 const { logger } = require('../utils/logger');
 const { buildSuccessResponse, buildFailureResponse, createRequestId } = require('../utils/response');
+const {
+  getLocationSuggestions,
+  getProtocol,
+  reportEventLog,
+  getConfig,
+  checkProtocolUpdate,
+  reportErrorLog,
+  reportPerformanceLog,
+  reportEventLogsBatch,
+} = require('../service/common-service');
 
 /**
  * 10.1 获取地点建议

@@ -5,7 +5,21 @@
  */
 const { logger } = require('../utils/logger');
 const { buildSuccessResponse, buildFailureResponse, createRequestId } = require('../utils/response');
-const { maskSensitive } = require('../utils/mask');
+const { maskSensitive } = require('../utils/mask-utils');
+const {
+  searchRides,
+  getLocationSuggestions,
+  getSearchMetadata,
+  getSearchPreferences,
+  publishRide,
+  getPublishConfig,
+  routePlan,
+  checkPublishPermission,
+  getRideDetail,
+  bookRide,
+  getDriverProfile,
+  getPrivateContact,
+} = require('../service/ride-service');
 
 /**
  * 5.1 行程搜索

@@ -3,6 +3,7 @@
  * 关联业务：行程列表、取消行程、行程详情、评价行程、行程模板、联系信息、取消原因
  * 说明：负责数据库操作、不包含业务逻辑
  */
+const { randomUUID } = require('crypto');
 const prisma = require('../config/prisma');
 const { logger } = require('../utils/logger');
 
@@ -90,7 +91,6 @@ async function updateTripStatus(tripId, status, cancelReason, cancelDescription,
       data: {
         status,
         cancel_reason: cancelReason,
-        cancel_description: cancelDescription,
         cancelled_at: new Date(),
       },
     });
@@ -125,7 +125,7 @@ async function getTripWithDetails(tripId, requestId) {
                 user_name: true,
                 avatar_url: true,
                 phone: true,
-                user_profile: {
+                profile: {
                   select: {
                     rating_avg: true,
                   },
@@ -175,24 +175,99 @@ async function getTripWithDetails(tripId, requestId) {
 /**
  * 9.4 更新行程评价
  */
-async function updateTripRating(tripId, rating, comment, tags, requestId) {
+async function recordTripRating({ tripId, fromUserId, toUserId, score, comment, tags, requestId }) {
   try {
-    const trip = await prisma.tripParticipant.update({
-      where: { trip_id: tripId },
+    const order = await prisma.rideOrder.findFirst({
+      where: { request_id: tripId },
+    });
+
+    if (!order) {
+      const error = new Error('行程订单不存在');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const rating = await prisma.orderRating.create({
       data: {
-        rating,
-        comment,
-        rating_tags: tags,
-        rated_at: new Date(),
+        rating_id: `rt_${randomUUID().replace(/-/g, '')}`,
+        order_id: order.order_id,
+        from_user_id: fromUserId,
+        to_user_id: toUserId,
+        score,
+        comment_text: comment || null,
+        tags_json: tags || null,
       },
     });
 
-    return trip;
+    const aggregate = await prisma.orderRating.aggregate({
+      where: { to_user_id: toUserId },
+      _avg: { score: true },
+    });
+
+    await prisma.userProfile.upsert({
+      where: { user_id: toUserId },
+      update: {
+        rating_avg: aggregate._avg.score ?? score,
+      },
+      create: {
+        user_id: toUserId,
+        role_type: 'passenger',
+        real_name: null,
+        gender: null,
+        age: null,
+        nationality: null,
+        accessibility_needs: null,
+        social_mode: 'efficiency',
+        credit_score: 100,
+        total_completed_orders: 0,
+        rating_avg: aggregate._avg.score ?? score,
+        accumulated_savings: 0,
+        level: 1,
+      },
+    });
+
+    return rating;
   } catch (error) {
     logger.error({
       module: 'trip-dao',
-      operate: 'update-trip-rating',
-      params: { tripId, rating },
+      operate: 'record-trip-rating',
+      params: { tripId, fromUserId, toUserId, score },
+      requestId,
+      error: error.message,
+      errorType: error.name || 'DatabaseError',
+    });
+    throw error;
+  }
+}
+
+/**
+ * 9.4 查询是否已评价
+ */
+async function hasTripRating({ tripId, fromUserId, requestId }) {
+  try {
+    const order = await prisma.rideOrder.findFirst({
+      where: { request_id: tripId },
+      select: { order_id: true },
+    });
+
+    if (!order) {
+      return false;
+    }
+
+    const rating = await prisma.orderRating.findFirst({
+      where: {
+        order_id: order.order_id,
+        from_user_id: fromUserId,
+      },
+      select: { rating_id: true },
+    });
+
+    return Boolean(rating);
+  } catch (error) {
+    logger.error({
+      module: 'trip-dao',
+      operate: 'has-trip-rating',
+      params: { tripId, fromUserId },
       requestId,
       error: error.message,
       errorType: error.name || 'DatabaseError',
@@ -206,9 +281,8 @@ async function updateTripRating(tripId, rating, comment, tags, requestId) {
  */
 async function getUserTripTemplates(userId, requestId) {
   try {
-    // TODO: 实现行程模板表
-    // 暂时返回空数组
-    return [];
+    const templates = await prisma.tripTemplate.findMany({ where: { user_id: userId }, orderBy: { updated_at: 'desc' } });
+    return templates;
   } catch (error) {
     logger.error({
       module: 'trip-dao',
@@ -222,11 +296,45 @@ async function getUserTripTemplates(userId, requestId) {
   }
 }
 
+/**
+ * 获取取消原因从 DB（若存在）
+ */
+async function getCancelReasonsFromDb(type, requestId) {
+  try {
+    const reasons = await prisma.cancelReason.findMany({ where: { type, status: 'enabled' }, orderBy: { sort_order: 'asc' } });
+    return reasons.map((r) => ({ id: r.id, reason: r.reason }));
+  } catch (error) {
+    logger.error({ module: 'trip-dao', operate: 'get-cancel-reasons-db', params: { type }, requestId, error: error.message });
+    throw error;
+  }
+}
+
 module.exports = {
   getUserTrips,
   getTripById,
   updateTripStatus,
   getTripWithDetails,
-  updateTripRating,
+  recordTripRating,
+  hasTripRating,
   getUserTripTemplates,
+  getCancelReasonsFromDb,
+  // helper for refund/notification placeholders
+  async getOrderByTripId(tripId, requestId) {
+    try {
+      const order = await prisma.rideOrder.findFirst({ where: { request_id: tripId } });
+      return order;
+    } catch (error) {
+      logger.error({ module: 'trip-dao', operate: 'get-order-by-trip-id', params: { tripId }, requestId, error: error.message });
+      throw error;
+    }
+  },
+  async listParticipantUserIdsByTrip(tripId, requestId) {
+    try {
+      const parts = await prisma.tripParticipant.findMany({ where: { trip_id: tripId }, select: { user_id: true } });
+      return parts.map((p) => p.user_id);
+    } catch (error) {
+      logger.error({ module: 'trip-dao', operate: 'list-participant-userids', params: { tripId }, requestId, error: error.message });
+      throw error;
+    }
+  },
 };

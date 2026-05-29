@@ -26,20 +26,13 @@ router.get('/list', getTripListController);
  * 9.2 取消行程
  * 路径：POST /api/trips/cancel
  */
+router.post('/:tripId/cancel', cancelTripController);
 router.post('/cancel', cancelTripController);
 
 /**
  * 9.3 获取行程详情
  * 路径：GET /api/trips/detail
  */
-router.get('/detail', getTripDetailController);
-
-/**
- * 9.4 评价行程
- * 路径：POST /api/trips/rate
- */
-router.post('/rate', rateTripController);
-
 /**
  * 9.5 再次预约/复用行程
  * 路径：GET /api/trips/template
@@ -51,11 +44,31 @@ router.get('/template', getTripTemplateController);
  * 路径：GET /api/trips/contact
  */
 router.get('/contact', getContactInfoController);
+router.get('/:tripId/contact', getContactInfoController);
 
 /**
  * 9.7 获取取消原因枚举
  * 路径：GET /api/trips/cancel-reasons
  */
 router.get('/cancel-reasons', getCancelReasonsController);
+
+/**
+ * 9.3 获取行程详情
+ * 路径：GET /api/trips/detail
+ */
+router.get('/detail', getTripDetailController);
+router.get('/:tripId', getTripDetailController);
+
+/**
+ * 9.4 评价行程
+ * 路径：POST /api/trips/rate
+ */
+router.post('/:tripId/rate', rateTripController);
+router.post('/rate', rateTripController);
+
+/**
+ * 9.4 评价行程
+ * 路径：POST /api/trips/rate
+ */
 
 module.exports = router;

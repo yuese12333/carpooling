@@ -52,11 +52,11 @@ async function searchRides({
       seatsLeft: ride.seats_left,
       seatsTotal: ride.seats_total,
       price: ride.price,
-      status: ride.status,
+      status: ride.ride_status,
       driverId: ride.driver_id,
       driverName: ride.driver?.user_name || '未知',
       driverAvatar: ride.driver?.avatar_url || '',
-      driverRating: ride.driver?.user_profile?.rating_avg || 0,
+      driverRating: ride.driver?.profile?.rating_avg || 0,
       vehicleModel: ride.vehicle?.model || '',
       vehicleColor: ride.vehicle?.color || '',
       vehiclePlate: ride.vehicle?.plate_number || '',
@@ -205,7 +205,7 @@ async function publishRide({
     departAt: ride.depart_at,
     seatsTotal: ride.seats_total,
     price: ride.price,
-    status: ride.status,
+    status: ride.ride_status,
   };
 }
 
@@ -325,13 +325,13 @@ async function getRideDetail({ rideId, userId, requestId }) {
     seatsLeft: ride.seats_left,
     seatsTotal: ride.seats_total,
     price: ride.price,
-    status: ride.status,
-    remark: ride.remark,
+    status: ride.ride_status,
+    remark: ride.notes,
     driver: {
       userId: ride.driver.user_id,
       userName: ride.driver.user_name,
       avatarUrl: ride.driver.avatar_url,
-      rating: ride.driver.user_profile?.rating_avg || 0,
+      rating: ride.driver.profile?.rating_avg || 0,
     },
     vehicle: ride.vehicle
       ? {
@@ -380,16 +380,20 @@ async function bookRide({ userId, rideId, seats, remark, requestId }) {
     passengerId: userId,
     driverId: ride.driver_id,
     rideId,
+    vehicleId: ride.vehicle_id,
     seats,
-    remark,
+    originText: ride.from_text,
+    destinationText: ride.to_text,
+    departAt: ride.depart_at,
     requestId,
   });
 
   return {
     orderId: order.order_id,
-    rideId: order.ride_id,
-    seats: order.booked_seats,
-    status: order.status,
+    tripId: order.request_id,
+    rideId,
+    seats,
+    status: order.order_status,
     createdAt: order.created_at,
   };
 }
@@ -418,9 +422,9 @@ async function getDriverProfile({ driverId, requestId }) {
     driverId: driver.user_id,
     userName: driver.user_name,
     avatarUrl: driver.avatar_url,
-    rating: driver.user_profile?.rating_avg || 0,
-    totalRides: driver.user_profile?.total_rides || 0,
-    creditScore: driver.user_profile?.credit_score || 0,
+    rating: driver.profile?.rating_avg || 0,
+    totalRides: driver.profile?.total_completed_orders || 0,
+    creditScore: driver.profile?.credit_score || 0,
     vehicles: driver.vehicles.map((v) => ({
       vehicleId: v.vehicle_id,
       plateNumber: v.plate_number,
