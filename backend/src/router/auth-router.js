@@ -18,6 +18,8 @@ const {
 	oauthBindController,
 	registerUserController,
 	checkNicknameController,
+  passwordVerifyCodeController,
+  resetPasswordController,
 } = require('../controller/auth-controller');
 
 const router = express.Router();
@@ -36,6 +38,10 @@ router.post('/password/sms', (req, res) => {
 	req.body = { ...(req.body || {}), type: 'reset_pwd' };
 	return sendAuthSmsController(req, res);
 });
+// 密码找回：校验验证码并签发临时重置令牌
+router.post('/password/verify-code', passwordVerifyCodeController);
+// 密码重置提交
+router.post('/password/reset', resetPasswordController);
 router.post('/oauth/bind', oauthBindController);
 
 // 注册相关路由（验码见 POST /api/sms/verify）

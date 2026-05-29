@@ -157,6 +157,61 @@ async function registerUser({ phone, nickname, password }, requestId) {
   }
 }
 
+/**
+ * 返回用户实名/认证状态
+ */
+async function getAuthStatus(userId, requestId) {
+  try {
+    const auth = await prisma.realNameAuth.findUnique({ where: { user_id: userId } }).catch(() => null);
+    if (!auth) return { verifyStatus: 'not_submitted', verifiedAt: null };
+    return { verifyStatus: auth.verify_status, verifiedAt: auth.verified_at || null };
+  } catch (error) {
+    logger.error({ module: 'users-service', operate: 'get-auth-status', params: { userId }, requestId, error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * 获取邀请信息（我的邀请码与邀请记录汇总）
+ */
+async function getInviteInfo(userId, requestId) {
+  try {
+    const invite = await prisma.inviteCode.findUnique({ where: { user_id: userId } }).catch(() => null);
+    const records = await prisma.inviteRecord.findMany({ where: { invite_code: invite ? invite.invite_code : undefined } }).catch(() => []);
+    return {
+      inviteCode: invite ? invite.invite_code : null,
+      totalInvited: records.length,
+      totalReward: records.reduce((s, r) => s + Number(r.reward_amount || 0), 0),
+      records: records.map((r) => ({ invitee: r.invitee_user_id, amount: r.reward_amount, status: r.reward_status, createdAt: r.created_at })),
+    };
+  } catch (error) {
+    logger.error({ module: 'users-service', operate: 'get-invite-info', params: { userId }, requestId, error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * 记录一次分享事件（用于 track-share）
+ */
+async function recordShareEvent(userId, platform, scene = 'invite', requestId) {
+  try {
+    const rec = await prisma.shareEvent.create({ data: { user_id: userId, platform, scene } });
+    return { success: true, id: rec.id };
+  } catch (error) {
+    logger.error({ module: 'users-service', operate: 'record-share-event', params: { userId, platform, scene }, requestId, error: error.message });
+    throw error;
+  }
+}
+
+module.exports = {
+  checkCoreSchema,
+  initCoreSchema,
+  registerUser,
+  getAuthStatus,
+  getInviteInfo,
+  recordShareEvent,
+};
+
 module.exports = {
   checkCoreSchema,
   initCoreSchema,

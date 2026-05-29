@@ -15,6 +15,8 @@ const oauthUtils = require('../utils/oauth-utils');
 const smsUtils = require('../utils/sms-utils');
 const redisUtils = require('../utils/redis-utils');
 const { consumeRegisterTempToken } = require('./register-temp-token-service');
+const { consumeResetTempToken, issueResetTempToken } = require('./reset-temp-token-service');
+const profileDao = require('../dao/profile-dao');
 const maskUtils = require('../utils/mask-utils');
 const captchaUtils = require('../utils/captcha-utils');
 const riskUtils = require('../utils/risk-utils');
@@ -642,4 +644,43 @@ module.exports = {
   oauthBind,
   registerUser,
   checkNickname,
+  // 密码重置
+  async resetPassword({ phone, newPassword, tempToken, requestId }) {
+    logger.info({
+      module: 'auth-service',
+      operate: 'reset-password',
+      params: maskSensitive({ phone }),
+      requestId,
+      result: 'Start reset password',
+    });
+
+    // 校验临时令牌
+    await consumeResetTempToken({ phone, tempToken, requestId });
+
+    // 哈希新密码
+    const passwordHash = await passwordUtils.hash(newPassword);
+
+    // 找到用户并更新密码
+    // 使用 profileDao 更新 auth_user.password
+    const user = await profileDao.updateUserPassword(phone.startsWith('u_') ? phone : undefined, passwordHash, requestId).catch(async (err) => {
+      // 如果第一个参数 treated as userId failed, try by phone lookup via userDao
+      const found = await userDao.findByPhone(phone, requestId);
+      if (!found) {
+        const error = new Error('用户不存在');
+        error.statusCode = 404;
+        throw error;
+      }
+      return profileDao.updateUserPassword(found.user_id, passwordHash, requestId);
+    });
+
+    logger.info({
+      module: 'auth-service',
+      operate: 'reset-password',
+      params: maskSensitive({ phone }),
+      requestId,
+      result: 'Password updated',
+    });
+
+    return { success: true };
+  },
 };

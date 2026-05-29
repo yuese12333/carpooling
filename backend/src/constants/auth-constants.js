@@ -58,6 +58,8 @@ const MAX_NICKNAME_LENGTH = 30;
 
 // ============ 注册临时令牌 ============
 const REGISTER_TEMP_EXPIRE = 10 * 60; // 10 分钟
+// 临时重置令牌
+const RESET_TEMP_EXPIRE = 10 * 60; // 10 分钟
 
 // ============ Redis Key 前缀 ============
 const REDIS_KEY_PREFIX = {
@@ -68,6 +70,7 @@ const REDIS_KEY_PREFIX = {
   CHALLENGE: 'challenge:', // 行为验证
   OAUTH_BIND: 'oauth_bind:', // OAuth 绑定
   REGISTER_TEMP: 'register_temp:', // 注册预校验临时令牌
+  RESET_TEMP: 'reset_temp:', // 密码重置临时令牌
   REFRESH_TOKEN: 'refresh_token:', // 刷新令牌（用于撤销登录态）
 };
 
@@ -135,6 +138,7 @@ module.exports = {
   MAX_VERIFY_ID_LENGTH,
   MAX_ACCESS_TOKEN_LENGTH,
   MAX_NICKNAME_LENGTH,
+  RESET_TEMP_EXPIRE,
   REGISTER_TEMP_EXPIRE,
   // Redis Key 前缀
   REDIS_KEY_PREFIX,
