@@ -14,7 +14,7 @@ async function findUserWithProfile(userId, requestId) {
     const user = await prisma.authUser.findUnique({
       where: { user_id: userId },
       include: {
-        user_profile: true,
+        profile: true,
       },
     });
 
@@ -31,10 +31,10 @@ async function findUserWithProfile(userId, requestId) {
       phone: user.phone,
       gender: user.gender,
       birthday: user.birthday,
-      creditScore: user.user_profile?.credit_score || 0,
-      ratingAvg: user.user_profile?.rating_avg || 0,
-      accumulatedSavings: user.user_profile?.accumulated_savings || 0,
-      level: user.user_profile?.level || 1,
+      creditScore: user.profile?.credit_score || 0,
+      ratingAvg: user.profile?.rating_avg || 0,
+      accumulatedSavings: user.profile?.accumulated_savings || 0,
+      level: user.profile?.level || 1,
     };
   } catch (error) {
     logger.error({
@@ -84,7 +84,7 @@ async function updateUserProfile(userId, profileData, requestId) {
 async function getUserVehicles(userId, requestId) {
   try {
     const vehicles = await prisma.vehicle.findMany({
-      where: { user_id: userId },
+      where: { owner_user_id: userId },
     });
 
     return vehicles;
@@ -180,9 +180,12 @@ async function getUserBadges(userId, requestId) {
  */
 async function getFrequentLocations(userId, requestId) {
   try {
-    const locations = await prisma.frequentLocation.findMany({
-      where: { user_id: userId },
-      orderBy: { use_count: 'desc' },
+    const locations = await prisma.userLocation.findMany({
+      where: { 
+        user_id: userId,
+        is_deleted: false,
+      },
+      orderBy: { updated_at: 'desc' },
     });
 
     return locations;
@@ -206,22 +209,26 @@ async function upsertFrequentLocations(userId, locations, requestId) {
   try {
     await prisma.$transaction(
       locations.map((loc) =>
-        prisma.frequentLocation.upsert({
+        prisma.userLocation.upsert({
           where: { location_id: loc.locationId || 'create-new' },
           update: {
-            name: loc.name,
+            label: loc.label || loc.name,
             address: loc.address,
             latitude: loc.latitude,
             longitude: loc.longitude,
-            use_count: { increment: 1 },
+            type: loc.type || 'other',
+            is_deleted: false,
           },
           create: {
+            location_id: loc.locationId || `loc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             user_id: userId,
-            name: loc.name,
+            label: loc.label || loc.name,
             address: loc.address,
             latitude: loc.latitude,
             longitude: loc.longitude,
-            use_count: 1,
+            type: loc.type || 'other',
+            is_default: false,
+            is_deleted: false,
           },
         })
       )
@@ -322,6 +329,29 @@ async function updateUserNotificationSettings(userId, settings, requestId) {
 /**
  * 8.11 更新退出登录时间
  */
+async function updateUserPassword(userId, newPasswordHash, requestId) {
+  try {
+    const user = await prisma.authUser.update({
+      where: { user_id: userId },
+      data: {
+        password: newPasswordHash,
+      },
+    });
+
+    return user;
+  } catch (error) {
+    logger.error({
+      module: 'profile-dao',
+      operate: 'update-user-password',
+      params: { userId },
+      requestId,
+      error: error.message,
+      errorType: error.name || 'DatabaseError',
+    });
+    throw error;
+  }
+}
+
 async function updateLogoutTime(userId, requestId) {
   try {
     await prisma.authUser.update({
@@ -356,5 +386,6 @@ module.exports = {
   getUserPaymentMethods,
   getUserNotificationSettings,
   updateUserNotificationSettings,
+  updateUserPassword,
   updateLogoutTime,
 };

@@ -90,7 +90,7 @@ async function getVehicle({ userId, vehicleId, requestId }) {
       model: vehicle.model,
       color: vehicle.color,
       seatTotal: vehicle.seat_total,
-      status: vehicle.status,
+      status: vehicle.vehicle_status,
     };
   }
 
@@ -102,7 +102,7 @@ async function getVehicle({ userId, vehicleId, requestId }) {
       model: v.model,
       color: v.color,
       seatTotal: v.seat_total,
-      status: v.status,
+      status: v.vehicle_status,
     })),
   };
 }
@@ -135,6 +135,7 @@ async function updateVehicle({ userId, vehicleId, plateNumber, brand, model, col
     model: vehicle.model,
     color: vehicle.color,
     seatTotal: vehicle.seat_total,
+    status: vehicle.vehicle_status,
   };
 }
 
@@ -224,7 +225,7 @@ async function getPaymentMethods({ userId, requestId }) {
     methods: methods.map((m) => ({
       methodId: m.method_id,
       methodType: m.method_type,
-      account: m.account,
+      account: m.display_name || m.bind_summary || '',
       isDefault: m.is_default,
       status: m.status,
     })),

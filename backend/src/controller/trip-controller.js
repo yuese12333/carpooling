@@ -5,6 +5,15 @@
  */
 const { logger } = require('../utils/logger');
 const { buildSuccessResponse, buildFailureResponse, createRequestId } = require('../utils/response');
+const {
+  getTripList,
+  cancelTrip,
+  getTripDetail,
+  rateTrip,
+  getTripTemplate,
+  getContactInfo,
+  getCancelReasons,
+} = require('../service/trip-service');
 
 /**
  * 9.1 获取行程列表
@@ -48,7 +57,8 @@ async function getTripListController(req, res) {
 async function cancelTripController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
   const userId = req.user?.userId;
-  const { tripId, cancelReason, cancelDescription } = req.body || {};
+  const tripId = req.params?.tripId || req.body?.tripId;
+  const { cancelReason, cancelDescription } = req.body || {};
 
   try {
     if (!userId) {
@@ -96,7 +106,7 @@ async function cancelTripController(req, res) {
 async function getTripDetailController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
   const userId = req.user?.userId;
-  const { tripId } = req.query || {};
+  const tripId = req.params?.tripId || req.query?.tripId;
 
   try {
     if (!userId) {
@@ -129,7 +139,8 @@ async function getTripDetailController(req, res) {
 async function rateTripController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
   const userId = req.user?.userId;
-  const { tripId, rating, comment, tags } = req.body || {};
+  const tripId = req.params?.tripId || req.body?.tripId;
+  const { rating, comment, tags } = req.body || {};
 
   try {
     if (!userId) {
@@ -210,7 +221,7 @@ async function getTripTemplateController(req, res) {
 async function getContactInfoController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
   const userId = req.user?.userId;
-  const { tripId } = req.query || {};
+  const tripId = req.params?.tripId || req.query?.tripId;
 
   try {
     if (!userId) {

@@ -3,6 +3,7 @@
  * 关联业务：行程搜索、发布、详情、预约
  * 说明：负责数据库操作、不包含业务逻辑
  */
+const { randomUUID } = require('crypto');
 const prisma = require('../config/prisma');
 const { logger } = require('../utils/logger');
 
@@ -58,7 +59,7 @@ async function searchRides({
               user_id: true,
               user_name: true,
               avatar_url: true,
-              user_profile: {
+              profile: {
                 select: {
                   rating_avg: true,
                 },
@@ -168,17 +169,17 @@ async function createRide({
       data: {
         driver_id: driverId,
         from_text: fromText,
-        from_latitude: fromLatitude,
-        from_longitude: fromLongitude,
+        from_lat: fromLatitude,
+        from_lng: fromLongitude,
         to_text: toText,
-        to_latitude: toLatitude,
-        to_longitude: toLongitude,
+        to_lat: toLatitude,
+        to_lng: toLongitude,
         depart_at: departAt,
         seats_total: seatsTotal,
         seats_left: seatsLeft,
         price,
         vehicle_id: vehicleId,
-        remark,
+        notes: remark,
         ride_status: 'open',
       },
     });
@@ -225,9 +226,12 @@ async function getUserVehicles(userId, requestId) {
  */
 async function getUserFrequentLocations(userId, requestId) {
   try {
-    const locations = await prisma.frequentLocation.findMany({
-      where: { user_id: userId },
-      orderBy: { use_count: 'desc' },
+    const locations = await prisma.userLocation.findMany({
+      where: { 
+        user_id: userId,
+        is_deleted: false,
+      },
+      orderBy: { updated_at: 'desc' },
       take: 5,
     });
 
@@ -253,7 +257,7 @@ async function getUserProfile(userId, requestId) {
     const user = await prisma.authUser.findUnique({
       where: { user_id: userId },
       include: {
-        user_profile: true,
+        profile: true,
       },
     });
 
@@ -264,7 +268,7 @@ async function getUserProfile(userId, requestId) {
     }
 
     return {
-      creditScore: user.user_profile?.credit_score || 0,
+      creditScore: user.profile?.credit_score || 0,
       status: user.status,
     };
   } catch (error) {
@@ -293,7 +297,7 @@ async function getRideById(rideId, requestId) {
             user_id: true,
             user_name: true,
             avatar_url: true,
-            user_profile: {
+            profile: {
               select: {
                 rating_avg: true,
               },
@@ -328,28 +332,42 @@ async function getRideById(rideId, requestId) {
 /**
  * 7.2 创建订单
  */
-async function createOrder({ passengerId, driverId, rideId, seats, remark, requestId }) {
+async function createOrder({ passengerId, driverId, rideId, vehicleId, seats, originText, destinationText, departAt, requestId }) {
   try {
+    const tripId = `tp_${randomUUID().replace(/-/g, '')}`;
+    const orderId = `or_${randomUUID().replace(/-/g, '')}`;
     const order = await prisma.$transaction(async (tx) => {
+      await tx.rideRequest.create({
+        data: {
+          request_id: tripId,
+          passenger_user_id: passengerId,
+          origin_text: originText,
+          destination_text: destinationText,
+          depart_at: departAt,
+          passenger_count: seats,
+          request_status: 'open',
+        },
+      });
+
       // 创建订单
       const newOrder = await tx.rideOrder.create({
         data: {
+          order_id: orderId,
+          request_id: tripId,
           passenger_user_id: passengerId,
           driver_user_id: driverId,
-          ride_id: rideId,
-          order_status: 'pending',
-          request_id: requestId,
+          vehicle_id: vehicleId || null,
         },
       });
 
       // 创建行程参与者记录
       await tx.tripParticipant.create({
         data: {
-          trip_id: newOrder.trip_id,
+          trip_id: tripId,
           ride_id: rideId,
           user_id: passengerId,
           role: 'passenger',
-          status: 'booked',
+          status: 'upcoming',
           booked_seats: seats,
         },
       });
@@ -367,7 +385,10 @@ async function createOrder({ passengerId, driverId, rideId, seats, remark, reque
       return newOrder;
     });
 
-    return order;
+    return {
+      ...order,
+      trip_id: tripId,
+    };
   } catch (error) {
     logger.error({
       module: 'ride-dao',
@@ -389,7 +410,7 @@ async function getDriverWithVehicles(driverId, requestId) {
     const driver = await prisma.authUser.findUnique({
       where: { user_id: driverId },
       include: {
-        user_profile: true,
+        profile: true,
         vehicles: {
           where: { vehicle_status: 'active' },
         },

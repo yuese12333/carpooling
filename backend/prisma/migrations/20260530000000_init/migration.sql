@@ -51,7 +51,7 @@ CREATE TABLE `user_profiles` (
     `updated_at` TIMESTAMP(0) NOT NULL,
 
     PRIMARY KEY (`user_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `real_name_auths` (
@@ -69,7 +69,7 @@ CREATE TABLE `real_name_auths` (
     UNIQUE INDEX `real_name_auths_user_id_key`(`user_id`),
     INDEX `idx_real_name_auth_verify_status`(`verify_status`),
     PRIMARY KEY (`auth_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `emergency_contacts` (
@@ -84,7 +84,7 @@ CREATE TABLE `emergency_contacts` (
 
     INDEX `idx_emergency_contacts_user_id`(`user_id`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `driver_credentials` (
@@ -107,7 +107,7 @@ CREATE TABLE `driver_credentials` (
     UNIQUE INDEX `driver_credentials_driver_license_no_key`(`driver_license_no`),
     UNIQUE INDEX `driver_credentials_vehicle_license_no_key`(`vehicle_license_no`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `vehicles` (
@@ -133,7 +133,7 @@ CREATE TABLE `vehicles` (
     INDEX `idx_vehicles_owner_user_id`(`owner_user_id`),
     INDEX `idx_vehicles_verify_status`(`verify_status`),
     PRIMARY KEY (`vehicle_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `user_locations` (
@@ -152,7 +152,7 @@ CREATE TABLE `user_locations` (
     INDEX `idx_user_locations_user_id`(`user_id`),
     INDEX `idx_user_locations_type`(`type`),
     PRIMARY KEY (`location_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `rides` (
@@ -187,7 +187,7 @@ CREATE TABLE `rides` (
     INDEX `idx_rides_status_from_depart`(`ride_status`, `from_text`, `depart_at`),
     INDEX `idx_rides_status_to_depart`(`ride_status`, `to_text`, `depart_at`),
     PRIMARY KEY (`ride_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `trip_participants` (
@@ -207,7 +207,7 @@ CREATE TABLE `trip_participants` (
     INDEX `idx_trip_participants_user_status`(`user_id`, `status`),
     UNIQUE INDEX `trip_participants_ride_id_user_id_key`(`ride_id`, `user_id`),
     PRIMARY KEY (`trip_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `ride_requests` (
@@ -230,7 +230,7 @@ CREATE TABLE `ride_requests` (
     INDEX `idx_ride_requests_request_status`(`request_status`),
     INDEX `idx_ride_requests_depart_at`(`depart_at`),
     PRIMARY KEY (`request_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `ride_orders` (
@@ -253,7 +253,7 @@ CREATE TABLE `ride_orders` (
     INDEX `idx_ride_orders_driver_user_id`(`driver_user_id`),
     INDEX `idx_ride_orders_order_status`(`order_status`),
     PRIMARY KEY (`order_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `trip_locations` (
@@ -267,7 +267,7 @@ CREATE TABLE `trip_locations` (
 
     INDEX `idx_trip_locations_order_id_recorded_at`(`order_id`, `recorded_at`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `safety_alerts` (
@@ -285,7 +285,7 @@ CREATE TABLE `safety_alerts` (
     INDEX `idx_safety_alerts_order_id`(`order_id`),
     INDEX `idx_safety_alerts_alert_status`(`alert_status`),
     PRIMARY KEY (`alert_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `payment_methods` (
@@ -302,7 +302,7 @@ CREATE TABLE `payment_methods` (
 
     INDEX `idx_payment_methods_user_id`(`user_id`),
     PRIMARY KEY (`method_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `order_payments` (
@@ -324,7 +324,7 @@ CREATE TABLE `order_payments` (
     UNIQUE INDEX `order_payments_transaction_id_key`(`transaction_id`),
     INDEX `idx_order_payments_payment_status`(`payment_status`),
     PRIMARY KEY (`payment_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `receipts` (
@@ -338,7 +338,7 @@ CREATE TABLE `receipts` (
 
     UNIQUE INDEX `receipts_payment_id_key`(`payment_id`),
     PRIMARY KEY (`receipt_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `notifications` (
@@ -355,7 +355,7 @@ CREATE TABLE `notifications` (
     INDEX `idx_notifications_user_read`(`user_id`, `is_read`),
     INDEX `idx_notifications_category`(`category`),
     PRIMARY KEY (`notification_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `user_badges` (
@@ -370,7 +370,7 @@ CREATE TABLE `user_badges` (
 
     UNIQUE INDEX `user_badges_user_id_badge_code_key`(`user_id`, `badge_code`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `invite_codes` (
@@ -382,7 +382,7 @@ CREATE TABLE `invite_codes` (
 
     INDEX `idx_invite_codes_user_id`(`user_id`),
     PRIMARY KEY (`invite_code`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `invite_records` (
@@ -397,7 +397,7 @@ CREATE TABLE `invite_records` (
     INDEX `idx_invite_records_invitee_user_id`(`invitee_user_id`),
     UNIQUE INDEX `invite_records_invite_code_invitee_user_id_key`(`invite_code`, `invitee_user_id`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `share_events` (
@@ -409,7 +409,7 @@ CREATE TABLE `share_events` (
 
     INDEX `idx_share_events_user_created_at`(`user_id`, `created_at`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `help_categories` (
@@ -424,7 +424,7 @@ CREATE TABLE `help_categories` (
 
     INDEX `idx_help_categories_status_sort`(`status`, `sort_order`),
     PRIMARY KEY (`category_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `help_questions` (
@@ -441,7 +441,7 @@ CREATE TABLE `help_questions` (
     INDEX `idx_help_questions_category_id`(`category_id`),
     INDEX `idx_help_questions_hot_status`(`is_hot`, `status`),
     PRIMARY KEY (`question_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `user_violations` (
@@ -458,7 +458,7 @@ CREATE TABLE `user_violations` (
     INDEX `idx_user_violations_order_id`(`order_id`),
     INDEX `idx_user_violations_user_type`(`user_id`, `violation_type`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `order_ratings` (
@@ -474,7 +474,7 @@ CREATE TABLE `order_ratings` (
     INDEX `idx_order_ratings_to_user_id`(`to_user_id`),
     UNIQUE INDEX `order_ratings_order_id_from_user_id_to_user_id_key`(`order_id`, `from_user_id`, `to_user_id`),
     PRIMARY KEY (`rating_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `user_preference_tags` (
@@ -487,7 +487,7 @@ CREATE TABLE `user_preference_tags` (
     INDEX `idx_user_preference_tags_user_id`(`user_id`),
     UNIQUE INDEX `user_preference_tags_user_id_tag_type_tag_value_key`(`user_id`, `tag_type`, `tag_value`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `compliance_region_rules` (
@@ -504,7 +504,7 @@ CREATE TABLE `compliance_region_rules` (
 
     UNIQUE INDEX `compliance_region_rules_region_code_key`(`region_code`),
     PRIMARY KEY (`rule_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `carbon_accounts` (
@@ -515,7 +515,7 @@ CREATE TABLE `carbon_accounts` (
     `updated_at` TIMESTAMP(0) NOT NULL,
 
     PRIMARY KEY (`user_id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `carbon_transactions` (
@@ -530,7 +530,7 @@ CREATE TABLE `carbon_transactions` (
     INDEX `idx_carbon_transactions_user_id`(`user_id`),
     INDEX `idx_carbon_transactions_order_id`(`order_id`),
     PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- AddForeignKey
 ALTER TABLE `admin_audit_logs` ADD CONSTRAINT `admin_audit_logs_admin_user_id_fkey` FOREIGN KEY (`admin_user_id`) REFERENCES `auth_users`(`user_id`) ON DELETE SET NULL ON UPDATE CASCADE;

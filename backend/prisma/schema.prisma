@@ -514,6 +514,35 @@ model HelpQuestion {
   @@map("help_questions")
 }
 
+model TripTemplate {
+  template_id    String   @id @db.VarChar(64)
+  user_id        String   @db.VarChar(64)
+  template_name  String   @db.VarChar(100)
+  origin         String   @db.VarChar(255)
+  destination    String   @db.VarChar(255)
+  departure_time DateTime?
+  frequency      String?  @db.VarChar(50)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id], name: "idx_trip_templates_user_id")
+  @@map("trip_templates")
+}
+
+model CancelReason {
+  id         Int      @id @default(autoincrement())
+  type       String   @db.VarChar(20)
+  reason     String   @db.VarChar(255)
+  sort_order Int      @default(0)
+  status     String   @default("enabled") @db.VarChar(20)
+  created_at DateTime @default(now())
+
+  @@index([type, status], name: "idx_cancel_reasons_type_status")
+  @@map("cancel_reasons")
+}
+
 model UserViolation {
   id             BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
   user_id        String   @db.VarChar(64)

@@ -5,7 +5,21 @@
  */
 const { logger } = require('../utils/logger');
 const { buildSuccessResponse, buildFailureResponse, createRequestId } = require('../utils/response');
-const { maskSensitive } = require('../utils/mask');
+const { maskSensitive } = require('../utils/mask-utils');
+const {
+  getProfileInfo,
+  updateProfile,
+  getVehicle,
+  updateVehicle,
+  getBadges,
+  getFrequentLocations,
+  updateFrequentLocations,
+  getPaymentMethods,
+  getNotificationSettings,
+  updateNotificationSettings,
+  logout,
+  checkVersion,
+} = require('../service/profile-service');
 
 /**
  * 8.1 获取用户信息

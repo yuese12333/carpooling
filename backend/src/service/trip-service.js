@@ -4,7 +4,9 @@
  * 说明：负责业务逻辑处理、调用DAO层
  */
 const { logger } = require('../utils/logger');
+const { maskPhone } = require('../utils/mask-utils');
 const tripDao = require('../dao/trip-dao');
+const privacyService = require('./privacy-service');
 
 /**
  * 9.1 获取行程列表
@@ -29,10 +31,10 @@ async function getTripList({ userId, status, page, pageSize, requestId }) {
       rideId: trip.ride_id,
       role: trip.role,
       status: trip.status,
-      origin: trip.ride.origin,
-      destination: trip.ride.destination,
-      departureTime: trip.ride.departure_time,
-      price: trip.price,
+      origin: trip.ride.from_text,
+      destination: trip.ride.to_text,
+      departureTime: trip.ride.depart_at,
+      price: trip.ride.price,
       driverName: trip.ride.driver?.user_name,
       vehicleInfo: trip.ride.vehicle ? `${trip.ride.vehicle.brand} ${trip.ride.vehicle.model}` : null,
     })),
@@ -73,8 +75,30 @@ async function cancelTrip({ userId, tripId, cancelReason, cancelDescription, req
 
   await tripDao.updateTripStatus(tripId, 'cancelled', cancelReason, cancelDescription, requestId);
 
-  // TODO: 处理退款逻辑
-  // TODO: 通知其他参与者
+  // 处理退款逻辑（占位）：尝试按订单发起退款
+  try {
+    const paymentsService = require('./payments-service');
+    // 查找订单并退款（最小实现：若存在订单则发起占位退款）
+    const order = await tripDao.getOrderByTripId(tripId, requestId).catch(() => null);
+    if (order) {
+      await paymentsService.issueRefund({ orderId: order.order_id, amount: order.amount || 0, requestId });
+    }
+  } catch (err) {
+    logger.warn({ module: 'trip-service', operate: 'cancel-trip-refund', requestId, error: err?.message || 'refund failed (placeholder)' });
+  }
+
+  // 通知其他参与者（占位）
+  try {
+    const notificationService = require('./notification-service');
+    const participants = await tripDao.listParticipantUserIdsByTrip(tripId, requestId).catch(() => []);
+    for (const uid of participants) {
+      if (uid !== userId) {
+        await notificationService.createNotification({ userId: uid, title: '行程已取消', body: `行程 ${tripId} 被取消`, meta: { tripId }, requestId }).catch(() => null);
+      }
+    }
+  } catch (err) {
+    logger.warn({ module: 'trip-service', operate: 'cancel-trip-notify', requestId, error: err?.message || 'notify failed (placeholder)' });
+  }
 
   return { success: true };
 }
@@ -110,19 +134,17 @@ async function getTripDetail({ userId, tripId, requestId }) {
     rideId: trip.ride_id,
     role: trip.role,
     status: trip.status,
-    price: trip.price,
-    seatCount: trip.seat_count,
-    origin: trip.ride.origin,
-    destination: trip.ride.destination,
-    departureTime: trip.ride.departure_time,
-    arrivalTime: trip.ride.arrival_time,
-    route: trip.ride.route,
+    price: trip.ride.price,
+    seatCount: trip.booked_seats,
+    origin: trip.ride.from_text,
+    destination: trip.ride.to_text,
+    departureTime: trip.ride.depart_at,
     driver: {
       userId: trip.ride.driver_id,
       userName: trip.ride.driver?.user_name,
       avatarUrl: trip.ride.driver?.avatar_url,
       phone: trip.ride.driver?.phone,
-      ratingAvg: trip.ride.driver?.user_profile?.rating_avg,
+      ratingAvg: trip.ride.driver?.profile?.rating_avg,
     },
     vehicle: trip.ride.vehicle
       ? {
@@ -137,10 +159,10 @@ async function getTripDetail({ userId, tripId, requestId }) {
       userId: p.user_id,
       userName: p.user?.user_name,
       avatarUrl: p.user?.avatar_url,
-      seatCount: p.seat_count,
+      seatCount: p.booked_seats,
     })),
-    rating: trip.rating,
-    comment: trip.comment,
+    rating: null,
+    comment: null,
   };
 }
 
@@ -156,7 +178,7 @@ async function rateTrip({ userId, tripId, rating, comment, tags, requestId }) {
     result: 'Rating trip',
   });
 
-  const trip = await tripDao.getTripById(tripId, requestId);
+  const trip = await tripDao.getTripWithDetails(tripId, requestId);
 
   if (!trip) {
     const error = new Error('行程不存在');
@@ -176,13 +198,33 @@ async function rateTrip({ userId, tripId, rating, comment, tags, requestId }) {
     throw error;
   }
 
-  if (trip.rating) {
+  const targetUserId = trip.role === 'passenger'
+    ? trip.ride.driver_id
+    : trip.ride.participants.find((participant) => participant.user_id !== userId)?.user_id;
+
+  if (!targetUserId) {
+    const error = new Error('未找到可评价对象');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const alreadyRated = await tripDao.hasTripRating({ tripId, fromUserId: userId, requestId });
+
+  if (alreadyRated) {
     const error = new Error('行程已评价');
     error.statusCode = 400;
     throw error;
   }
 
-  await tripDao.updateTripRating(tripId, rating, comment, tags, requestId);
+  await tripDao.recordTripRating({
+    tripId,
+    fromUserId: userId,
+    toUserId: targetUserId,
+    score: rating,
+    comment,
+    tags,
+    requestId,
+  });
 
   // TODO: 更新用户评分平均值
 
@@ -241,14 +283,22 @@ async function getContactInfo({ userId, tripId, requestId }) {
     throw error;
   }
 
-  // TODO: 实现隐私电话功能
-  return {
-    driverPhone: trip.ride.driver?.phone,
-    passengerPhones: trip.ride.participants.map((p) => ({
+  // 尝试获取隐私代理号；若不可用则返回脱敏号码
+  const driverProxy = await privacyService.getProxyNumberForPair({ callerUserId: userId, calleeUserId: trip.ride.driver_id, tripId, requestId });
+
+  const passengerPhones = [];
+  for (const p of trip.ride.participants) {
+    const proxy = await privacyService.getProxyNumberForPair({ callerUserId: userId, calleeUserId: p.user_id, tripId, requestId });
+    passengerPhones.push({
       userId: p.user_id,
       userName: p.user?.user_name,
-      phone: p.user?.phone,
-    })),
+      phone: proxy || maskPhone(p.user?.phone),
+    });
+  }
+
+  return {
+    driverPhone: driverProxy || maskPhone(trip.ride.driver?.phone),
+    passengerPhones,
   };
 }
 
@@ -265,6 +315,16 @@ async function getCancelReasons({ type, requestId }) {
   });
 
   // TODO: 从数据库或配置文件获取取消原因
+  try {
+    const dbReasons = await tripDao.getCancelReasonsFromDb(type, requestId).catch(() => null);
+    if (dbReasons && dbReasons.length) {
+      return { reasons: dbReasons };
+    }
+  } catch (err) {
+    logger.warn({ module: 'trip-service', operate: 'get-cancel-reasons-db', requestId, error: err?.message || 'db read failed' });
+  }
+
+  // fallback static list
   const reasons = {
     passenger: [
       { id: 1, reason: '临时有事无法出行' },

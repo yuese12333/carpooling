@@ -16,7 +16,7 @@ async function findUserProfileById(userId, requestId) {
     const user = await prisma.authUser.findUnique({
       where: { user_id: userId },
       include: {
-        user_profile: true,
+        profile: true,
       },
     });
 
@@ -31,10 +31,10 @@ async function findUserProfileById(userId, requestId) {
       userName: user.user_name,
       avatarUrl: user.avatar_url,
       phone: user.phone,
-      creditScore: user.user_profile?.credit_score || 0,
-      ratingAvg: user.user_profile?.rating_avg || 0,
-      accumulatedSavings: user.user_profile?.accumulated_savings || 0,
-      level: user.user_profile?.level || 1,
+      creditScore: user.profile?.credit_score || 0,
+      ratingAvg: user.profile?.rating_avg || 0,
+      accumulatedSavings: user.profile?.accumulated_savings || 0,
+      level: user.profile?.level || 1,
     };
   } catch (error) {
     logger.error({
