@@ -1,16 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { getBalanceController } = require('../controller/payments-controller');
 
-const { getPaymentHistoryController, getReceiptController } = require('../controller/payments-controller');
+const authMiddleware = require('../middleware/auth-middleware');
+
+const { getBalanceController, getPaymentHistoryController, getReceiptController } = require('../controller/payments-controller');
 
 /** GET /api/payments/balance */
-router.get('/balance', getBalanceController);
+router.get('/balance', authMiddleware, getBalanceController);
 
 /** GET /api/payments/history */
-router.get('/history', getPaymentHistoryController);
+router.get('/history', authMiddleware, getPaymentHistoryController);
 
 /** GET /api/payments/receipts/:paymentId */
-router.get('/receipts/:paymentId', getReceiptController);
+router.get('/receipts/:paymentId', authMiddleware, getReceiptController);
 
 module.exports = router;

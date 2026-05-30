@@ -204,26 +204,14 @@ async function recordTripRating({ tripId, fromUserId, toUserId, score, comment, 
       _avg: { score: true },
     });
 
-    await prisma.userProfile.upsert({
+    // 仅当用户档案已存在时更新评分，避免硬编码 role_type 创建错误档案
+    await prisma.userProfile.update({
       where: { user_id: toUserId },
-      update: {
+      data: {
         rating_avg: aggregate._avg.score ?? score,
       },
-      create: {
-        user_id: toUserId,
-        role_type: 'passenger',
-        real_name: null,
-        gender: null,
-        age: null,
-        nationality: null,
-        accessibility_needs: null,
-        social_mode: 'efficiency',
-        credit_score: 100,
-        total_completed_orders: 0,
-        rating_avg: aggregate._avg.score ?? score,
-        accumulated_savings: 0,
-        level: 1,
-      },
+    }).catch(() => {
+      // 用户档案不存在时静默跳过，不影响评价创建
     });
 
     return rating;

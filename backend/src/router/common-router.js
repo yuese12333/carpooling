@@ -6,6 +6,8 @@
 const express = require('express');
 const router = express.Router();
 
+const optionalAuthMiddleware = require('../middleware/optional-auth-middleware');
+
 const {
   getLocationSuggestionsController,
   getProtocolController,
@@ -33,7 +35,7 @@ router.get('/protocol', getProtocolController);
  * 10.2 埋点日志上报
  * 路径：POST /api/logs/event
  */
-router.post('/logs/event', reportEventLogController);
+router.post('/logs/event', optionalAuthMiddleware, reportEventLogController);
 
 /**
  * 10.3 获取App运行配置
@@ -51,18 +53,18 @@ router.get('/protocol/check', checkProtocolUpdateController);
  * 10.5 前端异常/崩溃上报
  * 路径：POST /api/logs/error
  */
-router.post('/logs/error', reportErrorLogController);
+router.post('/logs/error', optionalAuthMiddleware, reportErrorLogController);
 
 /**
  * 10.6 性能指标上报
  * 路径：POST /api/logs/perf
  */
-router.post('/logs/perf', reportPerformanceLogController);
+router.post('/logs/perf', optionalAuthMiddleware, reportPerformanceLogController);
 
 /**
  * 10.7 批量行为埋点上报
  * 路径：POST /api/logs/events/batch
  */
-router.post('/logs/events/batch', reportEventLogsBatchController);
+router.post('/logs/events/batch', optionalAuthMiddleware, reportEventLogsBatchController);
 
 module.exports = router;

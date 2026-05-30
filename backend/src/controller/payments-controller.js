@@ -18,8 +18,6 @@ async function getBalanceController(req, res) {
   }
 }
 
-module.exports = { getBalanceController };
-
 async function getPaymentHistoryController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
   const userId = req.user?.userId;

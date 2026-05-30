@@ -196,7 +196,7 @@ async function getInviteInfo(userId, requestId) {
 async function recordShareEvent(userId, platform, scene = 'invite', requestId) {
   try {
     const rec = await prisma.shareEvent.create({ data: { user_id: userId, platform, scene } });
-    return { success: true, id: rec.id };
+    return { success: true, id: rec.id.toString() };
   } catch (error) {
     logger.error({ module: 'users-service', operate: 'record-share-event', params: { userId, platform, scene }, requestId, error: error.message });
     throw error;
@@ -210,10 +210,4 @@ module.exports = {
   getAuthStatus,
   getInviteInfo,
   recordShareEvent,
-};
-
-module.exports = {
-  checkCoreSchema,
-  initCoreSchema,
-  registerUser,
 };

@@ -36,6 +36,7 @@ model AuthUser {
   share_events        ShareEvent[]
   rides               Ride[]
   trip_participants   TripParticipant[]
+  trip_templates      TripTemplate[]
   real_name_auth      RealNameAuth?
   violations          UserViolation[]
   ratings_given       OrderRating[]       @relation("RatingFromUser")
@@ -521,9 +522,9 @@ model TripTemplate {
   origin         String   @db.VarChar(255)
   destination    String   @db.VarChar(255)
   departure_time DateTime?
-  frequency      String?  @db.VarChar(50)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  frequency      String?   @db.VarChar(50)
+  created_at     DateTime  @default(now()) @db.Timestamp(0)
+  updated_at     DateTime  @updatedAt @db.Timestamp(0)
 
   user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
@@ -537,7 +538,7 @@ model CancelReason {
   reason     String   @db.VarChar(255)
   sort_order Int      @default(0)
   status     String   @default("enabled") @db.VarChar(20)
-  created_at DateTime @default(now())
+  created_at DateTime @default(now()) @db.Timestamp(0)
 
   @@index([type, status], name: "idx_cancel_reasons_type_status")
   @@map("cancel_reasons")

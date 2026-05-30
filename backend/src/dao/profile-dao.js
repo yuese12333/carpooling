@@ -5,6 +5,7 @@
  */
 const prisma = require('../config/prisma');
 const { logger } = require('../utils/logger');
+const { randomUUID } = require('crypto');
 
 /**
  * 8.1 查询用户及档案信息
@@ -108,7 +109,7 @@ async function upsertVehicle(userId, vehicleData, requestId) {
   try {
     const vehicle = vehicleData.vehicleId
       ? await prisma.vehicle.update({
-          where: { vehicle_id: vehicleData.vehicleId },
+          where: { vehicle_id: vehicleData.vehicleId, owner_user_id: userId },
           data: {
             plate_number: vehicleData.plateNumber,
             brand: vehicleData.brand,
@@ -119,6 +120,7 @@ async function upsertVehicle(userId, vehicleData, requestId) {
         })
       : await prisma.vehicle.create({
           data: {
+            vehicle_id: `v_${randomUUID().replace(/-/g, '')}`,
             owner_user_id: userId,
             plate_number: vehicleData.plateNumber,
             brand: vehicleData.brand,
@@ -150,17 +152,14 @@ async function getUserBadges(userId, requestId) {
   try {
     const badges = await prisma.userBadge.findMany({
       where: { user_id: userId },
-      include: {
-        badge: true,
-      },
     });
 
     return badges.map((ub) => ({
-      badge_id: ub.badge.badge_id,
-      badge_name: ub.badge.badge_name,
-      badge_icon: ub.badge.badge_icon,
-      description: ub.badge.description,
-      earned_at: ub.earned_at,
+      badge_code: ub.badge_code,
+      label: ub.label,
+      emoji: ub.emoji,
+      unlocked: ub.unlocked,
+      unlocked_at: ub.unlocked_at,
     }));
   } catch (error) {
     logger.error({
@@ -207,17 +206,37 @@ async function getFrequentLocations(userId, requestId) {
  */
 async function upsertFrequentLocations(userId, locations, requestId) {
   try {
+    // First pass: find existing locations to build a map of user-owned IDs
+    const locationIds = locations.filter(l => l.locationId).map(l => l.locationId);
+    const existingSet = new Set();
+    if (locationIds.length > 0) {
+      const existing = await prisma.userLocation.findMany({
+        where: { location_id: { in: locationIds }, user_id: userId },
+        select: { location_id: true },
+      });
+      existing.forEach(loc => existingSet.add(loc.location_id));
+    }
+
     await prisma.$transaction(
-      locations.map((loc) =>
-        prisma.userLocation.upsert({
+      locations.map((loc) => {
+        const exists = loc.locationId && existingSet.has(loc.locationId);
+        return prisma.userLocation.upsert({
           where: { location_id: loc.locationId || 'create-new' },
-          update: {
+          update: exists ? {
             label: loc.label || loc.name,
             address: loc.address,
             latitude: loc.latitude,
             longitude: loc.longitude,
             type: loc.type || 'other',
             is_deleted: false,
+          } : {
+            label: loc.label || loc.name,
+            address: loc.address,
+            latitude: loc.latitude,
+            longitude: loc.longitude,
+            type: loc.type || 'other',
+            is_deleted: false,
+            is_default: false,
           },
           create: {
             location_id: loc.locationId || `loc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -230,8 +249,8 @@ async function upsertFrequentLocations(userId, locations, requestId) {
             is_default: false,
             is_deleted: false,
           },
-        })
-      )
+        });
+      })
     );
 
     return { success: true };
@@ -357,7 +376,7 @@ async function updateLogoutTime(userId, requestId) {
     await prisma.authUser.update({
       where: { user_id: userId },
       data: {
-        last_login_at: new Date(),
+        updated_at: new Date(),
       },
     });
 
