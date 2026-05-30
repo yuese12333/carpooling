@@ -8,7 +8,6 @@ const { buildSuccessResponse, buildFailureResponse, createRequestId } = require(
 const { maskSensitive } = require('../utils/mask-utils');
 const {
   searchRides,
-  getLocationSuggestions,
   getSearchMetadata,
   getSearchPreferences,
   publishRide,
@@ -22,11 +21,11 @@ const {
 } = require('../service/ride-service');
 
 /**
- * 5.1 行程搜索
+ * 5.1 行程搜索（无需登录，未登录时返回公开数据）
  */
 async function searchRidesController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
-  const userId = req.user?.userId;
+  const userId = req.user?.userId; // 可选，未登录时返回公开数据
   const {
     fromText,
     toText,
@@ -40,10 +39,6 @@ async function searchRidesController(req, res) {
   } = req.query || {};
 
   try {
-    if (!userId) {
-      return res.status(401).json(buildFailureResponse(401, '未授权访问', null, requestId));
-    }
-
     // 参数校验
     if (!fromText || !toText) {
       return res.status(400).json(buildFailureResponse(400, '出发地和目的地不能为空', null, requestId));
@@ -79,41 +74,6 @@ async function searchRidesController(req, res) {
     });
     const status = error?.statusCode || 500;
     return res.status(status).json(buildFailureResponse(status, error?.message || '搜索行程失败', null, requestId));
-  }
-}
-
-/**
- * 5.2 地理位置建议/自动补全
- */
-async function getLocationSuggestionsController(req, res) {
-  const requestId = req.headers['x-request-id'] || createRequestId();
-  const { keyword, latitude, longitude, limit = 10 } = req.query || {};
-
-  try {
-    if (!keyword || typeof keyword !== 'string' || !keyword.trim()) {
-      return res.status(400).json(buildFailureResponse(400, '关键词不能为空', null, requestId));
-    }
-
-    const data = await getLocationSuggestions({
-      keyword: keyword.trim(),
-      latitude: latitude ? Number(latitude) : null,
-      longitude: longitude ? Number(longitude) : null,
-      limit: Number(limit),
-      requestId,
-    });
-
-    return res.json(buildSuccessResponse(data, requestId));
-  } catch (error) {
-    logger.error({
-      module: 'ride-controller',
-      operate: 'get-location-suggestions',
-      params: { keyword },
-      requestId,
-      error: error?.message || '获取位置建议失败',
-      errorType: error?.name || 'UnknownError',
-    });
-    const status = error?.statusCode || 500;
-    return res.status(status).json(buildFailureResponse(status, error?.message || '获取位置建议失败', null, requestId));
   }
 }
 
@@ -487,7 +447,6 @@ async function privateContactController(req, res) {
 
 module.exports = {
   searchRidesController,
-  getLocationSuggestionsController,
   getSearchMetadataController,
   getSearchPreferencesController,
   publishRideController,

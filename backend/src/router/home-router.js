@@ -6,6 +6,8 @@
 const express = require('express');
 const router = express.Router();
 
+const authMiddleware = require('../middleware/auth-middleware');
+
 const {
   getUserInfoController,
   getRecommendRidesController,
@@ -17,13 +19,13 @@ const {
  * 4.1 获取当前用户信息
  * 路径：GET /api/home/user-info
  */
-router.get('/user-info', getUserInfoController);
+router.get('/user-info', authMiddleware, getUserInfoController);
 
 /**
  * 4.2 获取推荐行程列表
- * 路径：GET /api/rides/recommend
+ * 路径：GET /api/home/rides/recommend
  */
-router.get('/rides/recommend', getRecommendRidesController);
+router.get('/rides/recommend', authMiddleware, getRecommendRidesController);
 
 /**
  * 4.3 获取系统统计数据
@@ -33,8 +35,8 @@ router.get('/statistics', getStatisticsController);
 
 /**
  * 4.4 获取未读通知状态
- * 路径：GET /api/notifications/unread-status
+ * 路径：GET /api/home/notifications/unread-status
  */
-router.get('/notifications/unread-status', getUnreadStatusController);
+router.get('/notifications/unread-status', authMiddleware, getUnreadStatusController);
 
 module.exports = router;

@@ -6,6 +6,8 @@
 const express = require('express');
 const router = express.Router();
 
+const authMiddleware = require('../middleware/auth-middleware');
+
 const {
   getProfileInfoController,
   updateProfileController,
@@ -25,67 +27,67 @@ const {
  * 8.1 获取用户信息
  * 路径：GET /api/profile/info
  */
-router.get('/info', getProfileInfoController);
+router.get('/info', authMiddleware, getProfileInfoController);
 
 /**
  * 8.2 更新用户资料
  * 路径：POST /api/profile/update
  */
-router.post('/update', updateProfileController);
+router.post('/update', authMiddleware, updateProfileController);
 
 /**
  * 8.3 获取车辆详情
  * 路径：GET /api/profile/car
  */
-router.get('/car', getVehicleController);
+router.get('/car', authMiddleware, getVehicleController);
 
 /**
  * 8.4 更新车辆信息
  * 路径：POST /api/profile/car/update
  */
-router.post('/car/update', updateVehicleController);
+router.post('/car/update', authMiddleware, updateVehicleController);
 
 /**
  * 8.5 获取成就勋章列表
  * 路径：GET /api/profile/badges
  */
-router.get('/badges', getBadgesController);
+router.get('/badges', authMiddleware, getBadgesController);
 
 /**
  * 8.6 获取常用地点
  * 路径：GET /api/profile/frequent-locations
  */
-router.get('/frequent-locations', getFrequentLocationsController);
+router.get('/frequent-locations', authMiddleware, getFrequentLocationsController);
 
 /**
  * 8.7 更新常用地点
  * 路径：POST /api/profile/frequent-locations/update
  */
-router.post('/frequent-locations/update', updateFrequentLocationsController);
+router.post('/frequent-locations/update', authMiddleware, updateFrequentLocationsController);
 
 /**
  * 8.8 获取支付方式状态
  * 路径：GET /api/profile/payment-methods
  */
-router.get('/payment-methods', getPaymentMethodsController);
+router.get('/payment-methods', authMiddleware, getPaymentMethodsController);
 
 /**
  * 8.9 获取通知设置
  * 路径：GET /api/profile/notification-settings
  */
-router.get('/notification-settings', getNotificationSettingsController);
+router.get('/notification-settings', authMiddleware, getNotificationSettingsController);
 
 /**
  * 8.10 更新通知设置
  * 路径：POST /api/profile/notification-settings/update
  */
-router.post('/notification-settings/update', updateNotificationSettingsController);
+router.post('/notification-settings/update', authMiddleware, updateNotificationSettingsController);
 
 /**
  * 8.11 退出登录
  * 路径：POST /api/profile/logout
  */
-router.post('/logout', logoutController);
+router.post('/logout', authMiddleware, logoutController);
 
 /**
  * 8.12 版本检测

@@ -36,12 +36,12 @@ async function clearNotifications(userId, ids = [], requestId) {
     if (ids && ids.length > 0) {
       await prisma.notification.updateMany({
         where: { user_id: userId, notification_id: { in: ids } },
-        data: { read: true, read_at: new Date() },
+        data: { is_read: true, read_at: new Date() },
       });
     } else {
       await prisma.notification.updateMany({
-        where: { user_id: userId, read: false },
-        data: { read: true, read_at: new Date() },
+        where: { user_id: userId, is_read: false },
+        data: { is_read: true, read_at: new Date() },
       });
     }
 
@@ -66,9 +66,8 @@ async function createNotification(userId, title, body, meta = {}, requestId) {
         notification_id: `n_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
         user_id: userId,
         title,
-        body,
-        meta_json: meta,
-        read: false,
+        content: body,
+        is_read: false,
       },
     });
 
