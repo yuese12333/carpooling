@@ -124,7 +124,7 @@ export async function fetchAdminUsersList(query: AdminUserListQuery): Promise<Ap
       };
     }
 
-    const res = await request.get<ApiResponse<AdminUserListResponse>>('/admin/users', {
+    const res = await request.get<any, ApiResponse<AdminUserListResponse>>('/admin/users', {
       params: {
         page: query.page ?? 1,
         pageSize: query.pageSize ?? 10,
@@ -132,14 +132,14 @@ export async function fetchAdminUsersList(query: AdminUserListQuery): Promise<Ap
         userName: query.userName,
         role: query.role,
         status: query.status,
-      },
+      } as Record<string, unknown>,
     });
     return res;
   } catch (error: any) {
     logger.error({
       module: moduleName,
       operate: operation,
-      params: query,
+      params: query as unknown as Record<string, unknown>,
       result: undefined,
       error: error?.message || String(error),
       errorType: 'API_FETCH_ERROR',
@@ -163,10 +163,11 @@ export async function updateAdminUserStatus(params: { targetUserId: string; stat
       };
     }
 
-    const res = await request.post<ApiResponse<{ targetUserId: string; status: AdminUserStatus }>>('/admin/users/status', params);
+    const res = await request.post<any, ApiResponse<{ targetUserId: string; status: AdminUserStatus }>>('/admin/users/status', params);
     return res;
   } catch (error: unknown) {
     logAdminUpdateFailure(moduleName, operation, params, error);
+    throw error;
   }
 }
 
@@ -184,10 +185,11 @@ export async function updateAdminUserRole(params: { targetUserId: string; role: 
       };
     }
 
-    const res = await request.post<ApiResponse<{ targetUserId: string; role: AdminUserRole }>>('/admin/users/role', params);
+    const res = await request.post<any, ApiResponse<{ targetUserId: string; role: AdminUserRole }>>('/admin/users/role', params);
     return res;
   } catch (error: unknown) {
     logAdminUpdateFailure(moduleName, operation, params, error);
+    throw error;
   }
 }
 

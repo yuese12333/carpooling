@@ -203,11 +203,80 @@ async function recordShareEvent(userId, platform, scene = 'invite', requestId) {
   }
 }
 
+/**
+ * 提交实名认证
+ * 入参：{ userId, name, idNumber, idType, requestId }
+ * 出参：脱敏后的 RealNameInfo
+ *
+ * 课程设计阶段：身份证号写入 sha256 哈希 + 掩码两份，明文不落库；
+ * verify_status 默认 pending，演示需要可在这里直接置 verified 并写 verified_at。
+ */
+async function submitRealNameAuth({ userId, name, idNumber, idType = 'id_card', requestId }) {
+  const trimmedName = typeof name === 'string' ? name.trim() : '';
+  const trimmedId = typeof idNumber === 'string' ? idNumber.trim() : '';
+  if (!trimmedName) {
+    const err = new Error('姓名不能为空');
+    err.statusCode = 400;
+    throw err;
+  }
+  if (!/^\d{17}[\dXx]$|^\d{15}$/.test(trimmedId)) {
+    const err = new Error('身份证号格式不合法');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const idHash = passwordUtils.sha256(trimmedId);
+  const idMask = trimmedId.length === 18
+    ? `${trimmedId.slice(0, 3)}***********${trimmedId.slice(-4)}`
+    : `${trimmedId.slice(0, 3)}********${trimmedId.slice(-4)}`;
+  const nameMask = trimmedName.length <= 1 ? trimmedName : `*${trimmedName.slice(1)}`;
+
+  try {
+    const existing = await prisma.realNameAuth.findUnique({ where: { user_id: userId } }).catch(() => null);
+    if (existing && existing.verify_status === 'verified') {
+      const err = new Error('已完成实名认证，无需重复提交');
+      err.statusCode = 409;
+      throw err;
+    }
+
+    const authId = existing?.auth_id || `rna_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const data = {
+      real_name: trimmedName,
+      id_type: idType,
+      id_number_hash: idHash,
+      id_number_mask: idMask,
+      verify_status: 'verified', // 课设演示自动通过；接生产时改为 pending 并交人工/三方审核
+      verified_at: new Date(),
+    };
+
+    if (existing) {
+      await prisma.realNameAuth.update({ where: { user_id: userId }, data });
+    } else {
+      await prisma.realNameAuth.create({ data: { auth_id: authId, user_id: userId, ...data } });
+    }
+
+    logger.info({ module: 'users-service', operate: 'submit-real-name-auth', params: { userId, idType, nameLength: trimmedName.length, idLength: trimmedId.length }, requestId, result: 'verified' });
+
+    return {
+      isVerified: true,
+      realName: nameMask,
+      idCardNo: idMask,
+      idType: idType === 'id_card' ? '中国居民身份证' : idType,
+    };
+  } catch (error) {
+    if (!error.statusCode) {
+      logger.error({ module: 'users-service', operate: 'submit-real-name-auth', params: { userId }, requestId, error: error.message });
+    }
+    throw error;
+  }
+}
+
 module.exports = {
   checkCoreSchema,
   initCoreSchema,
   registerUser,
   getAuthStatus,
+  submitRealNameAuth,
   getInviteInfo,
   recordShareEvent,
 };

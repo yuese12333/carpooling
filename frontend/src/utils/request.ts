@@ -68,7 +68,7 @@ request.interceptors.request.use(
  * 业务失败仍 resolve 标准 ApiResponse，由调用方按 success/code 处理。
  */
 request.interceptors.response.use(
-    (response) => {
+    ((response: any) => {
         const body = response.data as ApiResponse;
         const { currentRequestId } = useEnvStore.getState();
 
@@ -85,8 +85,9 @@ request.interceptors.response.use(
             }
         }
 
-        return body;
-    },
+        // 解包 response.data 为 ApiResponse 直接返回；axios 拦截器类型期望 AxiosResponse，这里用类型断言抹平
+        return body as any;
+    }) as any,
     (error: AxiosError) => {
         const { currentRequestId } = useEnvStore.getState();
         const url = error.config?.url || '';

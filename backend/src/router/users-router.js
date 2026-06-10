@@ -37,6 +37,11 @@ router.post('/me/track-share', authMiddleware, async (req, res, next) => {
   return require('../controller/users-controller').trackShareController(req, res, next);
 });
 
+/** POST /api/users/me/auth/verify */
+router.post('/me/auth/verify', authMiddleware, async (req, res, next) => {
+  return require('../controller/users-controller').submitAuthVerifyController(req, res, next);
+});
+
 /** @deprecated 请使用 POST /api/auth/register，避免绕过注册校验流程 */
 router.post('/create', (req, res) => {
   const requestId = req.headers['x-request-id'] || createRequestId();

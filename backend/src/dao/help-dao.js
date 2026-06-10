@@ -1,6 +1,7 @@
 /**
- * 帮助中心数据访问（最小实现，返回静态分类）
+ * 帮助中心数据访问
  */
+const prisma = require('../config/prisma');
 const { logger } = require('../utils/logger');
 
 async function listHelpCategories(requestId) {
@@ -20,6 +21,29 @@ async function listHelpCategories(requestId) {
   }
 }
 
+async function listHelpQuestions({ keyword, categoryId, hotOnly, limit = 50, requestId }) {
+  try {
+    const where = { status: 'enabled' };
+    if (categoryId) where.category_id = categoryId;
+    if (hotOnly) where.is_hot = true;
+    if (keyword) {
+      where.OR = [
+        { question: { contains: keyword } },
+        { answer: { contains: keyword } },
+      ];
+    }
+    return await prisma.helpQuestion.findMany({
+      where,
+      orderBy: [{ is_hot: 'desc' }, { sort_order: 'asc' }, { created_at: 'desc' }],
+      take: Math.min(Number(limit) || 50, 100),
+    });
+  } catch (error) {
+    logger.error({ module: 'help-dao', operate: 'list-help-questions', params: { keyword, categoryId, hotOnly }, requestId, error: error.message });
+    throw error;
+  }
+}
+
 module.exports = {
   listHelpCategories,
+  listHelpQuestions,
 };

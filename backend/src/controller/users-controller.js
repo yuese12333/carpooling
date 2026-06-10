@@ -221,4 +221,25 @@ module.exports = {
       return res.status(status).json(buildFailureResponse(status, err?.message || '记录分享事件失败', null, requestId));
     }
   },
+  async submitAuthVerifyController(req, res) {
+    const requestId = req.headers['x-request-id'] || createRequestId();
+    const userId = req.user?.userId;
+    // 兼容前端字段：name / idNumber，同时允许 realName / idType
+    const { name, realName, idNumber, idType } = req.body || {};
+    try {
+      if (!userId) return res.status(401).json(buildFailureResponse(401, '未授权访问', null, requestId));
+      const data = await usersService.submitRealNameAuth({
+        userId,
+        name: name || realName,
+        idNumber,
+        idType,
+        requestId,
+      });
+      return res.json(buildSuccessResponse(data, requestId));
+    } catch (err) {
+      logger.error({ module: 'users-controller', operate: 'submit-auth-verify', requestId, error: err?.message || 'submit auth verify failed' });
+      const status = err?.statusCode || 500;
+      return res.status(status).json(buildFailureResponse(status, err?.message || '提交实名认证失败', null, requestId));
+    }
+  },
 };

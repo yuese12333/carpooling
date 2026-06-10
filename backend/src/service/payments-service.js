@@ -58,9 +58,57 @@ async function issueRefund({ orderId, amount, requestId }) {
   }
 }
 
+function pickMonthRange(monthStr) {
+  const now = new Date();
+  let year = now.getFullYear();
+  let month = now.getMonth();
+  if (typeof monthStr === 'string' && /^\d{4}-\d{2}$/.test(monthStr)) {
+    const [y, m] = monthStr.split('-').map(Number);
+    year = y;
+    month = m - 1;
+  }
+  const start = new Date(year, month, 1, 0, 0, 0, 0);
+  const end = new Date(year, month + 1, 1, 0, 0, 0, 0);
+  const label = `${year}-${String(month + 1).padStart(2, '0')}`;
+  return { start, end, label };
+}
+
+async function listPaymentMethods({ userId, requestId }) {
+  logger.info({ module: 'payments-service', operate: 'list-payment-methods', params: { userId }, requestId, result: 'fetching' });
+  const rows = await paymentsDao.listPaymentMethodsByUser(userId, requestId);
+  return rows.map((m) => ({
+    id: m.method_id,
+    type: m.method_type,
+    name: m.display_name,
+    sub: m.bind_summary || '',
+    isDefault: m.is_default,
+    extra: m.extra_json || null,
+  }));
+}
+
+async function setDefaultPaymentMethod({ userId, methodId, requestId }) {
+  logger.info({ module: 'payments-service', operate: 'set-default-payment-method', params: { userId, methodId }, requestId, result: 'updating' });
+  if (!methodId) {
+    const err = new Error('methodId 不能为空');
+    err.statusCode = 400;
+    throw err;
+  }
+  return await paymentsDao.setDefaultPaymentMethod(userId, methodId, requestId);
+}
+
+async function getMonthlyStats({ userId, month, requestId }) {
+  const { start, end, label } = pickMonthRange(month);
+  logger.info({ module: 'payments-service', operate: 'get-monthly-stats', params: { userId, month: label }, requestId, result: 'aggregating' });
+  const stats = await paymentsDao.getMonthlyPaymentStats(userId, start, end, requestId);
+  return { month: label, totalExpense: stats.totalExpense, orderCount: stats.orderCount };
+}
+
 module.exports = {
   getBalance,
   issueRefund,
+  listPaymentMethods,
+  setDefaultPaymentMethod,
+  getMonthlyStats,
   // history & receipts
   async getPaymentHistory({ userId, page = 1, pageSize = 20, requestId }) {
     const result = await paymentsDao.listPaymentsByUser(userId, page, pageSize, requestId);

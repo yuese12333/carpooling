@@ -213,7 +213,7 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
             });
 
             // 本地存储用户信息并重定向（registerLocal 内部会解析 token payload 获取 role）
-            await registerLocal(nickname, phoneNumber, password, registerRes.accessToken);
+            await registerLocal(nickname, phoneNumber, password, registerRes.data?.accessToken);
             router.replace(ROUTES.HOME);
         } catch (error: any) {
             logger.error({

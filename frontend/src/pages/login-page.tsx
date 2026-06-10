@@ -264,7 +264,7 @@ export default function LoginPage() {
               </Text>
               <TouchableOpacity
                 activeOpacity={0.75}
-                onPress={() => router.push('/map-test')}
+                onPress={() => router.push('/map-test' as any)}
                 style={styles.mapTestEntry}
               >
                 <Text style={styles.mapTestEntryText}>打开地图 SDK 测试页</Text>
