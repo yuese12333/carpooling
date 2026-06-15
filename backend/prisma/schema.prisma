@@ -48,6 +48,7 @@ model AuthUser {
   audit_logs_as_admin     AdminAuditLog[]        @relation("AuditLogAdmin")
   audit_logs_as_target    AdminAuditLog[]        @relation("AuditLogTarget")
   credentials_reviewed    DriverCredential[]     @relation("CredentialReviewer")
+  notification_setting    NotificationSetting?
 
   @@index([role], name: "idx_auth_users_role")
   @@index([status], name: "idx_auth_users_status")
@@ -640,4 +641,103 @@ model CarbonTransaction {
   @@index([user_id], name: "idx_carbon_transactions_user_id")
   @@index([order_id], name: "idx_carbon_transactions_order_id")
   @@map("carbon_transactions")
+}
+
+model NotificationSetting {
+  id                    BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id               String   @unique @db.VarChar(64)
+  push_enabled          Boolean  @default(true)
+  sms_enabled           Boolean  @default(true)
+  email_enabled         Boolean  @default(false)
+  order_notification    Boolean  @default(true)
+  promotion_notification Boolean @default(false)
+  created_at            DateTime @default(now()) @db.Timestamp(0)
+  updated_at            DateTime @updatedAt @db.Timestamp(0)
+
+  user AuthUser @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("notification_settings")
+}
+
+model EventLog {
+  id          BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id     String?  @db.VarChar(64)
+  event_type  String   @db.VarChar(50)
+  event_data  Json?
+  device_info String?  @db.VarChar(255)
+  ip_address  String?  @db.VarChar(50)
+  created_at  DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([user_id], name: "idx_event_logs_user_id")
+  @@index([event_type], name: "idx_event_logs_event_type")
+  @@index([created_at], name: "idx_event_logs_created_at")
+  @@map("event_logs")
+}
+
+model ErrorLog {
+  id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id      String?  @db.VarChar(64)
+  error_type   String   @db.VarChar(50)
+  error_message String  @db.Text
+  stack_trace  String?  @db.Text
+  request_url  String?  @db.VarChar(255)
+  request_data String?  @db.Text
+  device_info  String?  @db.VarChar(255)
+  ip_address   String?  @db.VarChar(50)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([user_id], name: "idx_error_logs_user_id")
+  @@index([error_type], name: "idx_error_logs_error_type")
+  @@index([created_at], name: "idx_error_logs_created_at")
+  @@map("error_logs")
+}
+
+model PerformanceLog {
+  id             BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id        String?  @db.VarChar(64)
+  operation_type String   @db.VarChar(50)
+  duration_ms    Int
+  request_url    String?  @db.VarChar(255)
+  device_info    String?  @db.VarChar(255)
+  created_at     DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([user_id], name: "idx_performance_logs_user_id")
+  @@index([operation_type], name: "idx_performance_logs_operation_type")
+  @@index([created_at], name: "idx_performance_logs_created_at")
+  @@map("performance_logs")
+}
+
+model SystemConfig {
+  config_key   String   @id @db.VarChar(64)
+  config_value String   @db.Text
+  description  String?  @db.VarChar(255)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @updatedAt @db.Timestamp(0)
+
+  @@map("system_configs")
+}
+
+model SearchHistory {
+  id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id      String   @db.VarChar(64)
+  from_text    String?  @db.VarChar(255)
+  to_text      String?  @db.VarChar(255)
+  search_type  String   @default("ride") @db.VarChar(20)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([user_id], name: "idx_search_history_user_id")
+  @@index([created_at], name: "idx_search_history_created_at")
+  @@map("search_history")
+}
+
+model Protocol {
+  type         String   @id @db.VarChar(50)
+  title        String   @db.VarChar(100)
+  content      String   @db.Text
+  version      String   @db.VarChar(20)
+  force_update Boolean  @default(false)
+  created_at   DateTime @default(now()) @db.Timestamp(0)
+  updated_at   DateTime @updatedAt @db.Timestamp(0)
+
+  @@map("protocols")
 }

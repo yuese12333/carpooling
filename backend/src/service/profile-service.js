@@ -5,6 +5,11 @@
  */
 const { logger } = require('../utils/logger');
 const profileDao = require('../dao/profile-dao');
+const commonDao = require('../dao/common-dao');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
+const tokenBlacklist = new Set();
 
 /**
  * 8.1 获取用户信息
@@ -275,7 +280,7 @@ async function updateNotificationSettings({ userId, settings, requestId }) {
 /**
  * 8.11 退出登录
  */
-async function logout({ userId, requestId }) {
+async function logout({ userId, token, requestId }) {
   logger.info({
     module: 'profile-service',
     operate: 'logout',
@@ -284,10 +289,18 @@ async function logout({ userId, requestId }) {
     result: 'Logging out',
   });
 
-  // TODO: 实现token失效逻辑(如加入黑名单)
+  if (token) {
+    tokenBlacklist.add(token);
+    setTimeout(() => tokenBlacklist.delete(token), 7 * 24 * 60 * 60 * 1000);
+  }
+
   await profileDao.updateLogoutTime(userId, requestId);
 
   return { success: true };
+}
+
+function isTokenBlacklisted(token) {
+  return tokenBlacklist.has(token);
 }
 
 /**
@@ -302,17 +315,50 @@ async function checkVersion({ platform, currentVersion, requestId }) {
     result: 'Checking version',
   });
 
-  // TODO: 从数据库或配置文件获取最新版本信息
-  const latestVersion = '1.0.0';
-  const needUpdate = currentVersion < latestVersion;
+  const configs = await commonDao.getConfigs([
+    'app_version',
+    'min_app_version',
+    'force_update_version',
+    'download_url_android',
+    'download_url_ios',
+    'update_log',
+  ], requestId);
+
+  const configMap = configs.reduce((acc, c) => {
+    acc[c.config_key] = c.config_value;
+    return acc;
+  }, {});
+
+  const latestVersion = configMap.app_version || '1.0.0';
+  const minVersion = configMap.min_app_version || '1.0.0';
+  const forceUpdateVersion = configMap.force_update_version || '0.0.0';
+  const downloadUrl = platform === 'ios'
+    ? configMap.download_url_ios || 'https://apps.apple.com/app/xxx'
+    : configMap.download_url_android || 'https://example.com/download';
+
+  const needUpdate = compareVersions(currentVersion, latestVersion) < 0;
+  const forceUpdate = compareVersions(currentVersion, forceUpdateVersion) < 0 ||
+    compareVersions(currentVersion, minVersion) < 0;
 
   return {
     needUpdate,
     latestVersion,
-    downloadUrl: needUpdate ? 'https://example.com/download' : null,
-    forceUpdate: false,
-    updateLog: needUpdate ? '修复已知问题，优化用户体验' : null,
+    downloadUrl: needUpdate ? downloadUrl : null,
+    forceUpdate,
+    updateLog: needUpdate ? (configMap.update_log || '修复已知问题，优化用户体验') : null,
   };
+}
+
+function compareVersions(v1, v2) {
+  const parts1 = v1.split('.').map(Number);
+  const parts2 = v2.split('.').map(Number);
+  for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+    const p1 = parts1[i] || 0;
+    const p2 = parts2[i] || 0;
+    if (p1 < p2) return -1;
+    if (p1 > p2) return 1;
+  }
+  return 0;
 }
 
 module.exports = {
@@ -328,4 +374,5 @@ module.exports = {
   updateNotificationSettings,
   logout,
   checkVersion,
+  isTokenBlacklisted,
 };

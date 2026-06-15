@@ -126,11 +126,33 @@ async function getSearchMetadata(requestId) {
  */
 async function getUserSearchPreferences(userId, requestId) {
   try {
-    // TODO: 实现用户搜索历史记录
-    // 暂时返回空数组
+    const recentSearches = await prisma.searchHistory.findMany({
+      where: { user_id: userId, search_type: 'ride' },
+      orderBy: { created_at: 'desc' },
+      take: 10,
+    });
+
+    const frequentRoutes = await prisma.$queryRaw`
+      SELECT from_text, to_text, COUNT(*) as count
+      FROM search_history
+      WHERE user_id = ${userId} AND search_type = 'ride'
+        AND from_text IS NOT NULL AND to_text IS NOT NULL
+      GROUP BY from_text, to_text
+      ORDER BY count DESC
+      LIMIT 5
+    `;
+
     return {
-      recentSearches: [],
-      frequentRoutes: [],
+      recentSearches: recentSearches.map((s) => ({
+        fromText: s.from_text,
+        toText: s.to_text,
+        createdAt: s.created_at,
+      })),
+      frequentRoutes: frequentRoutes.map((r) => ({
+        fromText: r.from_text,
+        toText: r.to_text,
+        count: Number(r.count),
+      })),
     };
   } catch (error) {
     logger.error({

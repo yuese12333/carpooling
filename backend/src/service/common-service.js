@@ -5,9 +5,12 @@
  */
 const { logger } = require('../utils/logger');
 const commonDao = require('../dao/common-dao');
+const mapService = require('../utils/map-service');
 
 /**
  * 10.1 获取地点建议
+ * 入参：keyword（字符串，搜索关键字）、city（字符串，城市名）、requestId（字符串，链路追踪ID）
+ * 出参：Promise<Object> - 包含 suggestions 数组
  */
 async function getLocationSuggestions({ keyword, city, requestId }) {
   logger.info({
@@ -18,11 +21,20 @@ async function getLocationSuggestions({ keyword, city, requestId }) {
     result: 'Fetching location suggestions',
   });
 
-  // TODO: 调用地图API获取地点建议
-  const suggestions = await commonDao.searchLocations(keyword, city, requestId);
+  const mapSuggestions = await mapService.searchPlaces(keyword, city, 10, requestId);
+  const dbSuggestions = await commonDao.searchLocations(keyword, city, requestId);
+
+  const allSuggestions = [
+    ...mapSuggestions,
+    ...dbSuggestions.filter((db) =>
+      !mapSuggestions.some((map) =>
+        map.name === db.name || Math.abs(map.latitude - db.latitude) < 0.001
+      )
+    ),
+  ];
 
   return {
-    suggestions: suggestions.map((s) => ({
+    suggestions: allSuggestions.slice(0, 10).map((s) => ({
       name: s.name,
       address: s.address,
       latitude: s.latitude,
@@ -35,6 +47,8 @@ async function getLocationSuggestions({ keyword, city, requestId }) {
 
 /**
  * 10.2 获取协议内容
+ * 入参：type（字符串，协议类型）、requestId（字符串，链路追踪ID）
+ * 出参：Promise<Object> - 协议内容对象
  */
 async function getProtocol({ type, requestId }) {
   logger.info({
@@ -58,6 +72,8 @@ async function getProtocol({ type, requestId }) {
 
 /**
  * 10.3 上报事件日志
+ * 入参：userId（字符串，用户ID）、eventType（字符串，事件类型）、eventData（对象，事件数据）、page（字符串，页面标识）、timestamp（字符串，时间戳）、requestId（字符串，链路追踪ID）
+ * 出参：Promise<Object> - { success: boolean }
  */
 async function reportEventLog({ userId, eventType, eventData, page, timestamp, requestId }) {
   logger.info({
@@ -81,6 +97,8 @@ async function reportEventLog({ userId, eventType, eventData, page, timestamp, r
 
 /**
  * 10.4 获取配置信息
+ * 入参：keys（数组，配置键名列表）、requestId（字符串，链路追踪ID）
+ * 出参：Promise<Object> - 配置键值对对象
  */
 async function getConfig({ keys, requestId }) {
   logger.info({
@@ -106,6 +124,8 @@ async function getConfig({ keys, requestId }) {
 
 /**
  * 10.5 检测协议更新
+ * 入参：type（字符串，协议类型）、version（字符串，当前版本）、requestId（字符串，链路追踪ID）
+ * 出参：Promise<Object> - { needUpdate, latestVersion, forceUpdate }
  */
 async function checkProtocolUpdate({ type, version, requestId }) {
   logger.info({
@@ -129,6 +149,8 @@ async function checkProtocolUpdate({ type, version, requestId }) {
 
 /**
  * 10.6 上报错误日志
+ * 入参：userId（字符串，用户ID）、errorType（字符串，错误类型）、errorMessage（字符串，错误消息）、errorStack（字符串，错误堆栈）、page（字符串，页面标识）、timestamp（字符串，时间戳）、requestId（字符串，链路追踪ID）
+ * 出参：Promise<Object> - { success: boolean }
  */
 async function reportErrorLog({ userId, errorType, errorMessage, errorStack, page, timestamp, requestId }) {
   logger.info({
@@ -153,6 +175,8 @@ async function reportErrorLog({ userId, errorType, errorMessage, errorStack, pag
 
 /**
  * 10.7 上报性能日志
+ * 入参：userId（字符串，用户ID）、metrics（对象，性能指标）、page（字符串，页面标识）、timestamp（字符串，时间戳）、requestId（字符串，链路追踪ID）
+ * 出参：Promise<Object> - { success: boolean }
  */
 async function reportPerformanceLog({ userId, metrics, page, timestamp, requestId }) {
   logger.info({
@@ -175,6 +199,8 @@ async function reportPerformanceLog({ userId, metrics, page, timestamp, requestI
 
 /**
  * 10.8 批量上报事件日志
+ * 入参：userId（字符串，用户ID）、events（数组，事件列表）、requestId（字符串，链路追踪ID）
+ * 出参：Promise<Object> - { success: boolean, count: number }
  */
 async function reportEventLogsBatch({ userId, events, requestId }) {
   logger.info({

@@ -7,6 +7,7 @@ const { logger } = require('../utils/logger');
 const { maskPhone } = require('../utils/mask-utils');
 const tripDao = require('../dao/trip-dao');
 const privacyService = require('./privacy-service');
+const prisma = require('../config/prisma');
 
 /**
  * 9.1 获取行程列表
@@ -226,7 +227,18 @@ async function rateTrip({ userId, tripId, rating, comment, tags, requestId }) {
     requestId,
   });
 
-  // TODO: 更新用户评分平均值
+  const ratings = await prisma.orderRating.findMany({
+    where: { to_user_id: targetUserId },
+    select: { score: true },
+  });
+
+  if (ratings.length > 0) {
+    const avgRating = ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length;
+    await prisma.userProfile.update({
+      where: { user_id: targetUserId },
+      data: { rating_avg: Math.round(avgRating * 100) / 100 },
+    });
+  }
 
   return { success: true };
 }
@@ -314,17 +326,20 @@ async function getCancelReasons({ type, requestId }) {
     result: 'Fetching cancel reasons',
   });
 
-  // TODO: 从数据库或配置文件获取取消原因
   try {
-    const dbReasons = await tripDao.getCancelReasonsFromDb(type, requestId).catch(() => null);
-    if (dbReasons && dbReasons.length) {
+    const dbReasons = await prisma.cancelReason.findMany({
+      where: { type, status: 'enabled' },
+      orderBy: { sort_order: 'asc' },
+      select: { id: true, reason: true },
+    });
+
+    if (dbReasons && dbReasons.length > 0) {
       return { reasons: dbReasons };
     }
   } catch (err) {
     logger.warn({ module: 'trip-service', operate: 'get-cancel-reasons-db', requestId, error: err?.message || 'db read failed' });
   }
 
-  // fallback static list
   const reasons = {
     passenger: [
       { id: 1, reason: '临时有事无法出行' },

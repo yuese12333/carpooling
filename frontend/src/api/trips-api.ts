@@ -1,13 +1,15 @@
 /**
  * @file trips-api.ts
  * @description 行程管理模块 API 请求封装。
- * @version 1.2.0 (Refactored: Linear logic without Try-Catch)
+ * @version 1.3.0 (Added Mock mode support)
  */
 
 import request from '@/utils/request';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
 import { syncRequestId } from '@/utils/sync-request-id';
+import { useEnvStore } from '../store/env-store';
+import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 // --- 类型定义 ---
 
@@ -55,6 +57,63 @@ export interface RateTripParams {
 
 const MODULE_NAME = 'trips-api';
 
+// --- Mock 数据 ---
+
+const MOCK_TRIP_LIST: TripListData = {
+    list: [
+        {
+            tripId: 'trip_mock_001',
+            rideId: 'ride_mock_001',
+            role: 'passenger',
+            status: 'upcoming',
+            from: '北京市朝阳区望京SOHO',
+            to: '北京市海淀区中关村软件园',
+            date: '2026-06-16',
+            time: '08:30',
+            duration: '45分钟',
+            price: 25,
+            bookedSeats: 1,
+            isRated: false,
+            driverInfo: {
+                name: '张师傅',
+                avatar: '',
+                car: '大众帕萨特',
+                carPlate: '京A****88',
+                rating: 4.9,
+            },
+        },
+        {
+            tripId: 'trip_mock_002',
+            rideId: 'ride_mock_002',
+            role: 'driver',
+            status: 'completed',
+            from: '北京市海淀区五道口',
+            to: '北京市朝阳区国贸',
+            date: '2026-06-14',
+            time: '18:00',
+            duration: '50分钟',
+            price: 35,
+            bookedSeats: 2,
+            isRated: false,
+            driverInfo: {
+                name: '我',
+                avatar: '',
+                car: '我的车',
+                carPlate: '京B****66',
+                rating: 5.0,
+            },
+        },
+    ],
+    total: 2,
+};
+
+const MOCK_CONTACT = {
+    driverPhone: '138****1234',
+    passengerPhones: [
+        { userId: 'u_001', userName: '乘客A', phone: '139****5678' },
+    ],
+};
+
 // --- API 请求函数 ---
 
 export const tripsApi = {
@@ -74,11 +133,24 @@ export const tripsApi = {
         requestId: string
     ): Promise<ApiResponse<TripListData>> => {
         syncRequestId(requestId);
+        const isMockMode = useEnvStore.getState().isMockMode;
+
+        if (isMockMode) {
+            await mockDelay(MOCK_DELAY_MS.LIST);
+            logger.info({
+                module: MODULE_NAME,
+                operate: 'getList_MOCK',
+                params,
+                result: 'Mock trip list returned',
+                requestId,
+            });
+            return { success: true, message: 'mock', data: MOCK_TRIP_LIST };
+        }
+
         const result = await request.get<any, ApiResponse<TripListData>>('/trips', {
             params,
         });
 
-        // 仅在业务成功时记录日志，失败日志已由底层 request.ts 处理
         if (result.success) {
             logger.info({
                 module: MODULE_NAME,
@@ -101,7 +173,20 @@ export const tripsApi = {
      */
     cancelTrip: async (tripId: string, requestId: string, reason?: string): Promise<ApiResponse<null>> => {
         syncRequestId(requestId);
+        const isMockMode = useEnvStore.getState().isMockMode;
         const params = { reason: reason ?? undefined };
+
+        if (isMockMode) {
+            await mockDelay(MOCK_DELAY_MS.ACTION);
+            logger.info({
+                module: MODULE_NAME,
+                operate: 'cancelTrip_MOCK',
+                params: { tripId },
+                result: 'Trip cancelled (mock)',
+                requestId,
+            });
+            return { success: true, message: 'mock', data: null };
+        }
 
         const result = await request.post<any, ApiResponse<null>>(`/trips/${tripId}/cancel`, params);
 
@@ -126,6 +211,20 @@ export const tripsApi = {
      */
     rateTrip: async (data: RateTripParams, requestId: string): Promise<ApiResponse<null>> => {
         syncRequestId(requestId);
+        const isMockMode = useEnvStore.getState().isMockMode;
+
+        if (isMockMode) {
+            await mockDelay(MOCK_DELAY_MS.ACTION);
+            logger.info({
+                module: MODULE_NAME,
+                operate: 'rateTrip_MOCK',
+                params: { tripId: data.tripId, score: data.score },
+                result: 'Rating submitted (mock)',
+                requestId,
+            });
+            return { success: true, message: 'mock', data: null };
+        }
+
         const { tripId, ...rateBody } = data;
         const result = await request.post<any, ApiResponse<null>>(`/trips/${tripId}/rate`, rateBody);
 
@@ -133,7 +232,7 @@ export const tripsApi = {
             logger.info({
                 module: MODULE_NAME,
                 operate: 'rateTrip',
-                params: { tripId: data.tripId, score: data.score }, // 仅记录非敏感字段
+                params: { tripId: data.tripId, score: data.score },
                 result: 'Rating submitted successfully',
                 requestId,
             });
@@ -150,6 +249,25 @@ export const tripsApi = {
      */
     getRebookTemplate: async (tripId: string, requestId: string): Promise<ApiResponse<any>> => {
         syncRequestId(requestId);
+        const isMockMode = useEnvStore.getState().isMockMode;
+
+        if (isMockMode) {
+            await mockDelay(MOCK_DELAY_MS.DETAIL);
+            const mockTemplate = {
+                origin: '北京市朝阳区望京SOHO',
+                destination: '北京市海淀区中关村软件园',
+                departureTime: '08:30',
+            };
+            logger.info({
+                module: MODULE_NAME,
+                operate: 'getRebookTemplate_MOCK',
+                params: { tripId },
+                result: 'Rebook template retrieved (mock)',
+                requestId,
+            });
+            return { success: true, message: 'mock', data: mockTemplate };
+        }
+
         const result = await request.get<any, ApiResponse<any>>('/trips/template', {
             params: { tripId },
         });
@@ -175,6 +293,20 @@ export const tripsApi = {
      */
     getContact: async (tripId: string, requestId: string): Promise<ApiResponse<any>> => {
         syncRequestId(requestId);
+        const isMockMode = useEnvStore.getState().isMockMode;
+
+        if (isMockMode) {
+            await mockDelay(MOCK_DELAY_MS.DETAIL);
+            logger.info({
+                module: MODULE_NAME,
+                operate: 'getContact_MOCK',
+                params: { tripId },
+                result: 'Contact info retrieved (mock)',
+                requestId,
+            });
+            return { success: true, message: 'mock', data: MOCK_CONTACT };
+        }
+
         const result = await request.get<any, ApiResponse<any>>(`/trips/${tripId}/contact`);
 
         if (result.success) {

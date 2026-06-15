@@ -156,8 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const isMockMode = useEnvStore.getState().isMockMode;
         try {
             const data = await loginByPasswordApi(
-                { phone, password, shouldRemember: rememberMe },
-                isMockMode
+                { phone, password, shouldRemember: rememberMe }
             );
 
             const decoded = decodeTokenPayload(data.token);

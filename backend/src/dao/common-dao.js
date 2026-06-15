@@ -11,26 +11,27 @@ const { logger } = require('../utils/logger');
  */
 async function searchLocations(keyword, city, requestId) {
   try {
-    // TODO: 调用地图API或从数据库搜索地点
-    // 暂时返回模拟数据
-    return [
-      {
-        name: `${keyword}示例地点1`,
-        address: `${city || '北京市'}朝阳区${keyword}路1号`,
-        latitude: 39.9042,
-        longitude: 116.4074,
-        city: city || '北京市',
-        district: '朝阳区',
+    const locations = await prisma.userLocation.findMany({
+      where: {
+        is_deleted: false,
+        OR: [
+          { label: { contains: keyword } },
+          { address: { contains: keyword } },
+        ],
+        ...(city && { address: { contains: city } }),
       },
-      {
-        name: `${keyword}示例地点2`,
-        address: `${city || '北京市'}海淀区${keyword}街2号`,
-        latitude: 39.9563,
-        longitude: 116.3326,
-        city: city || '北京市',
-        district: '海淀区',
-      },
-    ];
+      take: 10,
+      orderBy: { updated_at: 'desc' },
+    });
+
+    return locations.map((loc) => ({
+      name: loc.label,
+      address: loc.address,
+      latitude: loc.latitude ? parseFloat(loc.latitude) : null,
+      longitude: loc.longitude ? parseFloat(loc.longitude) : null,
+      city: city || '',
+      district: '',
+    }));
   } catch (error) {
     logger.error({
       module: 'common-dao',
@@ -49,28 +50,9 @@ async function searchLocations(keyword, city, requestId) {
  */
 async function getProtocolByType(type, requestId) {
   try {
-    // TODO: 从数据库获取协议内容
-    // 暂时返回模拟数据
-    const protocols = {
-      'user-agreement': {
-        type: 'user-agreement',
-        title: '用户服务协议',
-        content: '这是用户服务协议的内容...',
-        version: '1.0.0',
-        updated_at: new Date('2024-01-01'),
-        force_update: false,
-      },
-      'privacy-policy': {
-        type: 'privacy-policy',
-        title: '隐私政策',
-        content: '这是隐私政策的内容...',
-        version: '1.0.0',
-        updated_at: new Date('2024-01-01'),
-        force_update: false,
-      },
-    };
-
-    const protocol = protocols[type];
+    const protocol = await prisma.protocol.findUnique({
+      where: { type },
+    });
 
     if (!protocol) {
       const error = new Error('协议不存在');
@@ -78,7 +60,14 @@ async function getProtocolByType(type, requestId) {
       throw error;
     }
 
-    return protocol;
+    return {
+      type: protocol.type,
+      title: protocol.title,
+      content: protocol.content,
+      version: protocol.version,
+      updated_at: protocol.updated_at,
+      force_update: protocol.force_update,
+    };
   } catch (error) {
     logger.error({
       module: 'common-dao',
@@ -97,7 +86,16 @@ async function getProtocolByType(type, requestId) {
  */
 async function createEventLog(logData, requestId) {
   try {
-    // TODO: 实现事件日志表
+    const log = await prisma.eventLog.create({
+      data: {
+        user_id: logData.userId || null,
+        event_type: logData.eventType,
+        event_data: logData.eventData || null,
+        device_info: logData.deviceInfo || null,
+        ip_address: logData.ipAddress || null,
+      },
+    });
+
     logger.info({
       module: 'common-dao',
       operate: 'create-event-log',
@@ -106,7 +104,7 @@ async function createEventLog(logData, requestId) {
       result: 'Event log created',
     });
 
-    return { success: true };
+    return { success: true, id: log.id };
   } catch (error) {
     logger.error({
       module: 'common-dao',
@@ -125,20 +123,19 @@ async function createEventLog(logData, requestId) {
  */
 async function getConfigs(keys, requestId) {
   try {
-    // TODO: 从数据库获取配置
-    // 暂时返回模拟数据
-    const allConfigs = [
-      { config_key: 'app_version', config_value: '1.0.0', description: '应用版本' },
-      { config_key: 'min_app_version', config_value: '1.0.0', description: '最低支持版本' },
-      { config_key: 'customer_service_phone', config_value: '400-123-4567', description: '客服电话' },
-      { config_key: 'max_upload_size', config_value: '10485760', description: '最大上传文件大小(字节)' },
-    ];
+    const whereClause = keys && keys.length > 0
+      ? { config_key: { in: keys } }
+      : {};
 
-    if (!keys || keys.length === 0) {
-      return allConfigs;
-    }
+    const configs = await prisma.systemConfig.findMany({
+      where: whereClause,
+    });
 
-    return allConfigs.filter((config) => keys.includes(config.config_key));
+    return configs.map((config) => ({
+      config_key: config.config_key,
+      config_value: config.config_value,
+      description: config.description,
+    }));
   } catch (error) {
     logger.error({
       module: 'common-dao',
@@ -157,7 +154,19 @@ async function getConfigs(keys, requestId) {
  */
 async function createErrorLog(logData, requestId) {
   try {
-    // TODO: 实现错误日志表
+    const log = await prisma.errorLog.create({
+      data: {
+        user_id: logData.userId || null,
+        error_type: logData.errorType,
+        error_message: logData.errorMessage,
+        stack_trace: logData.stackTrace || null,
+        request_url: logData.requestUrl || null,
+        request_data: logData.requestData ? JSON.stringify(logData.requestData) : null,
+        device_info: logData.deviceInfo || null,
+        ip_address: logData.ipAddress || null,
+      },
+    });
+
     logger.info({
       module: 'common-dao',
       operate: 'create-error-log',
@@ -166,7 +175,7 @@ async function createErrorLog(logData, requestId) {
       result: 'Error log created',
     });
 
-    return { success: true };
+    return { success: true, id: log.id };
   } catch (error) {
     logger.error({
       module: 'common-dao',
@@ -185,16 +194,25 @@ async function createErrorLog(logData, requestId) {
  */
 async function createPerformanceLog(logData, requestId) {
   try {
-    // TODO: 实现性能日志表
+    const log = await prisma.performanceLog.create({
+      data: {
+        user_id: logData.userId || null,
+        operation_type: logData.operationType,
+        duration_ms: logData.durationMs,
+        request_url: logData.requestUrl || null,
+        device_info: logData.deviceInfo || null,
+      },
+    });
+
     logger.info({
       module: 'common-dao',
       operate: 'create-performance-log',
-      params: { userId: logData.userId },
+      params: { userId: logData.userId, operationType: logData.operationType },
       requestId,
       result: 'Performance log created',
     });
 
-    return { success: true };
+    return { success: true, id: log.id };
   } catch (error) {
     logger.error({
       module: 'common-dao',
@@ -213,7 +231,16 @@ async function createPerformanceLog(logData, requestId) {
  */
 async function createEventLogsBatch(logs, requestId) {
   try {
-    // TODO: 实现事件日志表批量插入
+    const result = await prisma.eventLog.createMany({
+      data: logs.map((log) => ({
+        user_id: log.userId || null,
+        event_type: log.eventType,
+        event_data: log.eventData || null,
+        device_info: log.deviceInfo || null,
+        ip_address: log.ipAddress || null,
+      })),
+    });
+
     logger.info({
       module: 'common-dao',
       operate: 'create-event-logs-batch',
@@ -222,7 +249,7 @@ async function createEventLogsBatch(logs, requestId) {
       result: 'Event logs batch created',
     });
 
-    return { success: true, count: logs.length };
+    return { success: true, count: result.count };
   } catch (error) {
     logger.error({
       module: 'common-dao',

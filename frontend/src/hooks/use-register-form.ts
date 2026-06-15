@@ -2,6 +2,7 @@
  * @file use-register-form.ts
  * @description 注册页面业务逻辑 Hook，负责表单状态管理、校验、验证码倒计时及注册提交逻辑。
  * 遵循规范：链路追踪自动化方案、结构化日志输出规范、隐私保护规范。
+ * @version 1.1.0 (Unified mock mode from store)
  */
 
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -38,11 +39,11 @@ const COUNTDOWN_INITIAL = 60;
 
 /**
  * 注册流程业务逻辑封装
- * @param {boolean} isMockMode - 是否启用 Mock 模式
+ * @param {boolean} isMockMode - 是否启用 Mock 模式（已废弃，从 store 获取）
  * @param {(...args: any[]) => Promise<void>} registerLocal - 本地存储注册信息的外部回调
  * @returns 包含状态（state）与动作（actions）的响应式对象
  */
-export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: any[]) => Promise<void>, requestId: string) => {
+export const useRegisterForm = (_isMockMode: boolean, registerLocal: (...args: any[]) => Promise<void>, requestId: string) => {
     const router = useRouter();
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -85,7 +86,7 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
 
         setIsLoading(true);
         try {
-            const sendRes = await sendSmsCode(formData.phoneNumber, isMockMode);
+            const sendRes = await sendSmsCode(formData.phoneNumber);
             const sent = Boolean(sendRes.success && sendRes.data?.success);
 
             logger.info({
@@ -145,13 +146,13 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
 
         try {
             // 适配点：从 res.data 中提取 isAvailable
-            const nickRes = await checkNickname(formData.nickname, isMockMode);
+            const nickRes = await checkNickname(formData.nickname);
             if (!nickRes.success || !nickRes.data?.isAvailable) {
                 return setFieldErrors({ nickname: nickRes.message || "昵称已被占用" });
             }
 
             // 适配点：从 res.data 中提取 isValid 和 tempToken
-            const verifyRes = await verifySmsCode(formData.phoneNumber, formData.verifyCode, isMockMode);
+            const verifyRes = await verifySmsCode(formData.phoneNumber, formData.verifyCode);
 
             logger.info({
                 module: 'register-hook',
@@ -173,7 +174,7 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
             setIsLoading(false);
         }
     };
-    /** * 最终注册提交逻辑 
+    /** * 最终注册提交逻辑
      */
     const handleRegisterSubmit = async () => {
         const { password, confirmPassword, isAgreed, nickname, phoneNumber, verifyCode } = formData;
@@ -201,7 +202,7 @@ export const useRegisterForm = (isMockMode: boolean, registerLocal: (...args: an
                 agreeProtocol: isAgreed,
             };
 
-            const registerRes = await registerUser(registerParams, isMockMode);
+            const registerRes = await registerUser(registerParams);
 
             // 记录注册成功日志，严禁记录 password
             logger.info({

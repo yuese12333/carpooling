@@ -3,6 +3,7 @@
  * @description 认证模块接口请求实现。
  * 包含登录鉴权、页面动态配置加载、注册流程接口及相关的类型定义。
  * 遵循规范：2.4 接口请求与数据处理规范、严格结构化日志输出规范。
+ * @version 1.1.0 (Unified mock mode from store)
  */
 
 import { Platform } from 'react-native';
@@ -107,17 +108,21 @@ const MOCK_LOGIN_SUCCESS: LoginData = {
  */
 const getContextRequestId = (): string => useEnvStore.getState().currentRequestId;
 
+/**
+ * 获取当前 Mock 模式状态
+ */
+const getMockMode = (): boolean => useEnvStore.getState().isMockMode;
+
 // --- 接口函数实现 ---
 
 /**
  * 获取登录页动态 UI 配置
- * @param isMockMode 是否启用 Mock 模式
  * @remarks 调用前须由页面层 setCurrentRequestId，日志与 Header 共用 store 中的 requestId
  * @returns 返回页面配置数据
  */
-export const fetchLoginConfig = async (
-    isMockMode: boolean,
-): Promise<ApiResponse<PageConfig>> => {
+export const fetchLoginConfig = async (): Promise<ApiResponse<PageConfig>> => {
+    const isMockMode = getMockMode();
+
     if (isMockMode) {
         await mockDelay(MOCK_DELAY_MS.CONFIG);
         return { success: true, message: 'mock', data: MOCK_CONFIG };
@@ -141,14 +146,14 @@ export const fetchLoginConfig = async (
 /**
  * 执行账号密码登录请求
  * @param payload 登录请求参数
- * @param isMockMode 是否启用 Mock 模式
  * @remarks 调用前须由页面层 setCurrentRequestId
  * @returns 登录结果
  */
 export const loginByPassword = async (
     payload: LoginRequest,
-    isMockMode: boolean,
 ): Promise<LoginData> => {
+    const isMockMode = getMockMode();
+
     if (isMockMode) {
         await mockDelay(MOCK_DELAY_MS.LOGIN);
         return MOCK_LOGIN_SUCCESS;
@@ -183,14 +188,14 @@ export const loginByPassword = async (
 /**
  * 检测用户昵称是否可用
  * @param {string} nickname - 待检测的昵称
- * @param {boolean} isMock - 是否启用 Mock 模式
  * @returns {Promise<ApiResponse<NicknameCheckData>>} 可用性检测结果
  */
 export const checkNickname = async (
-    nickname: string,
-    isMock: boolean
+    nickname: string
 ): Promise<ApiResponse<NicknameCheckData>> => {
-    if (isMock) {
+    const isMockMode = getMockMode();
+
+    if (isMockMode) {
         return { success: true, message: 'mock', data: { isAvailable: nickname !== "已占用" } };
     }
     const result = await request.get<any, ApiResponse<NicknameCheckData>>('/auth/register/check-nickname', {
@@ -211,14 +216,14 @@ export const checkNickname = async (
 /**
  * 发送短信验证码
  * @param {string} phoneNumber - 手机号
- * @param {boolean} isMock - 是否启用 Mock 模式
  * @returns {Promise<ApiResponse<{ success: boolean }>>} 是否发送成功
  */
 export const sendSmsCode = async (
-    phoneNumber: string,
-    isMock: boolean
+    phoneNumber: string
 ): Promise<ApiResponse<{ success: boolean }>> => {
-    if (isMock) {
+    const isMockMode = getMockMode();
+
+    if (isMockMode) {
         return { success: true, message: 'mock', data: { success: true } };
     }
 
@@ -250,15 +255,15 @@ export const sendSmsCode = async (
  * 校验短信验证码合法性
  * @param {string} phoneNumber - 手机号
  * @param {string} verifyCode - 验证码
- * @param {boolean} isMock - 是否启用 Mock 模式
  * @returns {Promise<ApiResponse<VerifyCodeData>>} 校验结果及临时令牌
  */
 export const verifySmsCode = async (
     phoneNumber: string,
-    verifyCode: string,
-    isMock: boolean
+    verifyCode: string
 ): Promise<ApiResponse<VerifyCodeData>> => {
-    if (isMock) {
+    const isMockMode = getMockMode();
+
+    if (isMockMode) {
         return { success: true, message: 'mock', data: { isValid: true, tempToken: "mock_token" } };
     }
     const result = await request.post<any, ApiResponse<VerifyCodeData>>('/sms/verify', {
@@ -280,14 +285,14 @@ export const verifySmsCode = async (
 /**
  * 提交用户注册信息
  * @param {RegisterRequest} params - 注册请求完整参数
- * @param {boolean} isMock - 是否启用 Mock 模式
  * @returns {Promise<ApiResponse<RegisterData>>} 注册成功后的用户数据
  */
 export const registerUser = async (
-    params: RegisterRequest,
-    isMock: boolean
+    params: RegisterRequest
 ): Promise<ApiResponse<RegisterData>> => {
-    if (isMock) {
+    const isMockMode = getMockMode();
+
+    if (isMockMode) {
         return {
             success: true,
             message: 'mock',

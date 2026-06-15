@@ -2,7 +2,6 @@
  * 文件功能：文件上传业务逻辑层，负责文件合法性校验与公网访问URL生成
  * 关联业务：用户头像上传、车辆照片上传
  * 说明：文件实际存储由 multer 中间件处理，本层负责校验与URL拼接
- *       URL与用户的关联需等数据库模块完成后在此预留位置对接
  */
 
 'use strict';
@@ -12,6 +11,7 @@ const {
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE,
 } = require('../constants/upload-constants');
+const uploadDao = require('../dao/upload-dao');
 
 const MODULE = 'upload-service';
 
@@ -63,11 +63,10 @@ function buildFileUrl(filename) {
 
 /**
  * 函数功能：处理文件上传核心逻辑，校验文件并返回访问URL
- * 入参：file（对象）- multer 解析后的文件对象，requestId（字符串）
+ * 入参：file（对象）- multer 解析后的文件对象，requestId（字符串），userId（字符串，可选），fileType（字符串，可选）
  * 出参：{ success: boolean, url?: string, message: string }
- * 说明：URL与用户的绑定（如头像）预留此处，等数据库模块完成后在此调用 dao 层写入
  */
-async function handleUpload(file, requestId) {
+async function handleUpload(file, requestId, userId = null, fileType = 'general') {
   const validation = validateFile(file, requestId);
   if (!validation.valid) {
     return { success: false, message: validation.message };
@@ -83,8 +82,20 @@ async function handleUpload(file, requestId) {
     requestId,
   });
 
-  // TODO: 数据库模块完成后，在此调用 dao 层将 url 关联到对应用户
-  // await uploadDao.saveFileRecord({ userId, url, filename: file.filename, requestId });
+  if (userId) {
+    await uploadDao.saveFileRecord({
+      userId,
+      url,
+      filename: file.filename,
+      mimetype: file.mimetype,
+      size: file.size,
+      requestId,
+    });
+
+    if (fileType === 'avatar') {
+      await uploadDao.updateUserAvatar(userId, url, requestId);
+    }
+  }
 
   return { success: true, url, message: '上传成功' };
 }

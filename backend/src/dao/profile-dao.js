@@ -295,14 +295,22 @@ async function getUserPaymentMethods(userId, requestId) {
  */
 async function getUserNotificationSettings(userId, requestId) {
   try {
-    // TODO: 实现通知设置表
-    // 暂时返回默认设置
+    let settings = await prisma.notificationSetting.findUnique({
+      where: { user_id: userId },
+    });
+
+    if (!settings) {
+      settings = await prisma.notificationSetting.create({
+        data: { user_id: userId },
+      });
+    }
+
     return {
-      push_enabled: true,
-      sms_enabled: true,
-      email_enabled: false,
-      order_notification: true,
-      promotion_notification: false,
+      push_enabled: settings.push_enabled,
+      sms_enabled: settings.sms_enabled,
+      email_enabled: settings.email_enabled,
+      order_notification: settings.order_notification,
+      promotion_notification: settings.promotion_notification,
     };
   } catch (error) {
     logger.error({
@@ -322,7 +330,25 @@ async function getUserNotificationSettings(userId, requestId) {
  */
 async function updateUserNotificationSettings(userId, settings, requestId) {
   try {
-    // TODO: 实现通知设置表更新
+    await prisma.notificationSetting.upsert({
+      where: { user_id: userId },
+      update: {
+        push_enabled: settings.pushEnabled,
+        sms_enabled: settings.smsEnabled,
+        email_enabled: settings.emailEnabled,
+        order_notification: settings.orderNotification,
+        promotion_notification: settings.promotionNotification,
+      },
+      create: {
+        user_id: userId,
+        push_enabled: settings.pushEnabled ?? true,
+        sms_enabled: settings.smsEnabled ?? true,
+        email_enabled: settings.emailEnabled ?? false,
+        order_notification: settings.orderNotification ?? true,
+        promotion_notification: settings.promotionNotification ?? false,
+      },
+    });
+
     logger.info({
       module: 'profile-dao',
       operate: 'update-user-notification-settings',

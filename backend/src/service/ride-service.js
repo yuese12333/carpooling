@@ -5,6 +5,8 @@
  */
 const { logger } = require('../utils/logger');
 const rideDao = require('../dao/ride-dao');
+const mapService = require('../utils/map-service');
+const prisma = require('../config/prisma');
 
 /**
  * 5.1 行程搜索
@@ -43,6 +45,17 @@ async function searchRides({
     requestId,
   });
 
+  if (userId) {
+    await prisma.searchHistory.create({
+      data: {
+        user_id: userId,
+        from_text: fromText,
+        to_text: toText,
+        search_type: 'ride',
+      },
+    }).catch(() => {});
+  }
+
   return {
     list: rides.map((ride) => ({
       rideId: ride.ride_id,
@@ -79,26 +92,20 @@ async function getLocationSuggestions({ keyword, latitude, longitude, limit, req
     result: 'Getting location suggestions',
   });
 
-  // TODO: 集成高德地图API或其他地图服务
-  // 这里暂时返回模拟数据
-  const suggestions = [
-    {
-      name: `${keyword}附近地点1`,
-      address: '示例地址1',
-      latitude: latitude || 39.9042,
-      longitude: longitude || 116.4074,
-      distance: 1000,
-    },
-    {
-      name: `${keyword}附近地点2`,
-      address: '示例地址2',
-      latitude: latitude || 39.9042,
-      longitude: longitude || 116.4074,
-      distance: 2000,
-    },
-  ];
+  const suggestions = await mapService.searchPlaces(keyword, null, limit || 10, requestId);
 
-  return { suggestions: suggestions.slice(0, limit) };
+  if (latitude && longitude) {
+    suggestions.forEach((s) => {
+      if (s.latitude && s.longitude) {
+        s.distance = mapService.calculateStraightDistance(
+          latitude, longitude, s.latitude, s.longitude
+        );
+      }
+    });
+    suggestions.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+  }
+
+  return { suggestions: suggestions.slice(0, limit || 10) };
 }
 
 /**
@@ -257,19 +264,16 @@ async function routePlan({ fromLatitude, fromLongitude, toLatitude, toLongitude,
     result: 'Planning route',
   });
 
-  // TODO: 集成高德地图API或其他地图服务
-  // 这里暂时返回模拟数据
-  const distance = Math.sqrt(
-    Math.pow(toLatitude - fromLatitude, 2) + Math.pow(toLongitude - fromLongitude, 2)
-  ) * 111000; // 粗略计算距离(米)
-
-  const duration = distance / 500; // 假设平均速度500米/分钟
+  const route = await mapService.getDrivingRoute(
+    fromLongitude, fromLatitude, toLongitude, toLatitude, requestId
+  );
 
   return {
-    distance: Math.round(distance),
-    duration: Math.round(duration),
-    estimatedPrice: Math.round(distance / 1000 * 2), // 假设每公里2元
-    routePath: [], // 路径坐标点
+    distance: route.distance,
+    duration: route.duration,
+    estimatedPrice: Math.round(route.distance / 1000 * 2),
+    routePath: route.routePath,
+    tolls: route.tolls || 0,
   };
 }
 
@@ -460,11 +464,17 @@ async function getPrivateContact({ userId, orderId, requestId }) {
     throw error;
   }
 
-  // TODO: 集成隐私号码服务(如阿里云隐私号)
-  // 这里暂时返回模拟数据
+  const privacyService = require('./privacy-service');
+  const proxyNumber = await privacyService.getProxyNumberForPair({
+    callerUserId: userId,
+    calleeUserId: userId === order.passenger_user_id ? order.driver_user_id : order.passenger_user_id,
+    tripId: order.request_id,
+    requestId,
+  });
+
   return {
-    privacyPhone: '13800138000',
-    expireAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24小时后过期
+    privacyPhone: proxyNumber || '13800138000',
+    expireAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
   };
 }
 

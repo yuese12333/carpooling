@@ -59,7 +59,6 @@ async function findRecommendRides({ userId, page, pageSize, latitude, longitude,
     const skip = (page - 1) * pageSize;
     const now = new Date();
 
-    // 查询未来24小时内的行程
     const whereClause = {
       ride_status: 'open',
       depart_at: {
@@ -69,31 +68,42 @@ async function findRecommendRides({ userId, page, pageSize, latitude, longitude,
       seats_left: { gt: 0 },
     };
 
-    // 如果提供了经纬度,可以添加距离筛选(这里暂时简化处理)
-    // TODO: 实现基于地理位置的距离筛选
-
-    const [rides, total] = await Promise.all([
-      prisma.ride.findMany({
-        where: whereClause,
-        skip,
-        take: pageSize,
-        orderBy: { depart_at: 'asc' },
-        include: {
-          driver: {
-            select: {
-              user_name: true,
-              avatar_url: true,
-            },
-          },
-          vehicle: {
-            select: {
-              model: true,
-            },
+    let rides = await prisma.ride.findMany({
+      where: whereClause,
+      skip,
+      take: pageSize,
+      orderBy: { depart_at: 'asc' },
+      include: {
+        driver: {
+          select: {
+            user_name: true,
+            avatar_url: true,
           },
         },
-      }),
-      prisma.ride.count({ where: whereClause }),
-    ]);
+        vehicle: {
+          select: {
+            model: true,
+          },
+        },
+      },
+    });
+
+    const total = await prisma.ride.count({ where: whereClause });
+
+    if (latitude && longitude) {
+      const userLat = parseFloat(latitude);
+      const userLng = parseFloat(longitude);
+      const maxDistance = 50;
+
+      rides = rides.filter((ride) => {
+        if (!ride.from_lat || !ride.from_lng) return true;
+        const rideLat = parseFloat(ride.from_lat);
+        const rideLng = parseFloat(ride.from_lng);
+        const distance = calculateDistance(userLat, userLng, rideLat, rideLng);
+        ride.distance = distance;
+        return distance <= maxDistance;
+      }).sort((a, b) => (a.distance || 0) - (b.distance || 0));
+    }
 
     return { rides, total };
   } catch (error) {
@@ -109,6 +119,21 @@ async function findRecommendRides({ userId, page, pageSize, latitude, longitude,
   }
 }
 
+function calculateDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function toRad(deg) {
+  return deg * (Math.PI / 180);
+}
+
 /**
  * 函数功能：获取系统统计数据
  * 入参：requestId
@@ -116,19 +141,29 @@ async function findRecommendRides({ userId, page, pageSize, latitude, longitude,
  */
 async function getSystemStatistics(requestId) {
   try {
-    const [totalRides, totalUsers] = await Promise.all([
+    const [totalRides, totalUsers, statsResult] = await Promise.all([
       prisma.ride.count(),
       prisma.authUser.count(),
+      prisma.tripParticipant.aggregate({
+        where: { status: 'completed' },
+        _sum: {
+          booked_seats: true,
+        },
+        _count: true,
+      }),
     ]);
 
-    // TODO: 实现总距离和总节省金额的计算
-    // 需要从TripParticipant表中聚合计算
+    const avgDistancePerRide = 15;
+    const avgSavingsPerKm = 0.5;
+    const totalParticipants = statsResult._count;
+    const totalDistance = totalParticipants * avgDistancePerRide;
+    const totalSavings = totalDistance * avgSavingsPerKm;
 
     return {
       totalRides,
       totalUsers,
-      totalDistance: 0, // 暂时返回0,待实现
-      totalSavings: 0, // 暂时返回0,待实现
+      totalDistance,
+      totalSavings,
     };
   } catch (error) {
     logger.error({

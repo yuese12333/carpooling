@@ -108,13 +108,59 @@ export const useFindRideForm = (requestId: string) => {
     }, [loadData]);
 
     // --- 计算属性 ---
-    // TODO: 实现前端筛选与排序逻辑
-    // activeFilters 用于按日期(today/tomorrow)、司机特征(female_driver)等字段过滤 rides
-    // sortBy 用于对 rides 按出发时间/价格/评分排序
-    // 目前 activeFilters 和 sortBy 状态已维护，待后端接口稳定后决定前端过滤还是传参重新请求
     const filteredRides = useMemo(() => {
-        return rides;
-    }, [rides]);
+        let result = [...rides];
+
+        if (activeFilters.includes('today')) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            result = result.filter((ride) => {
+                const departAt = new Date(ride.departAt);
+                return departAt >= today && departAt < tomorrow;
+            });
+        }
+
+        if (activeFilters.includes('tomorrow')) {
+            const tomorrow = new Date();
+            tomorrow.setHours(0, 0, 0, 0);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dayAfter = new Date(tomorrow);
+            dayAfter.setDate(dayAfter.getDate() + 1);
+            result = result.filter((ride) => {
+                const departAt = new Date(ride.departAt);
+                return departAt >= tomorrow && departAt < dayAfter;
+            });
+        }
+
+        if (activeFilters.includes('female_driver')) {
+            result = result.filter((ride) => ride.driverGender === 'female');
+        }
+
+        if (activeFilters.includes('high_rated')) {
+            result = result.filter((ride) => ride.driverRating >= 4.5);
+        }
+
+        switch (sortBy) {
+            case '最快出发':
+                result.sort((a, b) => new Date(a.departAt).getTime() - new Date(b.departAt).getTime());
+                break;
+            case '价格最低':
+                result.sort((a, b) => a.price - b.price);
+                break;
+            case '评分最高':
+                result.sort((a, b) => b.driverRating - a.driverRating);
+                break;
+            case '距离最近':
+                result.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+                break;
+            default:
+                break;
+        }
+
+        return result;
+    }, [rides, activeFilters, sortBy]);
 
     /**
      * 执行搜索操作

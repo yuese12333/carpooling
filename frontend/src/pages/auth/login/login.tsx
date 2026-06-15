@@ -117,7 +117,7 @@ export default function LoginPage(): JSX.Element {
     setIsConfigLoading(true);
     try {
       // 1. 调用 API 获取标准响应结构
-      const res = await fetchLoginConfig(isMockMode);
+      const res = await fetchLoginConfig();
 
       // 2. 检查业务成功状态
       if (isApiSuccess(res) && res.data) {

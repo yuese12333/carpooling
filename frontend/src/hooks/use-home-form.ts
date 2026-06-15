@@ -6,6 +6,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Alert } from "react-native";
 import { useRouter, Href } from 'expo-router';
+import * as Location from 'expo-location';
 import { useEnvStore } from '../store/env-store';
 import { HomeService, UserInfo, RideItem, HomeStats } from '@/api/home-api';
 import { ROUTES } from '../router/paths';
@@ -38,8 +39,44 @@ export const useHomeForm = (requestId: string) => {
          * 异步初始化首页数据
          */
         const fetchHomeData = async () => {
-            // TODO: 替换为真实设备定位（调用 expo-location 获取当前坐标）
-            const locationParams = { latitude: 24.14, longitude: 120.67 };
+            let locationParams = { latitude: 24.14, longitude: 120.67 };
+
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status === 'granted') {
+                    const location = await Location.getCurrentPositionAsync({
+                        accuracy: Location.Accuracy.Balanced,
+                    });
+                    locationParams = {
+                        latitude: location.coords.latitude,
+                        longitude: location.coords.longitude,
+                    };
+                    logger.info({
+                        module: 'useHomeForm',
+                        operate: 'getLocation_Success',
+                        params: locationParams,
+                        result: 'Device location obtained',
+                        requestId
+                    });
+                } else {
+                    logger.warn({
+                        module: 'useHomeForm',
+                        operate: 'getLocation_PermissionDenied',
+                        params: { status },
+                        result: 'Using default location',
+                        requestId
+                    });
+                }
+            } catch (locError) {
+                logger.warn({
+                    module: 'useHomeForm',
+                    operate: 'getLocation_Error',
+                    params: undefined,
+                    result: 'Using default location',
+                    error: locError instanceof Error ? locError.message : String(locError),
+                    requestId
+                });
+            }
 
             try {
                 setIsLoading(true);
