@@ -21,8 +21,20 @@
 | 文档 | 说明 |
 |------|------|
 | [Prisma开发规范.md](./backend/Prisma开发规范.md) | Prisma 迁移、schema 变更与 dao 开发流程 |
-| [**数据库设计文档.md**](./backend/数据库设计文档.md) | 24 张表的字段、关系、索引、唯一约束与业务层实现注意事项 |
+| [**数据库设计文档.md**](./backend/数据库设计文档.md) | 31+ 张表的字段、关系、索引、唯一约束与业务层实现注意事项 |
 | [打包与上传服务器流程.md](./backend/打包与上传服务器流程.md) | 构建与发布到测试/生产服务器 |
+
+### 新增数据库表（2026-06-15）
+
+| 表名 | 说明 |
+|------|------|
+| `notification_settings` | 用户通知设置 |
+| `event_logs` | 事件日志 |
+| `error_logs` | 错误日志 |
+| `performance_logs` | 性能日志 |
+| `system_configs` | 系统配置 |
+| `search_history` | 搜索历史 |
+| `protocols` | 协议文档 |
 
 ---
 
@@ -32,6 +44,14 @@
 |------|------|
 | [**高德地图Android_SDK接入与开发说明.md**](./frontend/高德地图Android_SDK接入与开发说明.md) | 高德 2D 地图 + 定位 + 搜索（**地图相关唯一入口**） |
 | [安卓原生工程与版本控制说明.md](./frontend/安卓原生工程与版本控制说明.md) | `frontend/android` 与 Git 协作 |
+
+### Mock 模式说明
+
+前端支持 Mock 模式切换，在登录页面右上角开关：
+- **开启**：使用本地模拟数据，无需后端
+- **关闭**：调用真实后端 API
+
+所有 API 文件统一使用 `useEnvStore.getState().isMockMode` 判断 Mock 状态。
 
 ---
 
@@ -56,6 +76,7 @@
 
 ## 其他入口
 
-- 仓库根目录 [**CONTRIBUTING.md**](../CONTRIBUTING.md)：命名、目录、Commit 规范等。  
-- [**frontend/README.md**](../frontend/README.md)：Expo 运行与环境变量。  
+- 仓库根目录 [**CONTRIBUTING.md**](../CONTRIBUTING.md)：命名、目录、Commit 规范等。
+- [**frontend/README.md**](../frontend/README.md)：Expo 运行与环境变量。
 - [**backend/README.md**](../backend/README.md)：后端启动、已实现接口速查。
+- [**CLAUDE.md**](../CLAUDE.md)：Claude Code 开发指导。
