@@ -103,7 +103,7 @@ export const passwordApi = {
         }
 
         // --- 线性请求逻辑 ---
-        const result = await request.post<any, ApiResponse<VerifyCodeData>>('/auth/password/verify-code', { phone, code });
+        const result = await request.post<any, ApiResponse<VerifyCodeData>>('/auth/password/verify-code', { phoneNumber: phone, verifyCode: code });
 
         if (result.success) {
             logger.info({
@@ -120,11 +120,12 @@ export const passwordApi = {
 
     /**
      * 3.4 重置密码
+     * @param phone 手机号
      * @param token 校验验证码后返回的 tempToken
      * @param password 新密码
      * @returns 操作结果
      */
-    resetPassword: async (token: string, password: string): Promise<ApiResponse<Record<string, never>>> => {
+    resetPassword: async (phone: string, token: string, password: string): Promise<ApiResponse<Record<string, never>>> => {
         const requestId = useEnvStore.getState().currentRequestId;
 
         // --- Mock 逻辑 ---
@@ -134,7 +135,7 @@ export const passwordApi = {
         }
 
         // --- 线性请求逻辑 ---
-        const result = await request.post<any, ApiResponse<Record<string, never>>>('/auth/password/reset', { verifyToken: token, newPassword: password });
+        const result = await request.post<any, ApiResponse<Record<string, never>>>('/auth/password/reset', { phoneNumber: phone, tempToken: token, newPassword: password });
 
         if (result.success) {
             logger.info({

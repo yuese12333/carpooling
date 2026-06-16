@@ -375,19 +375,25 @@ async function behaviorVerify({ verifyId, trackData, requestId }) {
 }
 
 /**
- * 函数功能：手机号风控检测
+ * 函数功能：手机号风控检测与注册状态查询
  * 入参：phone/requestId
- * 出参：风险等级和是否高风险
+ * 出参：风险等级、是否高风险、是否已注册、用户状态
  */
 async function checkPhoneRisk({ phone, requestId }) {
   logger.info({
     module: 'auth-service',
     operate: 'check-phone-risk',
     params: maskSensitive({ phone }),
-    result: 'Checking phone risk',
+    result: 'Checking phone risk and registration',
     requestId,
   });
 
+  // 检查用户是否存在
+  const user = await userDao.findByPhone(phone, requestId);
+  const isRegistered = !!user;
+  const userStatus = user?.status || 'not_registered';
+
+  // 风控检测
   const inBlacklist = await riskDao.checkPhoneBlacklist(phone, requestId);
   const smsCount = Number((await redisUtils.get(`${REDIS_KEY_PREFIX.SMS_TOTAL}${phone}`)) || 0);
   const hasDeviceRisk = await riskDao.checkPhoneDeviceAbuse(phone, requestId);
@@ -403,13 +409,15 @@ async function checkPhoneRisk({ phone, requestId }) {
     module: 'auth-service',
     operate: 'check-phone-risk',
     params: maskSensitive({ phone }),
-    result: `Risk level: ${riskLevel}`,
+    result: `Risk level: ${riskLevel}, Registered: ${isRegistered}`,
     requestId,
   });
 
   return {
     isRisk: riskLevel !== 'low',
     riskLevel,
+    isRegistered,
+    userStatus,
   };
 }
 
@@ -657,21 +665,19 @@ module.exports = {
     // 校验临时令牌
     await consumeResetTempToken({ phone, tempToken, requestId });
 
+    // 查找用户
+    const user = await userDao.findByPhone(phone, requestId);
+    if (!user) {
+      const error = new Error('用户不存在');
+      error.statusCode = 404;
+      throw error;
+    }
+
     // 哈希新密码
     const passwordHash = await passwordUtils.hash(newPassword);
 
-    // 找到用户并更新密码
-    // 使用 profileDao 更新 auth_user.password
-    const user = await profileDao.updateUserPassword(phone.startsWith('u_') ? phone : undefined, passwordHash, requestId).catch(async (err) => {
-      // 如果第一个参数 treated as userId failed, try by phone lookup via userDao
-      const found = await userDao.findByPhone(phone, requestId);
-      if (!found) {
-        const error = new Error('用户不存在');
-        error.statusCode = 404;
-        throw error;
-      }
-      return profileDao.updateUserPassword(found.user_id, passwordHash, requestId);
-    });
+    // 更新密码
+    await profileDao.updateUserPassword(user.user_id, passwordHash, requestId);
 
     logger.info({
       module: 'auth-service',

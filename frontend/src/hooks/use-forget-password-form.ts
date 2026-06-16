@@ -198,7 +198,7 @@ export const useForgetPasswordForm = (requestId: string) => {
 
         setLoading(true);
         try {
-            const res = await passwordApi.resetPassword(tempToken, password);
+            const res = await passwordApi.resetPassword(phone, tempToken, password);
             if (isApiSuccess(res)) {
                 logger.info({
                     module: "Auth_ForgetPassword",
