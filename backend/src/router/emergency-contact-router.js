@@ -10,7 +10,7 @@ const {
   deleteContactController,
   sendTripShareController,
 } = require('../controller/emergency-contact-controller');
-const { authMiddleware } = require('../middleware/auth-middleware');
+const authMiddleware = require('../middleware/auth-middleware');
 
 const router = express.Router();
 
