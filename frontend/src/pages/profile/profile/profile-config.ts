@@ -12,6 +12,7 @@ import {
     Bell,
     HelpCircle,
     LogOut,
+    Phone,
     LucideIcon
 } from "lucide-react-native";
 import { Href } from 'expo-router';
@@ -65,6 +66,7 @@ export const getMenuData = ({
         group: "账户",
         items: [
             { icon: Shield, label: "实名认证", sub: verified ? "已认证" : "未认证，请前往认证", color: COLORS.primaryDark, bgColor: COLORS.bgLight, done: verified, path: ROUTES.PROFILE.REAL_NAME_AUTH as Href },
+            { icon: Phone, label: "紧急联系人", sub: "管理紧急联系人", color: COLORS.danger, bgColor: COLORS.errorLight, path: ROUTES.PROFILE.EMERGENCY_CONTACT as Href },
             { icon: Users, label: "邀请好友", sub: "邀请得奖励", color: COLORS.secondary, bgColor: COLORS.bgOrangeLight, path: ROUTES.PROFILE.INVITE_FRIENDS as Href },
             { icon: Bell, label: "消息通知", sub: "管理通知设置", color: COLORS.info, bgColor: COLORS.bgBlueLight, path: ROUTES.PROFILE.NOTIFICATION as Href },
         ],
