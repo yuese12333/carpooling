@@ -320,14 +320,108 @@ npm run prisma:generate
 
 ## 八、当前 Prisma 已管理的表（随迁移演进，以 schema 为准）
 
-以 `backend/prisma/schema.prisma` 为准；撰写时仓库内示例：
+以 `backend/prisma/schema.prisma` 为准，当前共 **39 张表**，按模块划分：
 
+### 用户与认证模块（6 张）
 | 表名 | 用途 |
 |------|------|
 | `auth_users` | 注册、登录、管理员角色与状态 |
-| `admin_audit_logs` | 管理后台操作审计 |
+| `user_profiles` | 用户个人资料 |
+| `real_name_auths` | 实名认证记录 |
+| `emergency_contacts` | 紧急联系人 |
+| `driver_credentials` | 驾驶员资质审核 |
+| `user_locations` | 用户收藏地点 |
 
-阶段四（首页、行程、车辆、地点、支付、通知等）须在 **本规范流程下** 逐模块补充 model，不得再使用 `schema-dao` 或运行时 DDL。
+### 行程与订单模块（5 张）
+| 表名 | 用途 |
+|------|------|
+| `rides` | 司机发布的行程 |
+| `trip_participants` | 行程参与者记录 |
+| `ride_requests` | 乘客发布的乘车需求 |
+| `ride_orders` | 匹配后的订单 |
+| `trip_locations` | 行程轨迹点 |
+
+### 车辆模块（1 张）
+| 表名 | 用途 |
+|------|------|
+| `vehicles` | 车辆信息 |
+
+### 支付与财务模块（3 张）
+| 表名 | 用途 |
+|------|------|
+| `payment_methods` | 用户绑定的支付方式 |
+| `order_payments` | 订单支付记录 |
+| `receipts` | 发票/收据 |
+
+### 安全与风控模块（2 张）
+| 表名 | 用途 |
+|------|------|
+| `safety_alerts` | 行程安全预警 |
+| `user_violations` | 用户违规记录 |
+
+### 评价与社交模块（5 张）
+| 表名 | 用途 |
+|------|------|
+| `order_ratings` | 订单互评 |
+| `user_badges` | 用户徽章 |
+| `invite_codes` | 邀请码 |
+| `invite_records` | 邀请记录与奖励 |
+| `share_events` | 分享行为追踪 |
+
+### 通知模块（2 张）
+| 表名 | 用途 |
+|------|------|
+| `notifications` | 系统通知/站内消息 |
+| `notification_settings` | 用户通知偏好设置 |
+
+### 帮助中心模块（2 张）
+| 表名 | 用途 |
+|------|------|
+| `help_categories` | 帮助问题分类 |
+| `help_questions` | 问答条目 |
+
+### 合规与碳账户模块（3 张）
+| 表名 | 用途 |
+|------|------|
+| `compliance_region_rules` | 不同城市的合规规则 |
+| `carbon_accounts` | 用户碳账户 |
+| `carbon_transactions` | 碳积分变动流水 |
+
+### 管理后台模块（1 张）
+| 表名 | 用途 |
+|------|------|
+| `admin_audit_logs` | 管理员操作审计日志 |
+
+### 行程模板与取消原因模块（2 张）
+| 表名 | 用途 |
+|------|------|
+| `trip_templates` | 用户常用行程模板 |
+| `cancel_reasons` | 取消原因配置表 |
+
+### 日志与配置模块（4 张）
+| 表名 | 用途 |
+|------|------|
+| `event_logs` | 事件日志 |
+| `error_logs` | 错误日志 |
+| `performance_logs` | 性能日志 |
+| `system_configs` | 系统配置 |
+
+### 搜索模块（1 张）
+| 表名 | 用途 |
+|------|------|
+| `search_history` | 用户搜索历史记录 |
+
+### 协议模块（1 张）
+| 表名 | 用途 |
+|------|------|
+| `protocols` | 用户协议/隐私政策文档 |
+
+### 用户偏好模块（1 张）
+| 表名 | 用途 |
+|------|------|
+| `user_preference_tags` | 用户偏好标签 |
+
+> 所有表结构均通过 Prisma Migrate 管理，严禁使用 `schema-dao` 或运行时 DDL。
 
 ---
 
