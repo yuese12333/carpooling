@@ -17,6 +17,7 @@ const {
   reportErrorLogController,
   reportPerformanceLogController,
   reportEventLogsBatchController,
+  getCancelReasonsController,
 } = require('../controller/common-controller');
 
 /**
@@ -66,5 +67,11 @@ router.post('/logs/perf', optionalAuthMiddleware, reportPerformanceLogController
  * 路径：POST /api/logs/events/batch
  */
 router.post('/logs/events/batch', optionalAuthMiddleware, reportEventLogsBatchController);
+
+/**
+ * 获取取消原因列表
+ * 路径：GET /api/common/cancel-reasons
+ */
+router.get('/cancel-reasons', getCancelReasonsController);
 
 module.exports = router;

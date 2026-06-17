@@ -44,6 +44,7 @@ export const ROUTES = {
         HELP_CENTER: '/profile/help-center/help-center' as any,
         EMERGENCY_CONTACT: '/profile/emergency-contact/emergency-contact' as any,
         LANGUAGE_SETTINGS: '/profile/language-settings/language-settings' as any,
+        SAFETY_CENTER: '/profile/safety-center/safety-center' as any,
     },
 
     // 行程/详情相关

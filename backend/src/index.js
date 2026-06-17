@@ -19,6 +19,8 @@ const notificationRouter = require('./router/notification-router');
 const paymentsRouter = require('./router/payments-router');
 const helpRouter = require('./router/help-router');
 const emergencyContactRouter = require('./router/emergency-contact-router');
+const ratingRouter = require('./router/rating-router');
+const inviteRouter = require('./router/invite-router');
 const prisma = require('./config/prisma');
 const { logger } = require('./utils/logger');
 const { createRequestId } = require('./utils/response');
@@ -81,6 +83,8 @@ app.use('/api/notifications', notificationRouter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/help', helpRouter);
 app.use('/api/emergency-contacts', emergencyContactRouter);
+app.use('/api/ratings', ratingRouter);
+app.use('/api/invite', inviteRouter);
 
 app.listen(Number(PORT), HOST, async () => {
   const requestId = `startup-${Date.now()}`;

@@ -278,4 +278,35 @@ module.exports = {
   reportErrorLogController,
   reportPerformanceLogController,
   reportEventLogsBatchController,
+  getCancelReasonsController,
 };
+
+/**
+ * 获取取消原因列表
+ * GET /api/common/cancel-reasons?type=driver|passenger
+ */
+async function getCancelReasonsController(req, res) {
+  const requestId = req.headers['x-request-id'] || createRequestId();
+  const { type } = req.query || {};
+
+  try {
+    const cancelReasonDao = require('../dao/cancel-reason-dao');
+    const reasons = await cancelReasonDao.getCancelReasons(type || 'passenger', requestId);
+
+    return res.json(buildSuccessResponse({
+      reasons: reasons.map((r) => ({
+        id: r.id,
+        reason: r.reason,
+      })),
+    }, requestId));
+  } catch (error) {
+    logger.error({
+      module: 'common-controller',
+      operate: 'get-cancel-reasons',
+      params: { type },
+      error: error.message,
+      requestId,
+    });
+    return res.status(500).json(buildFailureResponse(500, '获取取消原因失败', null, requestId));
+  }
+}
