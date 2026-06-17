@@ -160,3 +160,12 @@ frontend/
 - **requestId**：由 Page 层生成并经 props 注入 Hook；详见 `docs/ops/日志规范与埋点说明.md`。
 - **接口路径**：以 [`docs/api/接口汇总清单.md`](../docs/api/接口汇总清单.md) 为准。
 - **地图**：业务与原生接入见 [`docs/frontend/高德地图Android_SDK接入与开发说明.md`](../docs/frontend/高德地图Android_SDK接入与开发说明.md)。
+
+## 测试
+
+```bash
+npm run test:ci    # CI 模式，含覆盖率报告
+npm test           # 监听模式（开发时）
+```
+
+规范与报告见 [`docs/tests/全量测试文档.md`](../docs/tests/全量测试文档.md)、[`docs/tests/TEST_REPORT.md`](../docs/tests/TEST_REPORT.md)。
