@@ -187,11 +187,15 @@ async function reportPerformanceLog({ userId, metrics, page, timestamp, requestI
     result: 'Reporting performance log',
   });
 
+  // 从 metrics 对象中提取字段
+  const { operationType, pageLoadTime, apiResponseTime, requestUrl, deviceInfo } = metrics || {};
+
   await commonDao.createPerformanceLog({
     userId,
-    metrics,
-    page,
-    timestamp: timestamp ? new Date(timestamp) : new Date(),
+    operationType: operationType || page || 'page_load',
+    durationMs: pageLoadTime || apiResponseTime || 0,
+    requestUrl,
+    deviceInfo: deviceInfo ? JSON.stringify(deviceInfo) : null,
   }, requestId);
 
   return { success: true };
