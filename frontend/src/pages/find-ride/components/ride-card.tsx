@@ -6,8 +6,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Users, Star, Clock, ChevronRight } from "lucide-react-native";
-import { Avatar, AvatarImage, AvatarFallback } from "@/../components/avatar";
-import { Badge } from "@/../components/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/avatar";
+import { Badge } from "@/components/badge";
 import styles from "../find-ride.style";
 import { COLORS } from '@/pages/style';
 import logger from '@/utils/logger';

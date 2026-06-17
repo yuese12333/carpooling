@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import logger from '@/utils/logger';
 import { myTrips } from "../store/mock-data";
 import { tripsApi } from "../api/trips-api";
-import { ROUTES } from '../router/paths';
+import { ROUTES } from '@/router/paths';
 import { useEnvStore } from '@/store/env-store';
 
 const MODULE_NAME = 'use-trips-form';

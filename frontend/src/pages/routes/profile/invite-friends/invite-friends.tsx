@@ -1,1 +1,1 @@
-export { default } from '../../../profile/invite-friends/invite-friends';
+export { default } from '@/pages/profile/invite-friends/invite-friends';

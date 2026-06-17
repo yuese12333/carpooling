@@ -22,7 +22,7 @@ import { RouteSection } from "./components/route-section";
 import { DateTimeSection } from "./components/date-time-section";
 import { SeatPriceSection } from "./components/seat-price-section";
 import { NotesSection } from "./components/notes-section";
-import { Button } from "../../../components/button";
+import { Button } from "@/components/button";
 
 // 样式与工具
 import styles from "./offer-ride.style";

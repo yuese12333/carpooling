@@ -7,8 +7,8 @@
  */
 
 import { Platform } from 'react-native';
-import logger from '../utils/logger';
-import { useEnvStore } from '../store/env-store';
+import logger from '@/utils/logger';
+import { useEnvStore } from '@/store/env-store';
 import type { ApiResponse } from '@/api/api.d';
 import request from '@/utils/request';
 import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';

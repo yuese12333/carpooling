@@ -7,9 +7,9 @@ import { useState, useMemo, useEffect } from "react";
 import { Alert } from "react-native";
 import { useRouter, Href } from 'expo-router';
 import * as Location from 'expo-location';
-import { useEnvStore } from '../store/env-store';
+import { useEnvStore } from '@/store/env-store';
 import { HomeService, UserInfo, RideItem, HomeStats } from '@/api/home-api';
-import { ROUTES } from '../router/paths';
+import { ROUTES } from '@/router/paths';
 import logger from '@/utils/logger';
 
 /**

@@ -20,7 +20,7 @@ import styles from "./find-ride.style";
 import { COLORS } from '@/pages/style';
 
 // 导入业务逻辑 Hook
-import { useFindRideForm } from "../../hooks/use-find-ride-form";
+import { useFindRideForm } from "@/hooks/use-find-ride-form";
 import { RIDE_SORT_OPTIONS, RIDE_FILTER_TAGS } from "@/api/find-ride-api";
 
 // 导入子组件

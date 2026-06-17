@@ -1,1 +1,1 @@
-export { default } from '../../../profile/notification/notification';
+export { default } from '@/pages/profile/notification/notification';

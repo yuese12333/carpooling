@@ -6,8 +6,8 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, TextInput } from "react-native";
 import { Bell, Navigation, MapPin, Calendar } from "lucide-react-native";
-import { Card } from "@/../components/card";
-import { Button } from "@/../components/button";
+import { Card } from "@/components/card";
+import { Button } from "@/components/button";
 import { UserInfo } from "@/api/home-api";
 import logger from '@/utils/logger';
 import styles from "../home.style";

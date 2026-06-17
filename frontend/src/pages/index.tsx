@@ -5,8 +5,8 @@
 
 import React from 'react';
 import LoginPage from './auth/login/login';
-import { useEnvStore } from '../store/env-store';
-import logger, { generateRequestId } from '../utils/logger';
+import { useEnvStore } from '@/store/env-store';
+import logger, { generateRequestId } from '@/utils/logger';
 
 /**
  * 在模块加载时同步初始化 RequestId，确保子组件首次渲染时已可读取

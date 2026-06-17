@@ -1,1 +1,1 @@
-export { default } from '../../../profile/add-location/add-location';
+export { default } from '@/pages/profile/add-location/add-location';

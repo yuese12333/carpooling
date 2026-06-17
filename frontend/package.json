@@ -8,7 +8,43 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "jest --watchAll",
+    "test:ci": "jest --coverage --watchAll=false"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "setupFilesAfterEnv": [
+      "@testing-library/jest-native/extend-expect",
+      "<rootDir>/jest/setup.js"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|lucide-react-native|axios|i18n-js|date-fns|sonner-native|nativewind|tailwind-merge|zustand|react-native-css-interop))"
+    ],
+    "moduleNameMapper": {
+      "^@/components/language-switch$": "<rootDir>/src/components/language-switch",
+      "^@/components/(.*)$": "<rootDir>/components/$1",
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "\\.(css|style\\.ts)$": "identity-obj-proxy"
+    },
+    "testMatch": [
+      "**/__tests__/**/*.[jt]s?(x)",
+      "**/?(*.)+(spec|test).[jt]s?(x)"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/**/index.{js,ts}"
+    ],
+    "testEnvironment": "node",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
   },
   "dependencies": {
     "@expo/ngrok": "^4.1.0",
@@ -73,15 +109,22 @@
     "sonner-native": "^0.23.1",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^3.4.19",
-    "undefined": "@rn-primitives/tooltip\\"
+    "undefined": "@rn-primitives/tooltip\\",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@react-native-community/cli": "latest",
     "@react-native/metro-config": "^0.84.1",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^12.9.0",
+    "@types/jest": "^29.5.14",
     "@types/react": "~19.1.0",
     "dotenv": "^16.4.5",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "jest-expo": "~54.0.0",
     "typescript": "~5.9.2"
   },
   "private": true

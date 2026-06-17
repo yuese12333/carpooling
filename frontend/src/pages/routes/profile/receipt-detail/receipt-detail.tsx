@@ -1,1 +1,1 @@
-export { default } from '../../../profile/receipt-detail/receipt-detail';
+export { default } from '@/pages/profile/receipt-detail/receipt-detail';

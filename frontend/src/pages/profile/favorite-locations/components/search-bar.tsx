@@ -6,8 +6,8 @@
 import React, { JSX } from "react";
 import { View, Text } from "react-native";
 import { Search, Navigation } from "lucide-react-native";
-import { Input } from "@/../components/input";
-import { Button } from "@/../components/button";
+import { Input } from "@/components/input";
+import { Button } from "@/components/button";
 import styles, { COLORS } from "../favorite-locations.style";
 
 /**

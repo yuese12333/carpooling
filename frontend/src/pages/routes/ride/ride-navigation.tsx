@@ -1,1 +1,1 @@
-export { default } from '../../ride-navigation/ride-navigation';
+export { default } from '@/pages/ride-navigation/ride-navigation';

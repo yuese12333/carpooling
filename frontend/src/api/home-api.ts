@@ -4,8 +4,8 @@
  */
 
 import { mockRides, currentUser as mockUser } from "../store/mock-data";
-import { useEnvStore } from '../store/env-store'; // 仅用于获取 isMockMode
-import request from '../utils/request';
+import { useEnvStore } from '@/store/env-store'; // 仅用于获取 isMockMode
+import request from '@/utils/request';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
 import { syncRequestId } from '@/utils/sync-request-id';

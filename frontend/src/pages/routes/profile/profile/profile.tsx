@@ -1,1 +1,1 @@
-export { default } from '../../../profile/profile/profile';
+export { default } from '@/pages/profile/profile/profile';

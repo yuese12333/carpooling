@@ -1,1 +1,1 @@
-export { default } from '../../../profile/payment-history/payment-history';
+export { default } from '@/pages/profile/payment-history/payment-history';

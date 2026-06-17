@@ -1,1 +1,1 @@
-export { default } from '../../../profile/vehicle-verification-detail/vehicle-verification-detail';
+export { default } from '@/pages/profile/vehicle-verification-detail/vehicle-verification-detail';

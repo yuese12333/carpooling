@@ -1,0 +1,320 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HomePage 快照测试 1`] = `
+<SafeAreaView
+  edges={
+    [
+      "left",
+      "right",
+      "bottom",
+    ]
+  }
+  style={
+    {
+      "backgroundColor": "#F9FAFB",
+      "flex": 1,
+    }
+  }
+>
+  <RCTScrollView
+    bounces={false}
+    contentContainerStyle={
+      [
+        {
+          "paddingBottom": 20,
+        },
+        {
+          "paddingTop": 44,
+        },
+      ]
+    }
+    keyboardShouldPersistTaps="handled"
+  >
+    <View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "rgba(0,0,0,0.3)",
+            "borderRadius": 999,
+            "flexDirection": "row",
+            "paddingHorizontal": 8,
+            "paddingVertical": 4,
+            "position": "absolute",
+            "right": 20,
+            "top": 50,
+            "zIndex": 999,
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#FFFFFF",
+              "fontSize": 10,
+              "fontWeight": "600",
+              "marginRight": 4,
+            }
+          }
+        >
+          Mock 模式
+        </Text>
+        <RCTSwitch
+          accessibilityRole="switch"
+          onChange={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          onTintColor="#FFFFFF"
+          style={
+            [
+              {
+                "alignSelf": "flex-start",
+              },
+              {
+                "transform": [
+                  {
+                    "scaleX": 0.7,
+                  },
+                  {
+                    "scaleY": 0.7,
+                  },
+                ],
+              },
+            ]
+          }
+          thumbTintColor="#F3F4F6"
+          tintColor="#94a3b8"
+          value={false}
+        />
+      </View>
+      <HomeHeader
+        fromLocation=""
+        hasUnread={false}
+        onNavigateToNotifications={[Function]}
+        onNavigateToProfile={[Function]}
+        onSearch={[Function]}
+        onSetFrom={[MockFunction]}
+        onSetTo={[MockFunction]}
+        requestId="test-request-id"
+        selectedDate={2024-01-01T00:00:00.000Z}
+        toLocation=""
+        userInfo={
+          {
+            "name": "测试用户",
+            "phone": "138****8000",
+          }
+        }
+      />
+      <QuickActions
+        colors={
+          {
+            "blue": "#eff6ff",
+            "green": "#f0fdf4",
+            "orange": "#fff7ed",
+            "purple": "#FAF5FF",
+          }
+        }
+        onNavigate={[MockFunction]}
+        requestId="test-request-id"
+      />
+      <StatsBanner
+        stats={
+          {
+            "savedCarbon": 50,
+            "savedMoney": 100,
+            "totalRides": 10,
+          }
+        }
+      />
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "gap": 8,
+            "marginBottom": 16,
+            "paddingHorizontal": 20,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "#f0fdf4",
+              "borderRadius": 12,
+              "flex": 1,
+              "flexDirection": "row",
+              "justifyContent": "center",
+              "paddingVertical": 8,
+            }
+          }
+        >
+          <Shield
+            color="#10B981"
+            size={14}
+          />
+          <Text
+            style={
+              {
+                "color": "#10B981",
+                "fontSize": 11,
+                "marginLeft": 4,
+              }
+            }
+          >
+            实名认证
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "#EFF6FF",
+              "borderRadius": 12,
+              "flex": 1,
+              "flexDirection": "row",
+              "justifyContent": "center",
+              "paddingVertical": 8,
+            }
+          }
+        >
+          <Star
+            color="#2563EB"
+            size={14}
+          />
+          <Text
+            style={
+              {
+                "color": "#2563EB",
+                "fontSize": 11,
+                "marginLeft": 4,
+              }
+            }
+          >
+            信用评分
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "backgroundColor": "#FAF5FF",
+              "borderRadius": 12,
+              "flex": 1,
+              "flexDirection": "row",
+              "justifyContent": "center",
+              "paddingVertical": 8,
+            }
+          }
+        >
+          <Zap
+            color="#EA580C"
+            size={14}
+          />
+          <Text
+            style={
+              {
+                "color": "#EA580C",
+                "fontSize": 11,
+                "marginLeft": 4,
+              }
+            }
+          >
+            快速匹配
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "paddingBottom": 30,
+            "paddingHorizontal": 20,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+              "marginBottom": 12,
+            }
+          }
+        >
+          <Text
+            style={
+              {
+                "color": "#111827",
+                "fontSize": 16,
+                "fontWeight": "600",
+              }
+            }
+          >
+            附近行程
+          </Text>
+          <View
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "opacity": 1,
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "color": "#10B981",
+                  "fontSize": 14,
+                }
+              }
+            >
+              查看全部
+            </Text>
+            <ChevronRight
+              color="#10B981"
+              size={14}
+            />
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "flexDirection": "column",
+              "gap": 12,
+            }
+          }
+        />
+      </View>
+    </View>
+  </RCTScrollView>
+</SafeAreaView>
+`;

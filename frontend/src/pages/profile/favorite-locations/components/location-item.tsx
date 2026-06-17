@@ -7,9 +7,9 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { MapPin, Home, Briefcase, MoreVertical, Edit2, Trash2 } from "lucide-react-native";
 import { LocationItem as LocationDataType } from "@/api/favorite-locations-api";
-import { Card } from "@/../components/card";
-import { Badge } from "@/../components/badge";
-import { Popover, PopoverTrigger, PopoverContent } from "@/../components/popover";
+import { Card } from "@/components/card";
+import { Badge } from "@/components/badge";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/popover";
 import styles, { COLORS, getCategoryColor } from "../favorite-locations.style";
 
 interface LocationItemProps {

@@ -6,7 +6,7 @@
  */
 
 import axios, { type AxiosInstance, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { useEnvStore } from '../store/env-store';
+import { useEnvStore } from '@/store/env-store';
 import logger from './logger';
 import type { ApiResponse } from '@/api/api.d';
 import { getApiErrorMessage, isLoginPasswordUrl } from '@/utils/api-response';

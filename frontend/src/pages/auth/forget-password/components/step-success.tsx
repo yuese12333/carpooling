@@ -6,7 +6,7 @@
 import React, { useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { CheckCircle2 } from "lucide-react-native";
-import forgetPasswordStyles from '../forget-password.style';
+import forgetPasswordStyles from '@/pages/auth/forget-password/forget-password.style';
 import { COLORS } from '@/pages/style'
 import logger from '@/utils/logger';
 

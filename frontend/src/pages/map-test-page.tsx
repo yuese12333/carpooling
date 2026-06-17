@@ -19,9 +19,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AmapMapTestView } from '../../components/amap-map-test-view';
-import { startNavi } from '../utils/amap-navi';
-import logger from '../utils/logger';
+import { AmapMapTestView } from '@/components/amap-map-test-view';
+import { startNavi } from '@/utils/amap-navi';
+import logger from '@/utils/logger';
 
 const ZOOM_MIN = 3;
 const ZOOM_MAX = 20;

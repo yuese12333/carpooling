@@ -6,7 +6,7 @@
  */
 
 import { create } from 'zustand';
-import logger from '../utils/logger';
+import logger from '@/utils/logger';
 
 /**
  * 环境状态管理接口定义

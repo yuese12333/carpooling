@@ -1,1 +1,1 @@
-export { default } from '../map-test-page';
+export { default } from '@/pages/map-test-page';

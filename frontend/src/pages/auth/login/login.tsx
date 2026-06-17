@@ -26,32 +26,32 @@ import styles from './login.style';
 import { COLORS } from '@/pages/style';
 
 // 工具类
-import logger, { generateRequestId } from '../../../utils/logger';
+import logger, { generateRequestId } from '@/utils/logger';
 import { isApiSuccess } from '@/utils/api-response';
 import { syncRequestId } from '@/utils/sync-request-id';
 
 // 状态管理与 Hook
-import { useLoginForm } from '../../../hooks/use-login-form';
-import { useEnvStore } from '../../../store/env-store';
+import { useLoginForm } from '@/hooks/use-login-form';
+import { useEnvStore } from '@/store/env-store';
 
 // 路由常量
-import { ROUTES } from '../../../router/paths';
+import { ROUTES } from '@/router/paths';
 
 // 基础组件
-import { Button } from '../../../../components/button';
-import { Checkbox } from '../../../../components/checkbox';
-import { Separator } from '../../../../components/separator';
-import { Label } from '../../../../components/label';
-import { Alert } from '../../../../components/alert';
+import { Button } from '@/components/button';
+import { Checkbox } from '@/components/checkbox';
+import { Separator } from '@/components/separator';
+import { Label } from '@/components/label';
+import { Alert } from '@/components/alert';
 import { SocialChannelItem } from './components/social-channel-item';
-import { LanguageSwitch } from '../../../../components/language-switch';
+import { LanguageSwitch } from '@/components/language-switch';
 
 // API 接口定义
 import {
   fetchLoginConfig,
   type PageConfig,
   type SocialItemProps
-} from '../../../api/auth';
+} from '@/api/auth';
 
 /** 默认国际区号 */
 const DEFAULT_PHONE_PREFIX = '+86';

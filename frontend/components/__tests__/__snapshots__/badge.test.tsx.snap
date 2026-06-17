@@ -1,0 +1,64 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Badge 组件 快照测试 - destructive 变体 1`] = `
+<View
+  className="inline-flex flex-row items-center justify-center rounded-md px-2 py-0.5 border-transparent bg-red-600 active:opacity-80 dark:bg-red-900"
+  style={
+    [
+      {
+        "minHeight": 20,
+        "minWidth": 40,
+      },
+      undefined,
+    ]
+  }
+>
+  <Text
+    className="text-xs font-medium text-white"
+  >
+    危险
+  </Text>
+</View>
+`;
+
+exports[`Badge 组件 快照测试 - success 变体 1`] = `
+<View
+  className="inline-flex flex-row items-center justify-center rounded-md px-2 py-0.5 border-transparent bg-green-500 active:opacity-80"
+  style={
+    [
+      {
+        "minHeight": 20,
+        "minWidth": 40,
+      },
+      undefined,
+    ]
+  }
+>
+  <Text
+    className="text-xs font-medium text-white"
+  >
+    成功
+  </Text>
+</View>
+`;
+
+exports[`Badge 组件 快照测试 - 默认变体 1`] = `
+<View
+  className="inline-flex flex-row items-center justify-center rounded-md px-2 py-0.5 border-transparent bg-slate-900 shadow-sm active:opacity-80 dark:bg-slate-50"
+  style={
+    [
+      {
+        "minHeight": 20,
+        "minWidth": 40,
+      },
+      undefined,
+    ]
+  }
+>
+  <Text
+    className="text-xs font-medium text-slate-50 dark:text-slate-900"
+  >
+    快照测试
+  </Text>
+</View>
+`;

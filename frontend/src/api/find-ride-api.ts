@@ -2,7 +2,7 @@
  * @file find-ride-api.ts
  * @description 拼车行程相关接口对接。
  */
-import { mockRides } from '../store/mock-data';
+import { mockRides } from '@/store/mock-data';
 import logger from '@/utils/logger';
 import request from '@/utils/request';
 import { useEnvStore } from '@/store/env-store';

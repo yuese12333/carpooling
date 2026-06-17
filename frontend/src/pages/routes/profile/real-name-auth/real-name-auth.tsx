@@ -1,1 +1,1 @@
-export { default } from '../../../profile/real-name-auth/real-name-auth';
+export { default } from '@/pages/profile/real-name-auth/real-name-auth';

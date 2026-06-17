@@ -6,7 +6,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { Award } from "lucide-react-native";
-import { Card } from "@/../components/card";
+import { Card } from "@/components/card";
 import { BadgeItem } from "@/api/profile-api";
 import styles from "../profile.style";
 import { COLORS } from "@/pages/style";

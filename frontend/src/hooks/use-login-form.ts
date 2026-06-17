@@ -7,11 +7,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { validatePhoneNumber, validatePassword } from '../utils/validator';
-import { useAuth } from '../store/auth-context';
-import { useEnvStore } from '../store/env-store';
-import logger, { maskSensitive } from '../utils/logger';
-import { isAuthCredentialError } from '../utils/api-response';
+import { validatePhoneNumber, validatePassword } from '@/utils/validator';
+import { useAuth } from '@/store/auth-context';
+import { useEnvStore } from '@/store/env-store';
+import logger, { maskSensitive } from '@/utils/logger';
+import { isAuthCredentialError } from '@/utils/api-response';
 import { ROUTES } from '@/router/paths';
 
 /**

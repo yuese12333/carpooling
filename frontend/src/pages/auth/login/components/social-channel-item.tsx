@@ -12,15 +12,15 @@ import {
 } from 'react-native';
 
 // 基础组件
-import { Button } from '../../../../../components/button';
+import { Button } from '@/components/button';
 
 // 样式引用
-import styles from '../login.style';
+import styles from '@/pages/auth/login/login.style';
 
 // 类型定义
 import {
     type SocialItemProps
-} from '../../../../api/auth';
+} from '@/api/auth';
 
 /**
  * 社交登录渠道项组件

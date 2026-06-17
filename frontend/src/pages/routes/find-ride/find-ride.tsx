@@ -1,1 +1,1 @@
-export { default } from '../../find-ride/find-ride';
+export { default } from '@/pages/find-ride/find-ride';

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Stack, usePathname, useRouter } from 'expo-router';
-import { useAuth } from '../../../store/auth-context';
-import { ROUTES } from '../../../router/paths';
+import { useAuth } from '@/store/auth-context';
+import { ROUTES } from '@/router/paths';
 
 export default function AdminLayout() {
   const router = useRouter();

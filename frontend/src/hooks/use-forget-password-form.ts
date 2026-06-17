@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Alert, TextInput } from "react-native";
 import { useRouter } from 'expo-router';
-import { passwordApi } from '../api/password-api';
+import { passwordApi } from '@/api/password-api';
 import logger, { maskSensitive } from "@/utils/logger";
 import { isApiSuccess } from '@/utils/api-response';
 import { syncRequestId } from '@/utils/sync-request-id';
@@ -15,7 +15,7 @@ import {
     validateConfirmPassword,
     calculatePasswordStrength
 } from "../utils/validator";
-import { ROUTES } from '../router/paths';
+import { ROUTES } from '@/router/paths';
 
 type Step = 1 | 2 | 3 | 4;
 

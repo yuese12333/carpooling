@@ -8,7 +8,7 @@ import request from '@/utils/request';
 import logger from '@/utils/logger';
 import type { ApiResponse } from '@/api/api.d';
 import { syncRequestId } from '@/utils/sync-request-id';
-import { useEnvStore } from '../store/env-store';
+import { useEnvStore } from '@/store/env-store';
 import { mockDelay, MOCK_DELAY_MS } from '@/utils/mock-delay';
 
 // --- 类型定义 ---

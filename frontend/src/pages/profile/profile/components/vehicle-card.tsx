@@ -6,7 +6,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Car } from "lucide-react-native";
-import { Card } from "@/../components/card";
+import { Card } from "@/components/card";
 import styles from "../profile.style";
 import { COLORS } from "@/pages/style";
 

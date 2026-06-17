@@ -6,11 +6,11 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Lock, Eye, EyeOff } from "lucide-react-native";
-import forgetPasswordStyles from '../forget-password.style';
+import forgetPasswordStyles from '@/pages/auth/forget-password/forget-password.style';
 import { COLORS } from '@/pages/style'
-import { Button } from "@/../components/button";
-import { Label } from "@/../components/label";
-import { Progress } from "@/../components/progress";
+import { Button } from "@/components/button";
+import { Label } from "@/components/label";
+import { Progress } from "@/components/progress";
 import { MIN_PASSWORD_LENGTH } from '@/utils/validator';
 
 /** 强度信息接口定义 */

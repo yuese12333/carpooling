@@ -13,7 +13,7 @@ import {
     verifySmsCode,
     registerUser,
     RegisterRequest
-} from '../api/auth';
+} from '@/api/auth';
 import {
     validatePhoneNumber,
     validateNickname,
@@ -21,9 +21,9 @@ import {
     validateConfirmPassword,
     calculatePasswordStrength,
     MIN_PASSWORD_LENGTH
-} from '../utils/validator';
-import logger from '../utils/logger';
-import { ROUTES } from '../router/paths';
+} from '@/utils/validator';
+import logger from '@/utils/logger';
+import { ROUTES } from '@/router/paths';
 
 /** 注册表单数据接口 */
 export interface RegistrationFormData {

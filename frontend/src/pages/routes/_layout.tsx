@@ -1,1 +1,1 @@
-export { default } from '../_layout';
+export { default } from '@/pages/_layout';

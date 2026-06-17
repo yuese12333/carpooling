@@ -5,9 +5,9 @@
 
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import forgetPasswordStyles from '../forget-password.style';
+import forgetPasswordStyles from '@/pages/auth/forget-password/forget-password.style';
 import { COLORS } from '@/pages/style'
-import { Button } from "@/../components/button";
+import { Button } from "@/components/button";
 import logger from '@/utils/logger';
 
 interface StepVerifyOtpProps {

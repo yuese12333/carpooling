@@ -1,1 +1,1 @@
-export { default } from '../../../profile/payment-methods/payment-methods';
+export { default } from '@/pages/profile/payment-methods/payment-methods';

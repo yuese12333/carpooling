@@ -11,7 +11,7 @@ import { profileApi, type BadgeItem } from "../api/profile-api";
 import { getPaymentMethods } from "@/api/payment-methods-api";
 import { useEnvStore } from "@/store/env-store";
 import { currentUser } from "../store/mock-data";
-import { ROUTES } from '../router/paths';
+import { ROUTES } from '@/router/paths';
 import logger from '@/utils/logger';
 import { isApiSuccess } from '@/utils/api-response';
 import { getMenuData, type IMenuItem } from "@/pages/profile/profile/profile-config";

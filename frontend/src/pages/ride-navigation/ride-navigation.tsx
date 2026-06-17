@@ -17,7 +17,7 @@ import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Navigation, MapPin, ArrowLeft } from 'lucide-react-native';
 
-import { AmapMapTestView } from '@/../components/amap-map-test-view';
+import { AmapMapTestView } from '@/components/amap-map-test-view';
 import { generateRequestId } from '@/utils/logger';
 import { useRideNavigationForm } from '@/hooks/use-ride-navigation-form';
 import styles from './ride-navigation.style';
