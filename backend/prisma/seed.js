@@ -2,6 +2,9 @@
  * 数据库种子数据脚本
  * 运行命令: npx prisma db seed
  * 或: npm run prisma:seed
+ *
+ * 带清理参数: npx prisma db seed -- --clean
+ * 或: npm run prisma:seed -- --clean
  */
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
@@ -14,42 +17,88 @@ const generateId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString
 // 工具函数：生成手机号
 const generatePhone = (index) => `1380013${String(index).padStart(4, '0')}`;
 
-async function main() {
-  console.log('开始填充种子数据...');
+/**
+ * 清理所有现有数据
+ * 按照外键依赖顺序删除
+ */
+async function cleanAllData() {
+  console.log('🗑️  开始清理现有数据...');
 
-  // ============ 1. 清理现有数据（可选，按需取消注释）============
-  // console.log('清理现有数据...');
-  // await prisma.orderRating.deleteMany();
-  // await prisma.carbonTransaction.deleteMany();
-  // await prisma.carbonAccount.deleteMany();
-  // await prisma.tripLocation.deleteMany();
-  // await prisma.safetyAlert.deleteMany();
-  // await prisma.orderPayment.deleteMany();
-  // await prisma.receipt.deleteMany();
-  // await prisma.userViolation.deleteMany();
-  // await prisma.tripParticipant.deleteMany();
-  // await prisma.rideOrder.deleteMany();
-  // await prisma.rideRequest.deleteMany();
-  // await prisma.ride.deleteMany();
-  // await prisma.vehicle.deleteMany();
-  // await prisma.userLocation.deleteMany();
-  // await prisma.notificationSetting.deleteMany();
-  // await prisma.notification.deleteMany();
-  // await prisma.paymentMethod.deleteMany();
-  // await prisma.userBadge.deleteMany();
-  // await prisma.inviteRecord.deleteMany();
-  // await prisma.inviteCode.deleteMany();
-  // await prisma.shareEvent.deleteMany();
-  // await prisma.searchHistory.deleteMany();
-  // await prisma.tripTemplate.deleteMany();
-  // await prisma.userPreferenceTag.deleteMany();
-  // await prisma.driverCredential.deleteMany();
-  // await prisma.emergencyContact.deleteMany();
-  // await prisma.realNameAuth.deleteMany();
-  // await prisma.userProfile.deleteMany();
-  // await prisma.adminAuditLog.deleteMany();
-  // await prisma.authUser.deleteMany();
-  // console.log('数据清理完成');
+  // 按依赖关系逆序删除（先删除依赖表，再删除被依赖表）
+  const deleteOrder = [
+    // 无依赖或弱依赖
+    'orderRating',
+    'carbonTransaction',
+    'tripLocation',
+    'safetyAlert',
+    'orderPayment',
+    'receipt',
+    'userViolation',
+    'inviteRecord',
+    'shareEvent',
+    'searchHistory',
+    'tripTemplate',
+    'userPreferenceTag',
+    'eventLog',
+    'errorLog',
+    'performanceLog',
+    // 行程相关
+    'tripParticipant',
+    'rideOrder',
+    'rideRequest',
+    'ride',
+    // 用户相关
+    'vehicle',
+    'userLocation',
+    'notificationSetting',
+    'notification',
+    'paymentMethod',
+    'userBadge',
+    'inviteCode',
+    'driverCredential',
+    'emergencyContact',
+    'realNameAuth',
+    'userProfile',
+    // 系统数据
+    'helpQuestion',
+    'helpCategory',
+    'cancelReason',
+    'protocol',
+    'systemConfig',
+    'carbonAccount',
+    // 管理后台
+    'adminAuditLog',
+    // 用户主表
+    'authUser',
+  ];
+
+  for (const model of deleteOrder) {
+    try {
+      const result = await prisma[model].deleteMany();
+      if (result.count > 0) {
+        console.log(`   ✓ ${model}: ${result.count} 条`);
+      }
+    } catch (error) {
+      // 忽略不存在的表
+      if (!error.message.includes('does not exist')) {
+        console.log(`   ⚠ ${model}: ${error.message}`);
+      }
+    }
+  }
+
+  console.log('✅ 数据清理完成\n');
+}
+
+async function main() {
+  // 检查命令行参数
+  const args = process.argv.slice(2);
+  const shouldClean = args.includes('--clean') || args.includes('-c');
+
+  if (shouldClean) {
+    await cleanAllData();
+  }
+
+  console.log('🌱 开始填充种子数据...');
 
   // ============ 2. 创建用户 ============
   console.log('创建用户数据...');
