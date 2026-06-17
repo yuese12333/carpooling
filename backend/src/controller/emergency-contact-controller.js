@@ -107,8 +107,7 @@ async function addContactController(req, res) {
 async function updateContactController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
   const userId = req.user?.userId;
-  const contactId = req.params?.id;
-  const { contactName, contactPhone, relationType, isPrimary } = req.body || {};
+  const { id: contactId, contactName, contactPhone, relationType, isPrimary } = req.body || {};
 
   if (!userId) {
     return res.status(401).json(buildFailureResponse(401, '未登录', null, requestId));
@@ -156,7 +155,7 @@ async function updateContactController(req, res) {
 async function deleteContactController(req, res) {
   const requestId = req.headers['x-request-id'] || createRequestId();
   const userId = req.user?.userId;
-  const contactId = req.params?.id;
+  const { id: contactId } = req.body || {};
 
   if (!userId) {
     return res.status(401).json(buildFailureResponse(401, '未登录', null, requestId));

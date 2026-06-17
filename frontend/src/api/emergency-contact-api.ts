@@ -144,7 +144,7 @@ export const emergencyContactApi = {
         }
 
         // --- 真实请求 ---
-        const result = await request.put<any, ApiResponse<EmergencyContact>>(`/emergency-contacts/${contactId}`, data);
+        const result = await request.post<any, ApiResponse<EmergencyContact>>('/emergency-contacts/update', { id: contactId, ...data });
 
         if (result.success) {
             logger.info({
@@ -172,7 +172,7 @@ export const emergencyContactApi = {
         }
 
         // --- 真实请求 ---
-        const result = await request.delete<any, ApiResponse<{ success: boolean }>>(`/emergency-contacts/${contactId}`);
+        const result = await request.post<any, ApiResponse<{ success: boolean }>>('/emergency-contacts/delete', { id: contactId });
 
         if (result.success) {
             logger.info({

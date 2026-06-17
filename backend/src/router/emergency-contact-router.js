@@ -24,10 +24,10 @@ router.get('/', getContactListController);
 router.post('/', addContactController);
 
 // 更新紧急联系人
-router.put('/:id', updateContactController);
+router.post('/update', updateContactController);
 
 // 删除紧急联系人
-router.delete('/:id', deleteContactController);
+router.post('/delete', deleteContactController);
 
 // 发送行程共享通知
 router.post('/send-trip-share', sendTripShareController);
