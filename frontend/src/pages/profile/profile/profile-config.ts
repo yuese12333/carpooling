@@ -13,6 +13,7 @@ import {
     HelpCircle,
     LogOut,
     Phone,
+    Globe,
     LucideIcon
 } from "lucide-react-native";
 import { Href } from 'expo-router';
@@ -74,6 +75,7 @@ export const getMenuData = ({
     {
         group: "其他",
         items: [
+            { icon: Globe, label: "语言设置", sub: "切换中英文", color: COLORS.info, bgColor: COLORS.bgBlueLight, path: ROUTES.PROFILE.LANGUAGE_SETTINGS as Href },
             { icon: HelpCircle, label: "帮助中心", sub: "常见问题解答", color: COLORS.textSecondary, bgColor: COLORS.borderLight, path: ROUTES.PROFILE.HELP_CENTER as Href },
             { icon: LogOut, label: "退出登录", sub: "", color: COLORS.danger, bgColor: COLORS.errorLight, danger: true },
         ],

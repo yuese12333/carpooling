@@ -43,6 +43,7 @@ export const ROUTES = {
         REAL_NAME_AUTH: '/profile/real-name-auth/real-name-auth' as any,
         HELP_CENTER: '/profile/help-center/help-center' as any,
         EMERGENCY_CONTACT: '/profile/emergency-contact/emergency-contact' as any,
+        LANGUAGE_SETTINGS: '/profile/language-settings/language-settings' as any,
     },
 
     // 行程/详情相关

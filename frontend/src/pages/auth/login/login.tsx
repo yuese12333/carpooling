@@ -44,6 +44,7 @@ import { Separator } from '../../../../components/separator';
 import { Label } from '../../../../components/label';
 import { Alert } from '../../../../components/alert';
 import { SocialChannelItem } from './components/social-channel-item';
+import { LanguageSwitch } from '../../../../components/language-switch';
 
 // API 接口定义
 import {
@@ -193,16 +194,19 @@ export default function LoginPage(): JSX.Element {
 
   return (
     <View style={safeAreaContainerStyle}>
-      {/* 开发调试辅助：环境切换开关 */}
+      {/* 顶部工具栏：语言切换 + 环境开关 */}
       <View style={styles.envSwitcher}>
-        <Text style={styles.envLabel}>{isMockMode ? "Mock 模式" : "正式接口"}</Text>
-        <Switch
-          value={!isMockMode}
-          onValueChange={(val) => toggleMockMode(!val)}
-          trackColor={{ false: COLORS.textMuted, true: COLORS.primary }}
-          thumbColor={COLORS.white}
-          style={SWITCH_SCALE_STYLE}
-        />
+        <LanguageSwitch compact />
+        <View style={styles.envSwitcherRight}>
+          <Text style={styles.envLabel}>{isMockMode ? "Mock" : "API"}</Text>
+          <Switch
+            value={!isMockMode}
+            onValueChange={(val) => toggleMockMode(!val)}
+            trackColor={{ false: COLORS.textMuted, true: COLORS.primary }}
+            thumbColor={COLORS.white}
+            style={SWITCH_SCALE_STYLE}
+          />
+        </View>
       </View>
 
       <KeyboardAvoidingView

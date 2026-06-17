@@ -19,7 +19,14 @@ export default StyleSheet.create({
         position: 'absolute',
         top: 50,
         right: 20,
+        left: 20,
         zIndex: 99,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
+    envSwitcherRight: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: COLORS.whiteTrans[80],
@@ -34,6 +41,7 @@ export default StyleSheet.create({
         fontSize: 10,
         color: COLORS.textSecondary,
         fontWeight: 'bold',
+        marginRight: 4,
     },
 
     /** 头部视觉区块 */
