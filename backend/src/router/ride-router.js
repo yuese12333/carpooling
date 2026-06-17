@@ -69,7 +69,7 @@ router.get('/publish-permission', authMiddleware, checkPublishPermissionControll
  * 7.1 获取行程详情
  * 路径：GET /api/rides/detail
  */
-router.get('/detail', getRideDetailController);
+router.get('/detail', authMiddleware, getRideDetailController);
 
 /**
  * 7.2 提交拼车预约
