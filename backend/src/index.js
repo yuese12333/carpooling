@@ -30,7 +30,7 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 app.use(cors({ origin: true }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // 限制请求体大小，防止内存溢出攻击
 
 // 静态文件服务：将 uploads 目录暴露为可公网访问的资源
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
