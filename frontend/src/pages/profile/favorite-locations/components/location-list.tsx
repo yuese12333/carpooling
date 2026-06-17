@@ -67,11 +67,19 @@ export const LocationList = ({ data, loading, onEdit, onDelete }: LocationListPr
             contentContainerStyle={styles.listPadding}
             renderItem={renderItem}
             ListEmptyComponent={renderEmptyComponent}
-            // 性能优化配置：开启裁剪与初始渲染量控制
+            // 性能优化配置
             removeClippedSubviews={true}
             initialNumToRender={10}
-            // 确保数据刷新时布局平滑
+            maxToRenderPerBatch={5}
+            windowSize={5}
+            updateCellsBatchingPeriod={50}
             scrollEventThrottle={16}
+            // 固定高度项，使用 getItemLayout 优化滚动性能
+            getItemLayout={(_, index) => ({
+                length: 72, // 预估单项高度
+                offset: 72 * index,
+                index,
+            })}
         />
     );
 };

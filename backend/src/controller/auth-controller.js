@@ -701,6 +701,37 @@ async function checkNicknameController(req, res) {
   }
 }
 
+/**
+ * 刷新 Token 控制器
+ * POST /api/auth/refresh
+ */
+async function refreshTokenController(req, res) {
+  const requestId = req.headers['x-request-id'] || createRequestId();
+  const { refreshToken } = req.body || {};
+
+  if (!refreshToken) {
+    return res.status(400).json(buildFailureResponse(400, '刷新令牌不能为空', null, requestId));
+  }
+
+  try {
+    const data = await authService.refreshToken({ refreshToken, requestId });
+    return res.json(buildSuccessResponse(data, requestId));
+  } catch (error) {
+    const status = error.statusCode || 401;
+    const message = error.message || '刷新令牌无效或已过期';
+
+    logger.error({
+      module: 'auth-controller',
+      operate: 'refresh-token',
+      requestId,
+      error: message,
+      errorType: error?.name || 'RefreshTokenError',
+    });
+
+    return res.status(status).json(buildFailureResponse(status, message, null, requestId));
+  }
+}
+
 module.exports = {
   loginByPasswordController,
   loginBySocialController,
@@ -714,6 +745,7 @@ module.exports = {
   oauthBindController,
   registerUserController,
   checkNicknameController,
+  refreshTokenController,
   // 密码重置相关
   passwordVerifyCodeController,
   resetPasswordController,

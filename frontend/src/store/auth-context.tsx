@@ -126,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     // 同步到 Zustand：供 request 拦截器注入 Authorization
                     if (safeUser?.token) {
                         useEnvStore.getState().setToken(safeUser.token);
+                        useEnvStore.getState().setRefreshToken(safeUser.refreshToken);
                         useEnvStore.getState().setRole(safeUser.role);
                     }
                 }
@@ -183,6 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             // 同步到 Zustand：供 request 拦截器注入 Authorization
             useEnvStore.getState().setToken(loggedUser.token);
+            useEnvStore.getState().setRefreshToken(loggedUser.refreshToken);
             useEnvStore.getState().setRole(loggedUser.role);
 
             logger.info({
@@ -297,6 +299,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             // 清理鉴权态：防止携带旧 token 访问管理接口
             useEnvStore.getState().setToken("");
+            useEnvStore.getState().setRefreshToken("");
             useEnvStore.getState().setRole("user");
 
             logger.info({

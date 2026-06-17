@@ -83,6 +83,12 @@ export interface VerifyCodeData {
     tempToken: string;
 }
 
+/** Token 刷新响应 */
+export interface RefreshTokenData {
+    token: string;
+    expireIn: number;
+}
+
 // --- 内部常量与 Mock 数据 ---
 
 const MOCK_CONFIG: PageConfig = {
@@ -310,6 +316,40 @@ export const registerUser = async (
                 phoneNumber: params.phoneNumber,
                 agreeProtocol: params.agreeProtocol
             }, // 剔除敏感字段 password 和 verifyCode
+            requestId: getContextRequestId()
+        });
+    }
+
+    return result;
+};
+
+/**
+ * 刷新 Token
+ * @param refreshToken - 刷新令牌
+ * @returns 新的 access token
+ */
+export const refreshToken = async (
+    refreshTokenValue: string
+): Promise<ApiResponse<RefreshTokenData>> => {
+    const isMockMode = getMockMode();
+
+    if (isMockMode) {
+        return {
+            success: true,
+            message: 'mock',
+            data: { token: 'mock_new_token_' + Date.now(), expireIn: 86400 }
+        };
+    }
+
+    const result = await request.post<any, ApiResponse<RefreshTokenData>>(
+        '/auth/refresh',
+        { refreshToken: refreshTokenValue }
+    );
+
+    if (result.success) {
+        logger.info({
+            module: 'auth-api',
+            operate: 'refreshToken_SUCCESS',
             requestId: getContextRequestId()
         });
     }

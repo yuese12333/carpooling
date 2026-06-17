@@ -639,6 +639,70 @@ async function checkNickname({ nickname, requestId }) {
   return { isAvailable };
 }
 
+/**
+ * 刷新 Token
+ * 使用 refreshToken 换取新的 accessToken
+ */
+async function refreshToken({ refreshToken, requestId }) {
+  logger.info({
+    module: 'auth-service',
+    operate: 'refresh-token',
+    requestId,
+    result: 'Start refresh token',
+  });
+
+  try {
+    // 验证 refreshToken
+    const payload = jwtUtils.verifyToken(refreshToken);
+
+    // 检查是否是 refresh token 类型
+    if (payload.type !== 'refresh') {
+      const error = new Error('无效的刷新令牌');
+      error.statusCode = 401;
+      throw error;
+    }
+
+    // 查找用户确认存在
+    const user = await userDao.findById(payload.userId, requestId);
+    if (!user) {
+      const error = new Error('用户不存在');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // 生成新的 access token
+    const tokenPayload = {
+      userId: user.user_id,
+      phone: user.phone,
+      role: user.role,
+    };
+
+    const newToken = jwtUtils.generateToken(tokenPayload, { expiresIn: TOKEN_EXPIRE_DEFAULT });
+
+    logger.info({
+      module: 'auth-service',
+      operate: 'refresh-token',
+      params: { userId: user.user_id },
+      requestId,
+      result: 'Token refreshed',
+    });
+
+    return {
+      token: newToken,
+      expireIn: TOKEN_EXPIRE_DEFAULT,
+    };
+  } catch (error) {
+    logger.error({
+      module: 'auth-service',
+      operate: 'refresh-token',
+      requestId,
+      error: error.message,
+      errorType: 'REFRESH_TOKEN_ERROR',
+    });
+    throw error;
+  }
+}
+
 module.exports = {
   loginByPassword,
   loginBySocial,
@@ -652,6 +716,7 @@ module.exports = {
   oauthBind,
   registerUser,
   checkNickname,
+  refreshToken,
   // 密码重置
   async resetPassword({ phone, newPassword, tempToken, requestId }) {
     logger.info({

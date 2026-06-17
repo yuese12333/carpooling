@@ -20,6 +20,7 @@ const {
 	checkNicknameController,
   passwordVerifyCodeController,
   resetPasswordController,
+  refreshTokenController,
 } = require('../controller/auth-controller');
 
 const router = express.Router();
@@ -42,6 +43,10 @@ router.post('/password/sms', (req, res) => {
 router.post('/password/verify-code', passwordVerifyCodeController);
 // 密码重置提交
 router.post('/password/reset', resetPasswordController);
+
+// Token 刷新
+router.post('/refresh', refreshTokenController);
+
 router.post('/oauth/bind', oauthBindController);
 
 // 注册相关路由（验码见 POST /api/sms/verify）

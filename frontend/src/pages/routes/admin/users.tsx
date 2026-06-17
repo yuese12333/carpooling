@@ -124,7 +124,6 @@ export default function AdminUsersPage() {
         <FlatList
           data={state.list}
           keyExtractor={(item) => item.userId}
-          maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
           renderItem={({ item }) => {
             const nextStatus = item.status === 'active' ? 'disabled' : 'active';
             const nextRole = item.role === 'admin' ? 'user' : 'admin';
@@ -168,6 +167,12 @@ export default function AdminUsersPage() {
               </View>
             );
           }}
+          // 性能优化配置
+          removeClippedSubviews={true}
+          initialNumToRender={10}
+          maxToRenderPerBatch={5}
+          windowSize={5}
+          scrollEventThrottle={16}
         />
       )}
     </View>

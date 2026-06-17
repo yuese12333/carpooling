@@ -28,6 +28,9 @@ interface EnvState {
      */
     token: string;
 
+    /** refresh token，用于自动刷新 access token */
+    refreshToken: string;
+
     /** 当前用户角色（由 token payload 或后端鉴权结果解码得到） */
     role: string;
 
@@ -44,6 +47,9 @@ interface EnvState {
 
     /** 设置 access token，并同步清理角色（role 也由调用方写入） */
     setToken: (token: string) => void;
+
+    /** 设置 refresh token */
+    setRefreshToken: (refreshToken: string) => void;
 
     /** 设置当前用户角色 */
     setRole: (role: string) => void;
@@ -62,6 +68,9 @@ export const useEnvStore = create<EnvState>((set, get) => ({
 
     // token 默认为空（未登录）
     token: '',
+
+    // refreshToken 默认为空
+    refreshToken: '',
 
     // role 默认 user（非管理员）
     role: 'user',
@@ -107,6 +116,11 @@ export const useEnvStore = create<EnvState>((set, get) => ({
     setToken: (token: string) => {
       const safeToken = typeof token === 'string' ? token : '';
       set({ token: safeToken });
+    },
+
+    setRefreshToken: (refreshToken: string) => {
+      const safeRefreshToken = typeof refreshToken === 'string' ? refreshToken : '';
+      set({ refreshToken: safeRefreshToken });
     },
 
     setRole: (role: string) => {

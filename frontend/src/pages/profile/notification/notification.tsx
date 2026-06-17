@@ -146,7 +146,6 @@ export default function NotificationPage() {
                     keyExtractor={item => item.id}
                     contentContainerStyle={styles.listContent}
                     keyboardShouldPersistTaps="handled"
-                    maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
                     ItemSeparatorComponent={() => <View style={styles.separator} />}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
@@ -154,6 +153,12 @@ export default function NotificationPage() {
                             <Text style={styles.emptyText}>暂无相关消息</Text>
                         </View>
                     }
+                    // 性能优化配置
+                    removeClippedSubviews={true}
+                    initialNumToRender={10}
+                    maxToRenderPerBatch={5}
+                    windowSize={5}
+                    scrollEventThrottle={16}
                 />
             )}
         </SafeAreaView>
